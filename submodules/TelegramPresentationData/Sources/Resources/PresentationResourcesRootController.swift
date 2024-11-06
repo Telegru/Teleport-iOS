@@ -129,6 +129,12 @@ public struct PresentationResourcesRootController {
         })
     }
     
+    public static func navigationHomeIcon(_ theme: PresentationTheme) -> UIImage? {
+        return theme.image(PresentationResourceKey.navigationAddIcon.rawValue, { theme in
+            return generateTintedImage(image: UIImage(bundleImageName: "Location/HomeIcon")?.withRenderingMode(.alwaysTemplate), color: theme.rootController.navigationBar.accentTextColor)
+        })
+    }
+    
     public static func navigationPlayerCloseButton(_ theme: PresentationTheme) -> UIImage? {
         return theme.image(PresentationResourceKey.navigationPlayerCloseButton.rawValue, { theme in
             return generateImage(CGSize(width: 12.0, height: 12.0), contextGenerator: { size, context in
