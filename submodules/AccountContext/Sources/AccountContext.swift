@@ -910,6 +910,7 @@ public protocol SharedAccountContext: AnyObject {
     func makePeersNearbyController(context: AccountContext) -> ViewController
     func makeComposeController(context: AccountContext) -> ViewController
     func makeChatListController(context: AccountContext, location: ChatListControllerLocation, controlsHistoryPreload: Bool, hideNetworkActivityStatus: Bool, previewing: Bool, enableDebugActions: Bool) -> ChatListController
+    func makeNewsFeedController(context: AccountContext) -> ViewController
     func makeChatController(context: AccountContext, chatLocation: ChatLocation, subject: ChatControllerSubject?, botStart: ChatControllerInitialBotStart?, mode: ChatControllerPresentationMode, params: ChatControllerParams?) -> ChatController
     func makeChatHistoryListNode(
         context: AccountContext,
