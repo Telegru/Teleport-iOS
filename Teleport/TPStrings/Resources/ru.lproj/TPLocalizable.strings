@@ -1,2 +1,4 @@
 "Common.OpenTelegram" = "Открыть Telegram";
 "Common.UseTelegramForPremium" = "Обратите внимание: чтобы получить доступ к Telegram Premium, вам нужно использовать официальное приложение Telegram. После активации подписки все функции Telegram Premium будут доступны в приложении Teleport.";
+
+"RootTabs.News" = "Новости";

@@ -32,6 +32,8 @@ import PeerInfoStoryGridScreen
 import ShareWithPeersScreen
 import ChatEmptyNode
 
+import TPNews
+
 private class DetailsChatPlaceholderNode: ASDisplayNode, NavigationDetailsPlaceholderNode {
     private var presentationData: PresentationData
     private var presentationInterfaceState: ChatPresentationInterfaceState
@@ -78,6 +80,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     public var contactsController: ContactsController?
     public var callListController: CallListController?
     public var chatListController: ChatListController?
+    public var newsFeedController: ViewController?
     public var accountSettingsController: PeerInfoScreen?
     
     private var permissionsDisposable: Disposable?
@@ -190,6 +193,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         let tabBarController = TabBarControllerImpl(navigationBarPresentationData: NavigationBarPresentationData(presentationData: self.presentationData), theme: TabBarControllerTheme(rootControllerTheme: self.presentationData.theme))
         tabBarController.navigationPresentation = .master
         let chatListController = self.context.sharedContext.makeChatListController(context: self.context, location: .chatList(groupId: .root), controlsHistoryPreload: true, hideNetworkActivityStatus: false, previewing: false, enableDebugActions: !GlobalExperimentalSettings.isAppStoreBuild)
+        let newsFeedController = self.context.sharedContext.makeNewsFeedController(context: self.context)
         if let sharedContext = self.context.sharedContext as? SharedAccountContextImpl {
             chatListController.tabBarItem.badgeValue = sharedContext.switchingData.chatListBadge
         }
@@ -207,6 +211,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             controllers.append(callListController)
         }
         controllers.append(chatListController)
+        controllers.append(newsFeedController)
         
         var restoreSettignsController: (ViewController & SettingsController)?
         if let sharedContext = self.context.sharedContext as? SharedAccountContextImpl {
@@ -232,6 +237,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.contactsController = contactsController
         self.callListController = callListController
         self.chatListController = chatListController
+        self.newsFeedController = newsFeedController
         self.accountSettingsController = accountSettingsController
         self.rootTabController = tabBarController
         self.pushViewController(tabBarController, animated: false)
@@ -247,6 +253,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             controllers.append(self.callListController!)
         }
         controllers.append(self.chatListController!)
+        controllers.append(self.newsFeedController!)
         controllers.append(self.accountSettingsController!)
         
         rootTabController.setControllers(controllers, selectedIndex: nil)
