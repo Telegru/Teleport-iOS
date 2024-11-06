@@ -76,6 +76,8 @@ import StarsIntroScreen
 import ContentReportScreen
 import AffiliateProgramSetupScreen
 
+import TPNews
+
 private final class AccountUserInterfaceInUseContext {
     let subscribers = Bag<(Bool) -> Void>()
     let tokens = Bag<Void>()
@@ -1705,6 +1707,10 @@ public final class SharedAccountContextImpl: SharedAccountContext {
     
     public func makeChatListController(context: AccountContext, location: ChatListControllerLocation, controlsHistoryPreload: Bool, hideNetworkActivityStatus: Bool, previewing: Bool, enableDebugActions: Bool) -> ChatListController {
         return ChatListControllerImpl(context: context, location: location, controlsHistoryPreload: controlsHistoryPreload, hideNetworkActivityStatus: hideNetworkActivityStatus, previewing: previewing, enableDebugActions: enableDebugActions)
+    }
+    
+    public func makeNewsFeedController(context: AccountContext) -> ViewController {
+        return NewsFeedViewController(context: context)
     }
     
     public func makePeerSelectionController(_ params: PeerSelectionControllerParams) -> PeerSelectionController {
