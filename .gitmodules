@@ -33,6 +33,9 @@ url=https://github.com/TelegramMessenger/tgcalls.git
 	path = build-system/apple-certificates
 	url = git@github.com:Telegru/apple-certificates.git
 	branch = ios
+[submodule "build-system/teleport-ios-configs"]
+	path = build-system/teleport-ios-configs
+	url = git@github.com:Telegru/teleport-ios-configs.git
 [submodule "third-party/dav1d/dav1d"]
 	path = third-party/dav1d/dav1d
 	url = https://github.com/ali-fareed/dav1d.git
