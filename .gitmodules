@@ -29,3 +29,7 @@ url=https://github.com/TelegramMessenger/tgcalls.git
 [submodule "submodules/LottieCpp/lottiecpp"]
 	path = submodules/LottieCpp/lottiecpp
 	url = https://github.com/ali-fareed/lottiecpp.git
+[submodule "build-system/apple-certificates"]
+	path = build-system/apple-certificates
+	url = git@github.com:Telegru/apple-certificates.git
+	branch = ios
