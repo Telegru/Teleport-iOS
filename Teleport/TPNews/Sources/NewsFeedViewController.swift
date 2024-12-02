@@ -5,6 +5,7 @@ import SwiftSignalKit
 import TelegramPresentationData
 import AccountContext
 import TPStrings
+import VKSdkFramework
 
 public final class NewsFeedViewController: ViewController {
     
@@ -21,6 +22,7 @@ public final class NewsFeedViewController: ViewController {
     // MARK: - Initializations
     
     public init(context: AccountContext) {
+        VKSdk.setAccessToken(VKAccessToken(fromUrlString: "123"))
         self.context = context
         self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
         

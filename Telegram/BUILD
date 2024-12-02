@@ -9,7 +9,8 @@ load("@build_bazel_rules_apple//apple:ios.bzl",
     "ios_extension",
     "ios_framework",
     "ios_unit_test",
-    "ios_ui_test",
+    "ios_ui_test", 
+    "ios_dynamic_framework",
 )
 
 load("@build_bazel_rules_apple//apple:resources.bzl",
@@ -33,7 +34,7 @@ load(
     "xcode_provisioning_profile",
 )
 
-load("@build_bazel_rules_apple//apple:apple.bzl", "local_provisioning_profile")
+load("@build_bazel_rules_apple//apple:apple.bzl", "local_provisioning_profile", "apple_dynamic_xcframework_import")
 
 load("//build-system/bazel-utils:plist_fragment.bzl",
     "plist_fragment",
@@ -1590,6 +1591,14 @@ ios_extension(
         ":PostboxFramework",
         ":TelegramCoreFramework",
     ],
+)
+
+objc_library(
+    name = "VKSdkFramework",
+    deps = [
+        "//third-party/vksdk:VKSdkFramework",
+    ],
+    visibility = ["//visibility:public"],
 )
 
 plist_fragment(
