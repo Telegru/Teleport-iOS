@@ -395,29 +395,29 @@
 "Date.ChatDateHeaderYear" = "%1$@ %2$@, %3$@";
 
 // Tour
-"Tour.Title1" = "Teleport";
+"Tour.Title1" = "Dal";
 "Tour.Text1" = "The world's **fastest** messaging app.\nIt is **free** and **secure**.";
 
 "Tour.Title2" = "Fast";
-"Tour.Text2" = "**Teleport** delivers messages\nfaster than any other application.";
+"Tour.Text2" = "**Dal** delivers messages\nfaster than any other application.";
 
 "Tour.Title3" = "Powerful";
-"Tour.Text3" = "**Teleport** has no limits on\nthe size of your media and chats.";
+"Tour.Text3" = "**Dal** has no limits on\nthe size of your media and chats.";
 
 "Tour.Title4" = "Secure";
-"Tour.Text4" = "**Teleport** keeps your messages\nsafe from hacker attacks.";
+"Tour.Text4" = "**Dal** keeps your messages\nsafe from hacker attacks.";
 
 "Tour.Title5" = "Cloud-Based";
-"Tour.Text5" = "**Teleport** lets you access your\nmessages from multiple devices.";
+"Tour.Text5" = "**Dal** lets you access your\nmessages from multiple devices.";
 
 "Tour.Title6" = "Free";
-"Tour.Text6" = "**Teleport** provides free unlimited\ncloud storage for chats and media.";
+"Tour.Text6" = "**Dal** provides free unlimited\ncloud storage for chats and media.";
 
 "Tour.StartButton" = "Start Messaging";
 
 // Login
 "Login.PhoneAndCountryHelp" = "Please confirm your country code\nand enter your phone number.";
-"Login.CodeSentInternal" = "We've sent the code to the **Teleport** app on your other device";
+"Login.CodeSentInternal" = "We've sent the code to the **Dal** app on your other device";
 "Login.HaveNotReceivedCodeInternal" = "Didn't get the code?";
 "Login.CodeSentSms" = "We've sent you an SMS with the code";
 "Login.Code" = "Code";
@@ -426,7 +426,7 @@
 "Login.CallRequestState3" = "Telegram dialed your number\n[Didn't get the code?]";
 "Login.EmailNotConfiguredError" = "An email account is required so that you can send us details about the error.\n\nPlease go to your device‘s settings > Passwords & Accounts > Add account and set up an email account.";
 "Login.EmailCodeSubject" = "%@, no code";
-"Login.EmailCodeBody" = "My phone number is:\n%@\nI can't get an activation code for Teleport.";
+"Login.EmailCodeBody" = "My phone number is:\n%@\nI can't get an activation code for Dal.";
 "Login.UnknownError" = "An error occurred, please try again later.";
 "Login.InvalidCodeError" = "Invalid code, please try again.";
 "Login.NetworkError" = "Please check your internet connection and try again.";
@@ -437,13 +437,13 @@
 "Login.InvalidLastNameError" = "Sorry, this last name can't be used.";
 
 "Login.InvalidPhoneEmailSubject" = "Invalid phone number: %@";
-"Login.InvalidPhoneEmailBody" = "I'm trying to use my mobile phone number: %1$@\nBut Teleport says it's invalid. Please help.\n\nApp version: %2$@\nOS version: %3$@\nLocale: %4$@\nMNC: %5$@";
+"Login.InvalidPhoneEmailBody" = "I'm trying to use my mobile phone number: %1$@\nBut Dal says it's invalid. Please help.\n\nApp version: %2$@\nOS version: %3$@\nLocale: %4$@\nMNC: %5$@";
 
 "Login.PhoneBannedEmailSubject" = "Banned phone number: %@";
-"Login.PhoneBannedEmailBody" = "I'm trying to use my mobile phone number: %1$@\nBut Teleport says it's banned. Please help.\n\nApp version: %2$@\nOS version: %3$@\nLocale: %4$@\nMNC: %5$@";
+"Login.PhoneBannedEmailBody" = "I'm trying to use my mobile phone number: %1$@\nBut Dal says it's banned. Please help.\n\nApp version: %2$@\nOS version: %3$@\nLocale: %4$@\nMNC: %5$@";
 
-"Login.PhoneGenericEmailSubject" = "Teleport iOS error: %@";
-"Login.PhoneGenericEmailBody" = "I'm trying to use my mobile phone number: %1$@\nBut Teleport shows an error. Please help.\n\nError: %2$@\nApp version: %3$@\nOS version: %4$@\nLocale: %5$@\nMNC: %6$@";
+"Login.PhoneGenericEmailSubject" = "Dal iOS error: %@";
+"Login.PhoneGenericEmailBody" = "I'm trying to use my mobile phone number: %1$@\nBut Dal shows an error. Please help.\n\nError: %2$@\nApp version: %3$@\nOS version: %4$@\nLocale: %5$@\nMNC: %6$@";
 
 
 "Login.PhoneTitle" = "Your Phone";
@@ -498,9 +498,9 @@
 "Contacts.TabTitle" = "Contacts";
 "Contacts.Title" = "Contacts";
 "Contacts.FailedToSendInvitesMessage" = "An error occurred.";
-"Contacts.AccessDeniedError" = "Teleport does not have access to your contacts";
-"Contacts.AccessDeniedHelpLandscape" = "Please go to your %@ Settings — Privacy — Contacts.\nThen select ON for Teleport.";
-"Contacts.AccessDeniedHelpPortrait" = "Please go to your %@ Settings — Privacy — Contacts. Then select ON for Teleport.";
+"Contacts.AccessDeniedError" = "Dal does not have access to your contacts";
+"Contacts.AccessDeniedHelpLandscape" = "Please go to your %@ Settings — Privacy — Contacts.\nThen select ON for Dal.";
+"Contacts.AccessDeniedHelpPortrait" = "Please go to your %@ Settings — Privacy — Contacts. Then select ON for Dal.";
 "Contacts.AccessDeniedHelpON" = "ON";
 "Contacts.InviteToTelegram" = "Invite to Telegram";
 "Contacts.InviteFriends" = "Invite Friends";
@@ -538,7 +538,7 @@
 "Conversation.Contact" = "Contact";
 "Conversation.BlockUser" = "Block User";
 "Conversation.UnblockUser" = "Unblock User";
-"Conversation.UnsupportedMedia" = "This message is not supported on your version of Teleport. Update the app to view:\nhttps://telegram.org/update";
+"Conversation.UnsupportedMedia" = "This message is not supported on your version of Dal. Update the app to view:\nhttps://telegram.org/update";
 "Conversation.EncryptionWaiting" = "Waiting for %@ to get online...";
 "Conversation.EncryptionProcessing" = "Exchanging encryption keys...";
 "Conversation.EmptyPlaceholder" = "No messages here yet...";
@@ -653,7 +653,7 @@
 
 // User Profile
 "Profile.CreateEncryptedChatError" = "An error occurred.";
-"Profile.CreateEncryptedChatOutdatedError" = "Cannot create a secret chat with %@.\n%@ is using an older version of Teleport and needs to update first.";
+"Profile.CreateEncryptedChatOutdatedError" = "Cannot create a secret chat with %@.\n%@ is using an older version of Dal and needs to update first.";
 "Profile.CreateNewContact" = "Create New Contact";
 "Profile.AddToExisting" = "Add to Existing Contact";
 "Profile.EncryptionKey" = "Encryption Key";
@@ -842,9 +842,9 @@
 "BroadcastListInfo.AddRecipient" = "Add Recipient";
 
 "Settings.LogoutConfirmationTitle" = "Log out?";
-"Settings.LogoutConfirmationText" = "\nNote that you can seamlessly use Teleport on all your devices at once.\n\nRemember, logging out kills all your Secret Chats.";
+"Settings.LogoutConfirmationText" = "\nNote that you can seamlessly use Dal on all your devices at once.\n\nRemember, logging out kills all your Secret Chats.";
 
-"Login.PadPhoneHelp" = "\nYou can use your main mobile number to log in to Teleport on all devices.\nDon't use your iPad's SIM number here — we'll need to send you an SMS.\n\nIs this number correct?\n{number}";
+"Login.PadPhoneHelp" = "\nYou can use your main mobile number to log in to Dal on all devices.\nDon't use your iPad's SIM number here — we'll need to send you an SMS.\n\nIs this number correct?\n{number}";
 "Login.PadPhoneHelpTitle" = "Your Number";
 
 "MessageTimer.Custom" = "Custom";
@@ -932,7 +932,7 @@
 "Activity.RecordingAudio" = "recording audio";
 "Activity.RecordingVideoMessage" = "recording video";
 
-"Compatibility.SecretMediaVersionTooLow" = "%@ is using an older version of Teleport, so secret photos will be shown in compatibility mode.\n\nOnce %@ updates Teleport, photos with timers for 1 minute or less will start working in 'Tap and hold to view' mode, and you will be notified whenever the other party takes a screenshot.";
+"Compatibility.SecretMediaVersionTooLow" = "%@ is using an older version of Dal, so secret photos will be shown in compatibility mode.\n\nOnce %@ updates Dal, photos with timers for 1 minute or less will start working in 'Tap and hold to view' mode, and you will be notified whenever the other party takes a screenshot.";
 
 "Contacts.GlobalSearch" = "Global Search";
 "Profile.Username" = "username";
@@ -1240,18 +1240,18 @@
 "PasscodeSettings.SimplePasscode" = "Simple Passcode";
 "PasscodeSettings.SimplePasscodeHelp" = "A simple passcode is a 4 digit number.";
 "PasscodeSettings.EncryptData" = "Encrypt Local Database";
-"PasscodeSettings.EncryptDataHelp" = "Experimental feature, use with caution. Encrypt your local Teleport data, using a derivative of your passcode as the key.";
+"PasscodeSettings.EncryptDataHelp" = "Experimental feature, use with caution. Encrypt your local Dal data, using a derivative of your passcode as the key.";
 
-"EnterPasscode.EnterTitle" = "Enter your Teleport Passcode";
+"EnterPasscode.EnterTitle" = "Enter your Dal Passcode";
 "EnterPasscode.ChangeTitle" = "Change Passcode";
-"EnterPasscode.EnterPasscode" = "Enter your Teleport Passcode";
+"EnterPasscode.EnterPasscode" = "Enter your Dal Passcode";
 "EnterPasscode.EnterNewPasscodeNew" = "Enter a passcode";
 "EnterPasscode.EnterNewPasscodeChange" = "Enter your new passcode";
 "EnterPasscode.RepeatNewPasscode" = "Re-enter your new passcode";
 "EnterPasscode.EnterCurrentPasscode" = "Enter your current passcode";
-"EnterPasscode.TouchId" = "Unlock Teleport";
+"EnterPasscode.TouchId" = "Unlock Dal";
 
-"DialogList.PasscodeLockHelp" = "Tap to lock Teleport";
+"DialogList.PasscodeLockHelp" = "Tap to lock Dal";
 
 "PasscodeSettings.AutoLock" = "Auto-Lock";
 "PasscodeSettings.AutoLock.Disabled" = "Disabled";
@@ -1270,32 +1270,32 @@
 
 "AccessDenied.Title" = "Please Allow Access";
 
-"AccessDenied.Contacts" = "Teleport messaging is based on your existing contact list.\n\nPlease go to Settings > Privacy > Contacts and set Teleport to ON.";
+"AccessDenied.Contacts" = "Dal messaging is based on your existing contact list.\n\nPlease go to Settings > Privacy > Contacts and set Dal to ON.";
 
-"AccessDenied.VoiceMicrophone" = "Teleport needs access to your microphone to send voice messages.\n\nPlease go to Settings > Privacy > Microphone and set Teleport to ON.";
+"AccessDenied.VoiceMicrophone" = "Dal needs access to your microphone to send voice messages.\n\nPlease go to Settings > Privacy > Microphone and set Dal to ON.";
 
-"AccessDenied.VideoMicrophone" = "Teleport needs access to your microphone to record sound in videos recording.\n\nPlease go to Settings > Privacy > Microphone and set Teleport to ON.";
+"AccessDenied.VideoMicrophone" = "Dal needs access to your microphone to record sound in videos recording.\n\nPlease go to Settings > Privacy > Microphone and set Dal to ON.";
 
-"AccessDenied.MicrophoneRestricted" = "Microphone access is restricted for Teleport.\n\nPlease go to Settings > General > Restrictions > Microphone and set Teleport to ON.";
+"AccessDenied.MicrophoneRestricted" = "Microphone access is restricted for Dal.\n\nPlease go to Settings > General > Restrictions > Microphone and set Dal to ON.";
 
 
-"AccessDenied.Camera" = "Teleport needs access to your camera to take photos and videos.\n\nPlease go to Settings > Privacy > Camera and set Teleport to ON.";
+"AccessDenied.Camera" = "Dal needs access to your camera to take photos and videos.\n\nPlease go to Settings > Privacy > Camera and set Dal to ON.";
 
-"AccessDenied.CameraRestricted" = "Camera access is restricted for Teleport.\n\nPlease go to Settings > General > Restrictions > Camera and set Teleport to ON.";
+"AccessDenied.CameraRestricted" = "Camera access is restricted for Dal.\n\nPlease go to Settings > General > Restrictions > Camera and set Dal to ON.";
 
 "AccessDenied.CameraDisabled" = "Camera access is globally restricted on your phone.\n\nPlease go to Settings > General > Restrictions and set Camera to ON";
 
-"AccessDenied.PhotosAndVideos" = "Teleport needs access to your photo library to send photos and videos.\n\nPlease go to Settings > Privacy > Photos and set Teleport to ON.";
+"AccessDenied.PhotosAndVideos" = "Dal needs access to your photo library to send photos and videos.\n\nPlease go to Settings > Privacy > Photos and set Dal to ON.";
 
-"AccessDenied.SaveMedia" = "Teleport needs access to your photo library to save photos and videos.\n\nPlease go to Settings > Privacy > Photos and set Teleport to ON.";
+"AccessDenied.SaveMedia" = "Dal needs access to your photo library to save photos and videos.\n\nPlease go to Settings > Privacy > Photos and set Dal to ON.";
 
-"AccessDenied.PhotosRestricted" = "Photo access is restricted for Teleport.\n\nPlease go to Settings > General > Restrictions > Photos and set Teleport to ON.";
+"AccessDenied.PhotosRestricted" = "Photo access is restricted for Dal.\n\nPlease go to Settings > General > Restrictions > Photos and set Dal to ON.";
 
-"AccessDenied.LocationDenied" = "Teleport needs access to your location so that you can share it with your contacts.\n\nPlease go to Settings > Privacy > Location Services and set Teleport to ON.";
+"AccessDenied.LocationDenied" = "Dal needs access to your location so that you can share it with your contacts.\n\nPlease go to Settings > Privacy > Location Services and set Dal to ON.";
 
-"AccessDenied.LocationDisabled" = "Teleport needs access to your location so that you can share it with your contacts.\n\nPlease go to Settings > Privacy > Location Services and set it to ON.";
+"AccessDenied.LocationDisabled" = "Dal needs access to your location so that you can share it with your contacts.\n\nPlease go to Settings > Privacy > Location Services and set it to ON.";
 
-"AccessDenied.LocationTracking" = "Teleport needs access to your location to show you on the map.\n\nPlease go to Settings > Privacy > Location Services and set it to ON.";
+"AccessDenied.LocationTracking" = "Dal needs access to your location to show you on the map.\n\nPlease go to Settings > Privacy > Location Services and set it to ON.";
 
 "AccessDenied.Settings" = "Settings";
 
@@ -1433,7 +1433,7 @@
 "Conversation.FileDropbox" = "Dropbox";
 
 "Conversation.FileOpenIn" = "Open in...";
-"Conversation.FileHowToText" = "To share files of any type, open them on your %@ (e.g. in your browser), tap **Open in...** or the action button and choose Teleport.";
+"Conversation.FileHowToText" = "To share files of any type, open them on your %@ (e.g. in your browser), tap **Open in...** or the action button and choose Dal.";
 
 "Map.LocationTitle" = "Location";
 "Map.OpenInMaps" = "Open in Maps";
@@ -1469,7 +1469,7 @@
 
 "ChangePhone.ErrorOccupied" = "The number %@ is already connected to a Telegram account. Please delete that account before migrating to the new number.";
 
-"AccessDenied.LocationTracking" = "Teleport needs access to your location to show you on the map.\n\nPlease go to Settings > Privacy > Location Services and set it to ON.";
+"AccessDenied.LocationTracking" = "Dal needs access to your location to show you on the map.\n\nPlease go to Settings > Privacy > Location Services and set it to ON.";
 
 "PrivacySettings.AuthSessions" = "Active Sessions";
 "AuthSessions.Title" = "Active Sessions";
@@ -1479,7 +1479,7 @@
 "AuthSessions.TerminateSession" = "Terminate session";
 "AuthSessions.OtherSessions" = "ACTIVE SESSIONS";
 "AuthSessions.EmptyTitle" = "No other sessions";
-"AuthSessions.EmptyText" = "You can log in to Teleport from other mobile, tablet and desktop devices, using the same phone number. All your data will be instantly synchronized.";
+"AuthSessions.EmptyText" = "You can log in to Dal from other mobile, tablet and desktop devices, using the same phone number. All your data will be instantly synchronized.";
 "AuthSessions.AppUnofficial" = "(ID: %@)";
 
 "WebPreview.GettingLinkInfo" = "Getting Link Info...";
@@ -1492,7 +1492,7 @@
 
 "GroupInfo.InviteLink.Title" = "Invite Link";
 "GroupInfo.InviteLink.LinkSection" = "LINK";
-"GroupInfo.InviteLink.Help" = "Anyone who has Teleport installed will be able to join your group by following this link.";
+"GroupInfo.InviteLink.Help" = "Anyone who has Dal installed will be able to join your group by following this link.";
 "GroupInfo.InviteLink.CopyLink" = "Copy Link";
 "GroupInfo.InviteLink.RevokeLink" = "Revoke Link";
 "GroupInfo.InviteLink.ShareLink" = "Share Link";
@@ -1652,7 +1652,7 @@
 
 "Channel.Setup.Title" = "Channel";
 
-"Channel.Username.CreatePublicLinkHelp" = "People can share this link with others and find your channel using Teleport search.";
+"Channel.Username.CreatePublicLinkHelp" = "People can share this link with others and find your channel using Dal search.";
 "Channel.Username.CreatePrivateLinkHelp" = "People can join your channel by following this link. You can revoke the link at any time.";
 
 "Channel.Setup.PublicNoLink" = "Please choose a link for your public channel, so that people can find it in search and share with others.\n\nIf you're not interested, we suggest creating a private channel instead.";
@@ -1778,7 +1778,7 @@
 
 "Group.Management.AddModeratorHelp" = "You can add admins to help you manage your group.";
 
-"Watch.AppName" = "Teleport";
+"Watch.AppName" = "Dal";
 "Watch.Compose.AddContact" = "Choose Contact";
 "Watch.Compose.CreateMessage" = "Create Message";
 "Watch.Compose.CurrentLocation" = "Current Location";
@@ -1827,9 +1827,9 @@
 "Watch.Stickers.StickerPacks" = "Sticker Sets";
 
 "Watch.Location.Current" = "Current Location";
-"Watch.Location.Access" = "Allow Teleport to access location on your phone";
+"Watch.Location.Access" = "Allow Dal to access location on your phone";
 
-"Watch.AuthRequired" = "Log in to Teleport on your phone to get started";
+"Watch.AuthRequired" = "Log in to Dal on your phone to get started";
 
 "Watch.NoConnection" = "No Connection";
 "Watch.ConnectionDescription" = "Your Watch needs to be connected for the app to work";
@@ -1876,7 +1876,7 @@
 "Cache.ClearProgress" = "Please Wait...";
 "Cache.ClearEmpty" = "Empty";
 "Cache.ByPeerHeader" = "CHATS";
-"Cache.Indexing" = "Teleport is calculating current cache size.\nThis can take a few minutes.";
+"Cache.Indexing" = "Dal is calculating current cache size.\nThis can take a few minutes.";
 
 "ExplicitContent.AlertTitle" = "Sorry";
 "ExplicitContent.AlertChannel" = "You can't access this channel because it violates App Store rules.";
@@ -1957,7 +1957,7 @@
 "PrivacyLastSeenSettings.GroupsAndChannelsHelp" = "Change who can add you to groups and channels.";
 "MusicPlayer.VoiceNote" = "Voice Message";
 
-"Watch.Microphone.Access" = "Allow Teleport to access the microphone on your phone";
+"Watch.Microphone.Access" = "Allow Dal to access the microphone on your phone";
 
 "Settings.AppleWatch" = "Apple Watch";
 "AppleWatch.Title" = "Apple Watch";
@@ -2050,7 +2050,7 @@
 "Group.Setup.TypePublicHelp" = "Public groups can be found in search, chat history is available to everyone and anyone can join.";
 "Group.Setup.TypePrivateHelp" = "Private groups can only be joined if you were invited or have an invite link.";
 
-"Group.Username.CreatePublicLinkHelp" = "People can share this link with others and find your group using Teleport search.";
+"Group.Username.CreatePublicLinkHelp" = "People can share this link with others and find your group using Dal search.";
 "Group.Username.CreatePrivateLinkHelp" = "People can join your group by following this link. You can revoke the link at any time.";
 
 "Conversation.PinMessageAlertGroup" = "Pin this message and notify all members of the group?";
@@ -2266,7 +2266,7 @@ Unused sets are archived when you add more.";
 
 "Widget.AuthRequired" = "Log in to Telegram";
 "Widget.NoUsers" = "Start messaging to see your friends here";
-"Widget.GalleryTitle" = "Teleport";
+"Widget.GalleryTitle" = "Dal";
 "Widget.GalleryDescription" = "Select chats";
 
 "ShareMenu.CopyShareLinkGame" = "Copy link to game";
@@ -2291,11 +2291,11 @@ Unused sets are archived when you add more.";
 "Conversation.JumpToDate" = "Jump To Date";
 "Conversation.AddToReadingList" = "Add to Reading List";
 
-"AccessDenied.CallMicrophone" = "Teleport needs access to your microphone for voice calls.\n\nPlease go to Settings > Privacy > Microphone and set Teleport to ON.";
+"AccessDenied.CallMicrophone" = "Dal needs access to your microphone for voice calls.\n\nPlease go to Settings > Privacy > Microphone and set Dal to ON.";
 
 "Call.EncryptionKey.Title" = "Encryption Key";
 
-"Application.Name" = "Teleport";
+"Application.Name" = "Dal";
 "DialogList.Pin" = "Pin";
 "DialogList.Unpin" = "Unpin";
 "DialogList.PinLimitError" = "Sorry, you can pin no more than %@ chats to the top.";
@@ -2623,8 +2623,8 @@ Unused sets are archived when you add more.";
 "SharedMedia.CategoryLinks" = "Links";
 "SharedMedia.CategoryOther" = "Audio";
 
-"AccessDenied.VideoMessageCamera" = "Teleport needs access to your camera to send video messages.\n\nPlease go to Settings > Privacy > Camera and set Teleport to ON.";
-"AccessDenied.VideoMessageMicrophone" = "Teleport needs access to your microphone to send video messages.\n\nPlease go to Settings > Privacy > Microphone and set Teleport to ON.";
+"AccessDenied.VideoMessageCamera" = "Dal needs access to your camera to send video messages.\n\nPlease go to Settings > Privacy > Camera and set Dal to ON.";
+"AccessDenied.VideoMessageMicrophone" = "Dal needs access to your microphone to send video messages.\n\nPlease go to Settings > Privacy > Microphone and set Dal to ON.";
 
 "ChatSettings.AutomaticVideoMessageDownload" = "AUTOMATIC VIDEO MESSAGE DOWNLOAD";
 
@@ -2650,7 +2650,7 @@ Unused sets are archived when you add more.";
 
 "Privacy.PaymentsTitle" = "PAYMENTS";
 "Privacy.PaymentsClearInfo" = "Clear payment & shipping info";
-"Privacy.PaymentsClearInfoHelp" = "You can delete your shipping info and instruct all payment providers to remove your saved credit cards. Note that Teleport never stores your credit card data.";
+"Privacy.PaymentsClearInfoHelp" = "You can delete your shipping info and instruct all payment providers to remove your saved credit cards. Note that Dal never stores your credit card data.";
 "Privacy.PaymentsClear.PaymentInfo" = "Payment Info";
 "Privacy.PaymentsClear.ShippingInfo" = "Shipping Info";
 
@@ -2865,10 +2865,10 @@ Unused sets are archived when you add more.";
 "Group.Members.AddMemberBotErrorNotAllowed" = "Sorry, you don't have the necessary permissions to add bots to this group.";
 
 "Privacy.Calls.P2P" = "Peer-to-Peer";
-"Privacy.Calls.P2PHelp" = "Disabling peer-to-peer will relay all calls through Teleport servers to avoid revealing your IP address, but will slightly decrease audio quality.";
+"Privacy.Calls.P2PHelp" = "Disabling peer-to-peer will relay all calls through Dal servers to avoid revealing your IP address, but will slightly decrease audio quality.";
 
 "Privacy.Calls.Integration" = "iOS Call Integration";
-"Privacy.Calls.IntegrationHelp" = "iOS Call Integration shows Teleport calls on the lock screen and in the system's call history. If iCloud sync is enabled, your call history is shared with Apple.";
+"Privacy.Calls.IntegrationHelp" = "iOS Call Integration shows Dal calls on the lock screen and in the system's call history. If iCloud sync is enabled, your call history is shared with Apple.";
 
 "Call.ReportPlaceholder" = "What went wrong?";
 "Call.ReportIncludeLog" = "Send technical information";
@@ -2901,13 +2901,13 @@ Unused sets are archived when you add more.";
 "SocksProxySetup.UseForCallsHelp" = "Proxy servers may degrade the quality of your calls.";
 
 "InviteText.URL" = "https://telegram.org/dl";
-"InviteText.SingleContact" = "Hey, I'm using Teleport to chat. Join me! Download it here: %@";
-"InviteText.ContactsCountText_1" = "Hey, I'm using Teleport to chat. Join me! Download it here: {url}";
-"InviteText.ContactsCountText_2" = "Hey, I'm using Teleport to chat – and so are 2 of our other contacts. Join us! Download it here: {url}";
-"InviteText.ContactsCountText_3_10" = "Hey, I'm using Teleport to chat – and so are %@ of our other contacts. Join us! Download it here: {url}";
-"InviteText.ContactsCountText_any" = "Hey, I'm using Teleport to chat – and so are %@ of our other contacts. Join us! Download it here: {url}";
-"InviteText.ContactsCountText_many" = "Hey, I'm using Teleport to chat – and so are %@ of our other contacts. Join us! Download it here: {url}";
-"InviteText.ContactsCountText_0" = "Hey, I'm using Teleport to chat. Join me! Download it here: {url}";
+"InviteText.SingleContact" = "Hey, I'm using Dal to chat. Join me! Download it here: %@";
+"InviteText.ContactsCountText_1" = "Hey, I'm using Dal to chat. Join me! Download it here: {url}";
+"InviteText.ContactsCountText_2" = "Hey, I'm using Dal to chat – and so are 2 of our other contacts. Join us! Download it here: {url}";
+"InviteText.ContactsCountText_3_10" = "Hey, I'm using Dal to chat – and so are %@ of our other contacts. Join us! Download it here: {url}";
+"InviteText.ContactsCountText_any" = "Hey, I'm using Dal to chat – and so are %@ of our other contacts. Join us! Download it here: {url}";
+"InviteText.ContactsCountText_many" = "Hey, I'm using Dal to chat – and so are %@ of our other contacts. Join us! Download it here: {url}";
+"InviteText.ContactsCountText_0" = "Hey, I'm using Dal to chat. Join me! Download it here: {url}";
 
 "Invite.LargeRecipientsCountWarning" = "Please note that it may take some time for your device to send all of these invitations";
 
@@ -3063,12 +3063,12 @@ Unused sets are archived when you add more.";
 
 "NotificationSettings.ContactJoined" = "New Contacts";
 
-"AccessDenied.LocationAlwaysDenied" = "If you'd like to share your Live Location with friends, Teleport needs location access when the app is in the background.\n\nPlease go to Settings > Privacy > Location Services and set Teleport to Always.";
+"AccessDenied.LocationAlwaysDenied" = "If you'd like to share your Live Location with friends, Dal needs location access when the app is in the background.\n\nPlease go to Settings > Privacy > Location Services and set Dal to Always.";
 
 "UserInfo.UnblockConfirmation" = "Unblock %@?";
 
 "Login.BannedPhoneSubject" = "Banned phone number: %@";
-"Login.BannedPhoneBody" = "I'm trying to use my mobile phone number: %@\nBut Teleport says it's banned. Please help.";
+"Login.BannedPhoneBody" = "I'm trying to use my mobile phone number: %@\nBut Dal says it's banned. Please help.";
 
 "Conversation.StopLiveLocation" = "Stop Sharing";
 
@@ -3151,16 +3151,16 @@ Unused sets are archived when you add more.";
 
 "Privacy.PaymentsClearInfoDoneHelp" = "Payment & shipping info cleared.";
 
-"InfoPlist.NSContactsUsageDescription" = "Teleport will continuously upload your contacts to its heavily encrypted cloud servers to let you connect with your friends across all your devices.";
-"InfoPlist.NSLocationWhenInUseUsageDescription" = "When you send your location to your friends, Teleport needs access to show them a map.";
+"InfoPlist.NSContactsUsageDescription" = "Dal will continuously upload your contacts to its heavily encrypted cloud servers to let you connect with your friends across all your devices.";
+"InfoPlist.NSLocationWhenInUseUsageDescription" = "When you send your location to your friends, Dal needs access to show them a map.";
 "InfoPlist.NSCameraUsageDescription" = "We need this so that you can take and share photos and videos, as well as make video calls.";
 "InfoPlist.NSPhotoLibraryUsageDescription" = "We need this so that you can share photos and videos from your photo library.";
 "InfoPlist.NSPhotoLibraryAddUsageDescription" = "We need this so that you can save photos and videos to your photo library.";
 "InfoPlist.NSMicrophoneUsageDescription" = "We need this so that you can record and share voice messages and videos with sound.";
 "InfoPlist.NSSiriUsageDescription" = "You can use Siri to send messages.";
-"InfoPlist.NSLocationAlwaysAndWhenInUseUsageDescription" = "When you choose to share your Live Location with friends in a chat, Teleport needs background access to your location to keep them updated for the duration of the live sharing.";
-"InfoPlist.NSLocationAlwaysUsageDescription" = "When you choose to share your live location with friends in a chat, Teleport needs background access to your location to keep them updated for the duration of the live sharing. You also need this to send locations from an Apple Watch.";
-"InfoPlist.NSLocationWhenInUseUsageDescription" = "When you send your location to your friends, Teleport needs access to show them a map.";
+"InfoPlist.NSLocationAlwaysAndWhenInUseUsageDescription" = "When you choose to share your Live Location with friends in a chat, Dal needs background access to your location to keep them updated for the duration of the live sharing.";
+"InfoPlist.NSLocationAlwaysUsageDescription" = "When you choose to share your live location with friends in a chat, Dal needs background access to your location to keep them updated for the duration of the live sharing. You also need this to send locations from an Apple Watch.";
+"InfoPlist.NSLocationWhenInUseUsageDescription" = "When you send your location to your friends, Dal needs access to show them a map.";
 "InfoPlist.NSFaceIDUsageDescription" = "You can use Face ID to unlock the app.";
 
 "Privacy.Calls.P2PNever" = "Never";
@@ -3582,15 +3582,15 @@ Unused sets are archived when you add more.";
 
 "Passport.NotLoggedInMessage" = "Please log in to your account to use Telegram Passport";
 
-"Update.Title" = "Teleport Update";
-"Update.AppVersion" = "Teleport %@";
-"Update.UpdateApp" = "Update Teleport";
+"Update.Title" = "Dal Update";
+"Update.AppVersion" = "Dal %@";
+"Update.UpdateApp" = "Update Dal";
 "Update.Skip" = "Skip";
 
 "ReportPeer.ReasonCopyright" = "Copyright";
 
 "PrivacySettings.DataSettings" = "Data Settings";
-"PrivacySettings.DataSettingsHelp" = "Control which of your data is stored in the cloud and used by Teleport to enable advanced features.";
+"PrivacySettings.DataSettingsHelp" = "Control which of your data is stored in the cloud and used by Dal to enable advanced features.";
 
 "PrivateDataSettings.Title" = "Data Settings";
 "Privacy.ChatsTitle" = "CHATS";
@@ -3882,7 +3882,7 @@ Unused sets are archived when you add more.";
 "Permissions.Skip" = "Skip";
 
 "Permissions.ContactsTitle.v0" = "Sync Your Contacts";
-"Permissions.ContactsText.v0" = "See who's on Teleport and switch seamlessly, without having to \"add\" your friends.";
+"Permissions.ContactsText.v0" = "See who's on Dal and switch seamlessly, without having to \"add\" your friends.";
 "Permissions.ContactsAllow.v0" = "Allow Access";
 "Permissions.ContactsAllowInSettings.v0" = "Allow in Settings";
 
@@ -3893,7 +3893,7 @@ Unused sets are archived when you add more.";
 "Permissions.NotificationsAllowInSettings.v0" = "Turn ON in Settings";
 
 "Permissions.CellularDataTitle.v0" = "Enable Cellular Data";
-"Permissions.CellularDataText.v0" = "Don't worry, Teleport keeps network usage to a minimum. You can further control this in Settings > Data and Storage.";
+"Permissions.CellularDataText.v0" = "Don't worry, Dal keeps network usage to a minimum. You can further control this in Settings > Data and Storage.";
 "Permissions.CellularDataAllowInSettings.v0" = "Turn ON in Settings";
 
 "Permissions.SiriTitle.v0" = "Turn ON Siri";
@@ -3904,11 +3904,11 @@ Unused sets are archived when you add more.";
 "Permissions.PrivacyPolicy" = "Privacy Policy";
 
 "Contacts.PermissionsTitle" = "Access to Contacts";
-"Contacts.PermissionsText" = "Please allow Teleport access to your phonebook to seamlessly find all your friends.";
+"Contacts.PermissionsText" = "Please allow Dal access to your phonebook to seamlessly find all your friends.";
 "Contacts.PermissionsAllow" = "Allow Access";
 "Contacts.PermissionsAllowInSettings" = "Allow in Settings";
 "Contacts.PermissionsSuppressWarningTitle" = "Keep contacts disabled?";
-"Contacts.PermissionsSuppressWarningText" = "You won't know when your friends join Teleport and become available to chat. We recommend enabling access to contacts in Settings.";
+"Contacts.PermissionsSuppressWarningText" = "You won't know when your friends join Dal and become available to chat. We recommend enabling access to contacts in Settings.";
 "Contacts.PermissionsKeepDisabled" = "Keep Disabled";
 "Contacts.PermissionsEnable" = "Enable";
 
@@ -3920,7 +3920,7 @@ Unused sets are archived when you add more.";
 "Notifications.PermissionsAllowInSettings" = "Turn ON in Settings";
 "Notifications.PermissionsOpenSettings" = "Open Settings";
 "Notifications.PermissionsSuppressWarningTitle" = "Keep notifications disabled?";
-"Notifications.PermissionsSuppressWarningText" = "You may miss important messages on Teleport due to your current settings.\n\nFor better results, enable alerts or banners and try muting certain chats or chat types in Teleport settings.";
+"Notifications.PermissionsSuppressWarningText" = "You may miss important messages on Dal due to your current settings.\n\nFor better results, enable alerts or banners and try muting certain chats or chat types in Dal settings.";
 "Notifications.PermissionsKeepDisabled" = "Keep Disabled";
 "Notifications.PermissionsEnable" = "Enable";
 
@@ -3977,8 +3977,8 @@ Unused sets are archived when you add more.";
 
 "AttachmentMenu.WebSearch" = "Web Search";
 
-"Conversation.UnsupportedMediaPlaceholder" = "This message is not supported on your version of Teleport. Please update to the latest version.";
-"Conversation.UpdateTelegram" = "UPDATE TELEPORT";
+"Conversation.UnsupportedMediaPlaceholder" = "This message is not supported on your version of Dal. Please update to the latest version.";
+"Conversation.UpdateTelegram" = "UPDATE Dal";
 
 "Cache.LowDiskSpaceText" = "Your phone has run out of available storage. Please free some space to download or upload media.";
 
@@ -7292,8 +7292,8 @@ Sorry for the inconvenience.";
 "Contacts.QrCode.MyCode" = "My QR Code";
 "Contacts.QrCode.NoCodeFound" = "No valid QR code found in the image. Please try again.";
 
-"AccessDenied.QrCode" = "Teleport needs access to your photo library to scan QR codes.\n\nOpen your device's Settings > Privacy > Photos and set Teleport to ON.";
-"AccessDenied.QrCamera" = "Teleport needs access to your camera to scan QR codes.\n\nOpen your device's Settings > Privacy > Camera and set Teleport to ON.";
+"AccessDenied.QrCode" = "Dal needs access to your photo library to scan QR codes.\n\nOpen your device's Settings > Privacy > Photos and set Dal to ON.";
+"AccessDenied.QrCamera" = "Dal needs access to your camera to scan QR codes.\n\nOpen your device's Settings > Privacy > Camera and set Dal to ON.";
 
 "Share.ShareToInstagramStories" = "Share to Instagram Stories";
 
@@ -7406,8 +7406,8 @@ Sorry for the inconvenience.";
 "Attachment.MediaAccessText" = "Share an unlimited number of photos and videos of up to 2 GB each.";
 "Attachment.MediaAccessStoryText" = "Share an unlimited number of photos and videos of up to 2 GB each.";
 
-"Attachment.LimitedMediaAccessText" = "You have limited Teleport from accessing all of your photos.";
-"Attachment.CameraAccessText" = "Teleport needs camera access so that you can take photos and videos.";
+"Attachment.LimitedMediaAccessText" = "You have limited Dal from accessing all of your photos.";
+"Attachment.CameraAccessText" = "Dal needs camera access so that you can take photos and videos.";
 "Attachment.Manage" = "Manage";
 
 "Attachment.OpenSettings" = "Go to Settings";
@@ -7442,7 +7442,7 @@ Sorry for the inconvenience.";
 "DownloadList.RemoveFileAlertRemove" = "Remove";
 
 "DownloadList.ClearAlertTitle" = "Downloaded Files";
-"DownloadList.ClearAlertText" = "Teleport allows to store all received and sent\ndocuments in the cloud and save storage\nspace on your device.";
+"DownloadList.ClearAlertText" = "Dal allows to store all received and sent\ndocuments in the cloud and save storage\nspace on your device.";
 
 "ChatList.Search.FilterDownloads" = "Downloads";
 
@@ -7451,7 +7451,7 @@ Sorry for the inconvenience.";
 "LiveStream.ViewerCount_any" = "%@ viewers";
 "LiveStream.Watching" = "watching";
 
-"LiveStream.NoSignalAdminText" = "Oops! Teleport doesn't see any stream\ncoming from your streaming app.\n\nPlease make sure you entered the right Server\nURL and Stream Key in your app.";
+"LiveStream.NoSignalAdminText" = "Oops! Dal doesn't see any stream\ncoming from your streaming app.\n\nPlease make sure you entered the right Server\nURL and Stream Key in your app.";
 "LiveStream.NoSignalUserText" = "%@ is currently not broadcasting live\nstream data to Telegram.";
 
 "LiveStream.ViewCredentials" = "View Stream Key";
@@ -10148,7 +10148,7 @@ Sorry for the inconvenience.";
 "NameColor.ChatPreview.ReplyText.Channel" = "Reply to your channel message";
 "NameColor.ChatPreview.MessageText.Account" = "Your name and replies to your messages will be shown in the selected color.";
 "NameColor.ChatPreview.MessageText.Channel" = "The name of your channek and replies to its messages will be shown in the selected color.";
-"NameColor.ChatPreview.LinkSite" = "Teleport";
+"NameColor.ChatPreview.LinkSite" = "Dal";
 "NameColor.ChatPreview.LinkTitle" = "Link Preview";
 "NameColor.ChatPreview.LinkText" = "Your selected color will also tint the link preview.";
 "NameColor.ChatPreview.Description.Account" = "You can choose an individual color to tint your name, the links you send, and replies to your messages.";
@@ -10830,7 +10830,7 @@ Sorry for the inconvenience.";
 
 "Channel.Appearance.ExampleReplyText" = "Reply to your channel";
 "Channel.Appearance.ExampleText" = "The color you select will be used for the channel's name";
-"Channel.Appearance.ExampleLinkWebsite" = "Teleport";
+"Channel.Appearance.ExampleLinkWebsite" = "Dal";
 "Channel.Appearance.ExampleLinkTitle" = "Link Preview";
 "Channel.Appearance.ExampleLinkText" = "This preview will also be tinted.";
 
