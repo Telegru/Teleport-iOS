@@ -11365,7 +11365,7 @@ Sorry for the inconvenience.";
 
 "Premium.Business.Location.Title" = "Location";
 "Premium.Business.Location.Text" = "Display the location of your business on your account.";
-            
+
 "Premium.Business.Hours.Title" = "Opening Hours";
 "Premium.Business.Hours.Text" = "Show to your customers when you are open for business.";
 
@@ -13218,3 +13218,12 @@ Sorry for the inconvenience.";
 "Gift.Convert.Period.Unavailable.Text" = "Sorry, you can't convert this gift.\n\nStars can only be claimed within %@ after receiving a gift.";
 "Gift.Convert.Period.Unavailable.Days_1" = "%@ day";
 "Gift.Convert.Period.Unavailable.Days_any" = "%@ days";
+
+"Settings.DalSettings" = "Dahl Settings";
+"DalSettings.HidePublishStoriesButton" = "Hide Publish Stories Button";
+"DalSettings.HideStories" = "Hide Stories";
+"DalSettings.HideViewedStories" = "Hide Viewed Stories";
+"DalSettings.HidePhone" = "Hide Phone Number";
+"DalSettings.HideActivity" = "No Read Receipts";
+"DalSettings.PrivacyHeader" = "Privacy";
+"DalSettings.StoriesHeader" = "Stories";
