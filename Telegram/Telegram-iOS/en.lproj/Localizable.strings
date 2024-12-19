@@ -13225,5 +13225,6 @@ Sorry for the inconvenience.";
 "DalSettings.HideViewedStories" = "Hide Viewed Stories";
 "DalSettings.HidePhone" = "Hide Phone Number";
 "DalSettings.HideActivity" = "No Read Receipts";
+"DalSettings.OfflineMode" = "Offline mode";
 "DalSettings.PrivacyHeader" = "Privacy";
 "DalSettings.StoriesHeader" = "Stories";

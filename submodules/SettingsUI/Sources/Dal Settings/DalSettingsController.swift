@@ -24,7 +24,8 @@ private final class DalSettingsArguments {
     let updateHideStories: (Bool) -> Void
     let updateHideViewedStories: (Bool) -> Void
     let updateHidePhone: (Bool) -> Void
-    let updateHideReadTime: (Bool) -> Void
+    let updateDisableReadHistory: (Bool) -> Void
+    let updateOfflineMode: (Bool) -> Void
 
     init(
         context: AccountContext,
@@ -34,7 +35,8 @@ private final class DalSettingsArguments {
         updateHideStories: @escaping (Bool) -> Void,
         updateHideViewedStories: @escaping (Bool) -> Void,
         updateHidePhone: @escaping (Bool) -> Void,
-        updateHideReadTime: @escaping (Bool) -> Void
+        updateDisableReadHistory: @escaping (Bool) -> Void,
+        updateOfflineMode: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.presentController = presentController
@@ -43,7 +45,8 @@ private final class DalSettingsArguments {
         self.updateHideStories = updateHideStories
         self.updateHideViewedStories = updateHideViewedStories
         self.updateHidePhone = updateHidePhone
-        self.updateHideReadTime = updateHideReadTime
+        self.updateDisableReadHistory = updateDisableReadHistory
+        self.updateOfflineMode = updateOfflineMode
     }
 }
 
@@ -57,7 +60,8 @@ public enum DalSettingsEntryTag: ItemListItemTag {
     case hideStories
     case hideViewedStories
     case hidePhone
-    case hideReadTime
+    case disableReadHistory
+    case offlineMode
 
     public func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? DalSettingsEntryTag, self == other {
@@ -79,7 +83,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     
     // Раздел Конфиденциальность
     case hidePhone(PresentationTheme, String, Bool)
-    case hideReadTime(PresentationTheme, String, Bool)
+    case disableReadHistory(PresentationTheme, String, Bool)
+    case offlineMode(PresentationTheme, String, Bool)
 
     var section: ItemListSectionId {
         switch self {
@@ -88,7 +93,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsSection.stories.rawValue
             
             // Приватность находится в секции confidentiality
-        case .privacyHeader, .hidePhone, .hideReadTime:
+        case .privacyHeader, .hidePhone, .disableReadHistory, .offlineMode:
             return DalSettingsSection.confidentiality.rawValue
         }
     }
@@ -107,8 +112,10 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return 4
         case .hidePhone:
             return 5
-        case .hideReadTime:
+        case .disableReadHistory:
             return 6
+        case .offlineMode:
+            return 7
         }
     }
 
@@ -122,8 +129,10 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.hideViewedStories
         case .hidePhone:
             return DalSettingsEntryTag.hidePhone
-        case .hideReadTime:
-            return DalSettingsEntryTag.hideReadTime
+        case .offlineMode:
+            return DalSettingsEntryTag.offlineMode
+        case .disableReadHistory:
+            return DalSettingsEntryTag.disableReadHistory
         case .storiesHeader, .privacyHeader:
             return nil
         }
@@ -167,8 +176,17 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case let .hideReadTime(lhsTheme, lhsText, lhsValue):
-            if case let .hideReadTime(rhsTheme, rhsText, rhsValue) = rhs,
+        case let .disableReadHistory(lhsTheme, lhsText, lhsValue):
+            if case let .disableReadHistory(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case let .offlineMode(lhsTheme, lhsText, lhsValue):
+            if case let .offlineMode(rhsTheme, rhsText, rhsValue) = rhs,
                lhsTheme === rhsTheme,
                lhsText == rhsText,
                lhsValue == rhsValue {
@@ -241,7 +259,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 },
                 tag: self.tag
             )
-        case let .hideReadTime(_, text, value):
+        case let .disableReadHistory(_, text, value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
                 title: text,
@@ -249,7 +267,19 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section,
                 style: .blocks,
                 updated: { updatedValue in
-                    arguments.updateHideReadTime(updatedValue)
+                    arguments.updateDisableReadHistory(updatedValue)
+                },
+                tag: self.tag
+            )
+        case let .offlineMode(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateOfflineMode(updatedValue)
                 },
                 tag: self.tag
             )
@@ -274,7 +304,8 @@ private func dalSettingsEntries(
     hideStories: Bool,
     hideViewedStories: Bool,
     hidePhone: Bool,
-    hideReadTime: Bool,
+    disableReadHistory: Bool,
+    offlintMode: Bool,
     presentationData: PresentationData
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
@@ -303,10 +334,15 @@ private func dalSettingsEntries(
         presentationData.strings.DalSettings_HidePhone,
         hidePhone
     ))
-    entries.append(.hideReadTime(
+    entries.append(.disableReadHistory(
         presentationData.theme,
         presentationData.strings.DalSettings_HideActivity,
-        hideReadTime
+        disableReadHistory
+    ))
+    entries.append(.offlineMode(
+        presentationData.theme,
+        presentationData.strings.DalSettings_OfflineMode,
+        offlintMode
     ))
     
     return entries
@@ -364,27 +400,25 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
                 }
             ).start()
         },
-        updateHideReadTime: { value in
-            let currentPrivacy = Promise<AccountPrivacySettings>()
-            currentPrivacy.set(context.engine.privacy.requestAccountPrivacySettings())
-                        
-            let _ = (currentPrivacy.get()
-            |> take(1)
-            |> mapToSignal { current in
-                var settings = current.globalSettings
-                settings.hideReadTime = value
-                return context.engine.privacy.updateGlobalPrivacySettings(settings: settings)
-            }
-            |> deliverOnMainQueue).startStandalone(completed: {
-                let _ = updateDalSettingsInteractively(
-                    accountManager: context.sharedContext.accountManager,
-                    { settings in
-                        var settings = settings
-                        settings.hideReadTime = value
-                        return settings
-                    }
-                ).start()
-            })
+        updateDisableReadHistory: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.disableReadHistory = value
+                    return settings
+                }
+            ).start()
+        },
+        updateOfflineMode: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.offlineMode = value
+                    return settings
+                }
+            ).start()
         }
     )
     
@@ -408,7 +442,8 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
             hideStories: dalSettings.hideStories,
             hideViewedStories: dalSettings.hideViewedStories,
             hidePhone: dalSettings.hidePhone,
-            hideReadTime: dalSettings.hideReadTime,
+            disableReadHistory: dalSettings.disableReadHistory,
+            offlintMode: dalSettings.offlineMode,
             presentationData: presentationData
         )
         

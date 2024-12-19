@@ -12,15 +12,17 @@ public struct DalSettings: Codable, Equatable {
     
     // Раздел Конфиденциальность
     public var hidePhone: Bool
-    public var hideReadTime: Bool
-    
+    public var disableReadHistory: Bool
+    public var offlineMode: Bool
+
     public static var defaultSettings: DalSettings {
         return DalSettings(
             hidePublishStoriesButton: false,
             hideStories: false,
             hideViewedStories: false,
             hidePhone: false,
-            hideReadTime: false
+            disableReadHistory: false,
+            offlineMode: false
         )
     }
     
@@ -29,13 +31,15 @@ public struct DalSettings: Codable, Equatable {
         hideStories: Bool,
         hideViewedStories: Bool,
         hidePhone: Bool,
-        hideReadTime: Bool
+        disableReadHistory: Bool,
+        offlineMode: Bool
     ) {
         self.hidePublishStoriesButton = hidePublishStoriesButton
         self.hideStories = hideStories
         self.hideViewedStories = hideViewedStories
         self.hidePhone = hidePhone
-        self.hideReadTime = hideReadTime
+        self.disableReadHistory = disableReadHistory
+        self.offlineMode = offlineMode
     }
     
     public init(from decoder: Decoder) throws {
@@ -46,7 +50,8 @@ public struct DalSettings: Codable, Equatable {
         self.hideViewedStories = (try container.decodeIfPresent(Int32.self, forKey: "hideViewedStories") ?? 0) != 0
         // Раздел Конфиденциальность
         self.hidePhone = (try container.decodeIfPresent(Int32.self, forKey: "hidePhone") ?? 0) != 0
-        self.hideReadTime = (try container.decodeIfPresent(Int32.self, forKey: "hideReadTime") ?? 0) != 0
+        self.disableReadHistory = (try container.decodeIfPresent(Int32.self, forKey: "disableReadHistory") ?? 0) != 0
+        self.offlineMode = (try container.decodeIfPresent(Int32.self, forKey: "offlineMode") ?? 0) != 0
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -57,7 +62,8 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.hideViewedStories ? 1 : 0) as Int32, forKey: "hideViewedStories")
         // Раздел Конфиденциальность
         try container.encode((self.hidePhone ? 1 : 0) as Int32, forKey: "hidePhone")
-        try container.encode((self.hideReadTime ? 1 : 0) as Int32, forKey: "hideReadTime")
+        try container.encode((self.disableReadHistory ? 1 : 0) as Int32, forKey: "disableReadHistory")
+        try container.encode((self.offlineMode ? 1 : 0) as Int32, forKey: "offlineMode")
     }
 }
 
