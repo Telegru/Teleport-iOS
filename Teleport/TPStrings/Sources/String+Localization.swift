@@ -2,7 +2,7 @@ import Foundation
 
 extension String {
     
-    public func tp_loc(lang: String) -> String {
+    public func tp_loc(lang: String = Locale.current.languageCode ?? "ru") -> String {
         let table = "TPLocalizable"
         let bundle = localizationBundle(languageCode: lang)
         
