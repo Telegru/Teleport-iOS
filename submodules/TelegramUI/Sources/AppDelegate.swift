@@ -43,6 +43,7 @@ import TelegramUIDeclareEncodables
 import ContextMenuScreen
 import MetalEngine
 import TranslateUI
+import TPOnboarding
 
 #if canImport(AppCenter)
 import AppCenter

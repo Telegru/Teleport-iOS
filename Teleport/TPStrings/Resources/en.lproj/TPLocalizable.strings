@@ -2,3 +2,24 @@
 "Common.UseTelegramForPremium" = "Please note: to access Telegram Premium, you need to use the official Telegram app. Once you activate your subscription, all Telegram Premium features will be available in the Dal app.";
 
 "RootTabs.News" = "News";
+
+// Intro
+"Intro.Page1.Title" = "Dahl";
+"Intro.Page1.Description" = "A messenger **designed and tailored to the needs** of the Russian-speaking audience.";
+"Intro.Page2.Title" = "Communication";
+"Intro.Page2.Description" = "Start a conversation on one device and seamlessly continue it on another with **instant data sync**.";
+"Intro.Page3.Title" = "Simplicity and Convenience";
+"Intro.Page3.Description" = "**We’ve simplified everything** so you can focus on what matters most—your conversations and ideas.";
+"Intro.Page4.Title" = "Privacy";
+"Intro.Page4.Description" = "**Your data is yours and yours alone**. Dahl doesn’t use it for advertising or share it with third parties.";
+"Intro.Page5.Title" = "Speed";
+"Intro.Page5.Description" = "Fast message delivery, **even with a weak internet connection.**";
+"Intro.Page6.Title" = "Collaboration";
+"Intro.Page6.Description" = "**Create** groups, **organize** projects, and **share** ideas.";
+"Intro.Page7.Title" = "Creativity";
+"Intro.Page7.Description" = "**Express yourself freely** with emojis, stickers, and GIFs.";
+"Intro.Page8.Title" = "Dahl";
+"Intro.Page8.Description" = "**Read** with Dahl. **Write** with Dahl. **Stay connected** with Dahl.";
+
+"Intro.StartMessaging" = "Start Messaging";
+"Intro.Continue" = "Продолжить на русском";

@@ -375,6 +375,7 @@ swift_library(
         "//submodules/TelegramUI:TelegramUIResources",
         "//submodules/TelegramUI:TelegramUIAssets",
         "//submodules/TelegramUI/Components/Calls/CallScreen:Assets",
+        "//Teleport/TPOnboarding:TPOnboardingAssets",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [
@@ -1849,6 +1850,7 @@ plist_fragment(
         <string>SFCompactRounded-Semibold.otf</string>
         <string>AremacFS-Regular.otf</string>
         <string>AremacFS-Semibold.otf</string>
+        <string>Playfair-Bold.ttf</string>
     </array>
     <key>UIBackgroundModes</key>
     <array>

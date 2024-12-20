@@ -124,19 +124,19 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
         self.view.backgroundColor = self.presentationData.theme.list.plainBackgroundColor
     }
     
-    private func splashController() -> AuthorizationSequenceSplashController {
-        var currentController: AuthorizationSequenceSplashController?
+    private func splashController() -> DAuthorizationSequenceSplashController {
+        var currentController: DAuthorizationSequenceSplashController?
         for c in self.viewControllers {
-            if let c = c as? AuthorizationSequenceSplashController {
+            if let c = c as? DAuthorizationSequenceSplashController {
                 currentController = c
                 break
             }
         }
-        let controller: AuthorizationSequenceSplashController
+        let controller: DAuthorizationSequenceSplashController
         if let currentController = currentController {
             controller = currentController
         } else {
-            controller = AuthorizationSequenceSplashController(accountManager: self.sharedContext.accountManager, account: self.account, theme: self.presentationData.theme)
+            controller = DAuthorizationSequenceSplashController(accountManager: self.sharedContext.accountManager, account: self.account, theme: self.presentationData.theme)
             controller.nextPressed = { [weak self] strings in
                 if let strongSelf = self {
                     if let strings = strings {
@@ -154,7 +154,7 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
         return controller
     }
     
-    private func phoneEntryController(countryCode: Int32, number: String, splashController: AuthorizationSequenceSplashController?) -> AuthorizationSequencePhoneEntryController {
+    private func phoneEntryController(countryCode: Int32, number: String, splashController: DAuthorizationSequenceSplashController?) -> AuthorizationSequencePhoneEntryController {
         var currentController: AuthorizationSequencePhoneEntryController?
         for c in self.viewControllers {
             if let c = c as? AuthorizationSequencePhoneEntryController {
@@ -1189,12 +1189,12 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
         case let .state(state):
             switch state {
                 case .empty:
-                    if let _ = self.viewControllers.last as? AuthorizationSequenceSplashController {
+                    if let _ = self.viewControllers.last as? DAuthorizationSequenceSplashController {
                     } else {
                         var controllers: [ViewController] = []
                         if self.otherAccountPhoneNumbers.1.isEmpty {
                             controllers.append(self.splashController())
-                            controllers.append(self.phoneEntryController(countryCode: AuthorizationSequenceController.defaultCountryCode(), number: "", splashController: nil))
+//                            controllers.append(self.phoneEntryController(countryCode: AuthorizationSequenceController.defaultCountryCode(), number: "", splashController: nil))
                         } else {
                             controllers.append(self.phoneEntryController(countryCode: AuthorizationSequenceController.defaultCountryCode(), number: "", splashController: nil))
                         }
@@ -1205,9 +1205,9 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
                     if !self.otherAccountPhoneNumbers.1.isEmpty {
                         controllers.append(self.splashController())
                     }
-                    var previousSplashController: AuthorizationSequenceSplashController?
+                    var previousSplashController: DAuthorizationSequenceSplashController?
                     for c in self.viewControllers {
-                        if let c = c as? AuthorizationSequenceSplashController {
+                        if let c = c as? DAuthorizationSequenceSplashController {
                             previousSplashController = c
                             break
                         }
@@ -1293,11 +1293,11 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
     }
     
     override public func setViewControllers(_ viewControllers: [UIViewController], animated: Bool) {
-        let viewControllers = viewControllers.filter { !($0 is AuthorizationSequenceSplashController) }
+//        let viewControllers = viewControllers.filter { !($0 is AuthorizationSequenceSplashController) }
         let wasEmpty = self.viewControllers.isEmpty
         super.setViewControllers(viewControllers, animated: animated)
         if wasEmpty {
-            if self.topViewController is AuthorizationSequenceSplashController {
+            if self.topViewController is DAuthorizationSequenceSplashController {
             } else {
                 self.topViewController?.view.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.3)
             }
@@ -1341,9 +1341,9 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
         if !self.otherAccountPhoneNumbers.1.isEmpty {
             self.view.layer.animatePosition(from: CGPoint(x: self.view.layer.position.x, y: self.view.layer.position.y + self.view.layer.bounds.size.height), to: self.view.layer.position, duration: 0.5, timingFunction: kCAMediaTimingFunctionSpring)
         } else {
-            if let splashController = self.topViewController as? AuthorizationSequenceSplashController {
-                splashController.animateIn()
-            }
+//            if let splashController = self.topViewController as? DAuthorizationSequenceSplashController {
+//                splashController.animateIn()
+//            }
         }
     }
     

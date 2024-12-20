@@ -130,12 +130,12 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
     private var shouldAnimateIn = false
     private var transitionInArguments: (buttonFrame: CGRect, buttonTitle: String, animationSnapshot: UIView, textSnapshot: UIView)?
     
-    func animateWithSplashController(_ controller: AuthorizationSequenceSplashController) {
+    func animateWithSplashController(_ controller: DAuthorizationSequenceSplashController) {
         self.shouldAnimateIn = true
         
-        if let animationSnapshot = controller.animationSnapshot, let textSnapshot = controller.textSnaphot {
-            self.transitionInArguments = (controller.buttonFrame, controller.buttonTitle, animationSnapshot, textSnapshot)
-        }
+//        if let animationSnapshot = controller.animationSnapshot, let textSnapshot = controller.textSnaphot {
+//            self.transitionInArguments = (controller.buttonFrame, controller.buttonTitle, animationSnapshot, textSnapshot)
+//        }
     }
     
     override public func loadDisplayNode() {
