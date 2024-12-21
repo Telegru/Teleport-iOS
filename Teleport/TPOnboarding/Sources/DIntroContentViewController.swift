@@ -19,6 +19,7 @@ final class DIntroContentViewController: UIViewController {
     private lazy var coverImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
         return imageView
     }()
     
