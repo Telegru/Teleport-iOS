@@ -111,6 +111,10 @@ import UIKitRuntimeUtils
 import OldChannelsController
 import UrlHandling
 
+
+import TPSettings
+import TPStrings
+
 public enum PeerInfoAvatarEditingMode {
     case generic
     case accept
@@ -893,7 +897,7 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
             interaction.openSettings(.profile)
         }))
         
-        items[.dal]!.append(PeerInfoScreenDisclosureItem(id: 0, text: presentationData.strings.Settings_DalSettings, icon: PresentationResourcesSettings.premium, action: {
+        items[.dal]!.append(PeerInfoScreenDisclosureItem(id: 0, text: "DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode), icon: UIImage.tpSettingsIcon, action: {
             interaction.openSettings(.dal)
         }))
         

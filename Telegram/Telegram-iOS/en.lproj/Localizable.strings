@@ -13442,16 +13442,3 @@ Sorry for the inconvenience.";
 "StarsTransaction.StarRefReason.Miniapp" = "Mini App";
 "StarsTransaction.StarRefReason.Affiliate" = "Affiliate";
 "StarsTransaction.StarRefReason.Referred" = "Referred User";
-
-"Settings.DalSettings" = "Dahl Settings";
-"DalSettings.HidePublishStoriesButton" = "Hide Publish Stories Button";
-"DalSettings.HideStories" = "Hide Stories";
-"DalSettings.HideViewedStories" = "Hide Viewed Stories";
-"DalSettings.HidePhone" = "Hide Phone Number";
-"DalSettings.HideActivity" = "No Read Receipts";
-"DalSettings.OfflineMode" = "Offline mode";
-"DalSettings.PrivacyHeader" = "Privacy";
-"DalSettings.StoriesHeader" = "Stories";
-"DalSettings.CameraSettings" = "Выбор камеры для записи пятака";
-"DalSettings.FrontCamera" = "Передняя камера";
-"DalSettings.BackCamera" = "Задняя камера";

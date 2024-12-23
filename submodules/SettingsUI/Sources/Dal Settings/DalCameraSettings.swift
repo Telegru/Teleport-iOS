@@ -9,6 +9,10 @@ import ItemListUI
 import AccountContext
 import PresentationDataUtils
 
+
+
+import TPStrings
+
 private final class DalCameraSettingsArguments {
     let updateSelectedCamera: (String) -> Void
 
@@ -92,8 +96,8 @@ private enum DalCameraSettingsEntry: ItemListNodeEntry {
 
 private func dalCameraSettingsEntries(selectedCamera: String, presentationData: PresentationData) -> [DalCameraSettingsEntry] {
     return [
-        .frontCamera(presentationData.theme, presentationData.strings.DalSettings_FrontCamera, selectedCamera == "front"),
-        .backCamera(presentationData.theme, presentationData.strings.DalSettings_BackCamera, selectedCamera == "back")
+        .frontCamera(presentationData.theme, "DahlSettings.FrontCamera".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == "front"),
+        .backCamera(presentationData.theme, "DahlSettings.BackCamera".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == "back")
     ]
 }
 
@@ -108,7 +112,7 @@ public func dalCameraSettingsController(context: AccountContext, selectedCamera:
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .text(presentationData.strings.DalSettings_CameraSettings),
+            title: .text("DahlSettings.CameraSettings".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)

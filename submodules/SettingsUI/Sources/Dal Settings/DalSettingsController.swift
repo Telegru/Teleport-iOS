@@ -15,6 +15,9 @@ import TelegramNotices
 import NotificationSoundSelectionUI
 import TelegramStringFormatting
 
+
+import TPStrings
+
 private final class DalSettingsArguments {
     let context: AccountContext
     let presentController: (ViewController, ViewControllerPresentationArguments?) -> Void
@@ -307,19 +310,19 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return ItemListDisclosureItem(
                 presentationData: presentationData,
                 title: text,
-                label: selectedCamera == "front" ? presentationData.strings.DalSettings_FrontCamera : presentationData.strings.DalSettings_BackCamera,
+                label: selectedCamera == "front" ?  "DahlSettings.FrontCamera".tp_loc(lang: presentationData.strings.baseLanguageCode) : "DahlSettings.BackCamera".tp_loc(lang: presentationData.strings.baseLanguageCode),
                 sectionId: self.section,
                 style: .blocks,
                 action: {
                     // Переход на контроллер выбора камеры
-                    let cameraSettingsController = dalCameraSettingsController(
-                        context: ,
-                        selectedCamera: selectedCamera,
-                        updateCamera: { newCamera in
-//                            arguments.updateCameraChoice(newCamera)
-                        }
-                    )
-                    arguments.pushController(cameraSettingsController)
+//                    let cameraSettingsController = dalCameraSettingsController(
+//                        context: ,
+//                        selectedCamera: selectedCamera,
+//                        updateCamera: { newCamera in
+////                            arguments.updateCameraChoice(newCamera)
+//                        }
+//                    )
+//                    arguments.pushController(cameraSettingsController)
                 },
                 tag: self.tag
             )
@@ -355,39 +358,39 @@ private func dalSettingsEntries(
     presentationData: PresentationData
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
+    let lang = presentationData.strings.baseLanguageCode
     
-    // Добавляем заголовок для секции "Истории"
-    entries.append(.storiesHeader(presentationData.theme, presentationData.strings.DalSettings_StoriesHeader.uppercased()))
+    entries.append(.storiesHeader(presentationData.theme, "DahlSettings.StoriesHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePublishStoriesButton(
         presentationData.theme,
-        presentationData.strings.DalSettings_HidePublishStoriesButton,
+        "DahlSettings.HidePublishStoriesButton".tp_loc(lang: lang),
         hidePublishStoriesButton
     ))
     entries.append(.hideStories(
         presentationData.theme,
-        presentationData.strings.DalSettings_HideStories,
+        "DahlSettings.HideStories".tp_loc(lang: lang),
         hideStories
     ))
     entries.append(.hideViewedStories(
         presentationData.theme,
-        presentationData.strings.DalSettings_HideViewedStories,
+        "DahlSettings.HideViewedStories".tp_loc(lang: lang),
         hideViewedStories
     ))
     
-    entries.append(.privacyHeader(presentationData.theme, presentationData.strings.DalSettings_PrivacyHeader.uppercased()))
+    entries.append(.privacyHeader(presentationData.theme,         "DahlSettings.PrivacyHeader".tp_loc(lang: lang)))
     entries.append(.hidePhone(
         presentationData.theme,
-        presentationData.strings.DalSettings_HidePhone,
+        "DahlSettings.HidePhone".tp_loc(lang: lang),
         hidePhone
     ))
     entries.append(.disableReadHistory(
         presentationData.theme,
-        presentationData.strings.DalSettings_HideActivity,
+        "DahlSettings.HideActivity".tp_loc(lang: lang),
         disableReadHistory
     ))
     entries.append(.offlineMode(
         presentationData.theme,
-        presentationData.strings.DalSettings_OfflineMode,
+        "DahlSettings.OfflineMode".tp_loc(lang: lang),
         offlintMode
     ))
     
@@ -507,7 +510,7 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .text(presentationData.strings.Settings_DalSettings),
+            title: .text("DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)

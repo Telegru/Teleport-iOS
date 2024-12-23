@@ -438,7 +438,7 @@ final class PeerInfoScreenData {
         revenueStatsContext: RevenueStatsContext?,
         profileGiftsContext: ProfileGiftsContext?,
         premiumGiftOptions: [PremiumGiftCodeOption],
-        webAppPermissions: WebAppPermissionsState?
+        webAppPermissions: WebAppPermissionsState?,
         dalSettings: DalSettings
     ) {
         self.peer = peer
