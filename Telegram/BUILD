@@ -376,6 +376,7 @@ swift_library(
         "//submodules/TelegramUI:TelegramUIAssets",
         "//submodules/TelegramUI/Components/Calls/CallScreen:Assets",
         "//Teleport/TPOnboarding:TPOnboardingAssets",
+        "//Teleport/TPSettings:TPSettingsAssets",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [

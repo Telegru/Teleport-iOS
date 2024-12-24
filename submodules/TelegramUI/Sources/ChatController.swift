@@ -7139,14 +7139,24 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             })
         }
         
+        let disableReadHistory = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        |> map { sharedData -> Bool in
+            var hideReadTime = false
+            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                hideReadTime = current.disableReadHistory
+            } else {
+                hideReadTime = DalSettings.defaultSettings.disableReadHistory
+            }
+            return hideReadTime
+        })
 
-        
         self.canReadHistoryDisposable = (combineLatest(
             context.sharedContext.applicationBindings.applicationInForeground,
             self.canReadHistory.get(),
-            self.hasBrowserOrAppInFront.get()
-        ) |> map { inForeground, globallyEnabled, hasBrowserOrWebAppInFront in
-            return inForeground && globallyEnabled && !hasBrowserOrWebAppInFront
+            self.hasBrowserOrAppInFront.get(),
+            disableReadHistory
+        ) |> map { inForeground, globallyEnabled, hasBrowserOrWebAppInFront, disableReadHistory in
+            return inForeground && globallyEnabled && !hasBrowserOrWebAppInFront && !disableReadHistory
         } |> deliverOnMainQueue).startStrict(next: { [weak self] value in
             if let strongSelf = self, strongSelf.canReadHistoryValue != value {
                 strongSelf.canReadHistoryValue = value

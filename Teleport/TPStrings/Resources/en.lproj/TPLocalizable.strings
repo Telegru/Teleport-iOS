@@ -23,3 +23,18 @@
 
 "Intro.StartMessaging" = "Start Messaging";
 "Intro.Continue" = "Продолжить на русском";
+
+
+// Settings
+"DahlSettings.Title" = "Dahl Settings";
+"DahlSettings.HidePublishStoriesButton" = "Hide Publish Stories Button";
+"DahlSettings.HideStories" = "Hide Stories";
+"DahlSettings.HideViewedStories" = "Hide Viewed Stories";
+"DahlSettings.HidePhone" = "Hide Phone Number";
+"DahlSettings.HideActivity" = "No Read Receipts";
+"DahlSettings.OfflineMode" = "Invisible mode";
+"DahlSettings.PrivacyHeader" = "Privacy";
+"DahlSettings.StoriesHeader" = "Stories";
+"DahlSettings.CameraSettings" = "Video message camera";
+"DahlSettings.FrontCamera" = "Front camera";
+"DahlSettings.BackCamera" = "Back camera";

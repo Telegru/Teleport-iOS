@@ -168,6 +168,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     private var storiesPostingAvailabilityDisposable: Disposable?
     private let storyPostingAvailabilityValue = ValuePromise<StoriesConfiguration.PostingAvailability>(.disabled)
     
+    private(set) var storyPostingHidden: Bool = false
+    private var storiesPostingHiddenDisposable: Disposable?
+    private let storyPostingHiddenValue = ValuePromise<Bool>(false)
+    
     private var didSetupTabs = false
     
     private weak var emojiStatusSelectionController: ViewController?
@@ -289,7 +293,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 default:
                     return false
                 }
-            }
+            },
+            storyPostingHidden: self.storyPostingHiddenValue.get()
         )
         self.primaryContext = primaryContext
         self.primaryInfoReady.set(primaryContext.ready.get())
@@ -760,6 +765,24 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             if let self {
                 self.storyPostingAvailability = postingAvailability
                 self.storyPostingAvailabilityValue.set(postingAvailability)
+            }
+        })
+        
+        self.storiesPostingHiddenDisposable = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        |> map { sharedData -> Bool in
+            var storyPostingHidden = false
+            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                storyPostingHidden = current.hidePublishStoriesButton
+            } else {
+                storyPostingHidden = DalSettings.defaultSettings.hidePublishStoriesButton
+            }
+            return storyPostingHidden
+        }
+        |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] storyPostingHidden in
+            if let self {
+                self.storyPostingHidden = storyPostingHidden
+                self.storyPostingHiddenValue.set(storyPostingHidden)
             }
         })
         
@@ -2033,32 +2056,53 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             if self.previewing {
                 self.storiesReady.set(.single(true))
             } else {
-                self.storySubscriptionsDisposable = (self.context.engine.messages.storySubscriptions(isHidden: self.location == .chatList(groupId: .archive))
-                |> deliverOnMainQueue).startStrict(next: { [weak self] rawStorySubscriptions in
-                    guard let self else {
-                        return
+                let dalSettings = self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> map { sharedData -> DalSettings in
+                    var dalSettings =  DalSettings.defaultSettings
+                    if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                        dalSettings = current
                     }
+                    return dalSettings
+                }
+     
+                self.storySubscriptionsDisposable = (combineLatest(dalSettings, self.context.engine.messages.storySubscriptions(isHidden: self.location == .chatList(groupId: .archive)))
+                    |> deliverOnMainQueue
+                )
+                .startStrict(next: { [weak self] dalSettings, rawStorySubscriptions in
+                    guard let self else { return }
                     
                     self.rawStorySubscriptions = rawStorySubscriptions
-                    var items: [EngineStorySubscriptions.Item] = []
-                    if self.shouldFixStorySubscriptionOrder {
-                        for peerId in self.fixedStorySubscriptionOrder {
-                            if let item = rawStorySubscriptions.items.first(where: { $0.peer.id == peerId }) {
+
+                    if dalSettings.hideStories {
+                        // Если истории должны быть скрыты, очищаем подписки
+                        self.orderedStorySubscriptions = EngineStorySubscriptions(
+                            accountItem: rawStorySubscriptions.accountItem,
+                            items: [], // Пустой массив, чтобы скрыть истории
+                            hasMoreToken: rawStorySubscriptions.hasMoreToken
+                        )
+                    } else {
+                        // Иначе, обрабатываем подписки как обычно
+                        var items: [EngineStorySubscriptions.Item] = []
+                        if self.shouldFixStorySubscriptionOrder {
+                            for peerId in self.fixedStorySubscriptionOrder {
+                                if let item = rawStorySubscriptions.items.first(where: { $0.peer.id == peerId }) {
+                                    items.append(item)
+                                }
+                            }
+                        }
+
+                        for item in rawStorySubscriptions.items {
+                            if !items.contains(where: { $0.peer.id == item.peer.id }) && (!dalSettings.hideViewedStories || item.hasUnseen) {
                                 items.append(item)
                             }
                         }
+                        self.orderedStorySubscriptions = EngineStorySubscriptions(
+                            accountItem: rawStorySubscriptions.accountItem,
+                            items: items,
+                            hasMoreToken: rawStorySubscriptions.hasMoreToken
+                        )
+                        self.fixedStorySubscriptionOrder = items.map(\.peer.id)
                     }
-                    for item in rawStorySubscriptions.items {
-                        if !items.contains(where: { $0.peer.id == item.peer.id }) {
-                            items.append(item)
-                        }
-                    }
-                    self.orderedStorySubscriptions = EngineStorySubscriptions(
-                        accountItem: rawStorySubscriptions.accountItem,
-                        items: items,
-                        hasMoreToken: rawStorySubscriptions.hasMoreToken
-                    )
-                    self.fixedStorySubscriptionOrder = items.map(\.peer.id)
                     
                     let transition: ContainedViewLayoutTransition
                     if self.didAppear {
@@ -2078,9 +2122,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     self.storiesReady.set(.single(true))
                     
                     Queue.mainQueue().after(1.0, { [weak self] in
-                        guard let self else {
-                            return
-                        }
+                        guard let self else { return }
                         self.maybeDisplayStoryTooltip()
                     })
                 })
@@ -2093,8 +2135,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 })
                 
                 if case .chatList(.root) = self.location {
-                    self.storyArchiveSubscriptionsDisposable = (self.context.engine.messages.storySubscriptions(isHidden: true)
-                    |> deliverOnMainQueue).startStrict(next: { [weak self] rawStoryArchiveSubscriptions in
+                    self.storyArchiveSubscriptionsDisposable = (combineLatest(dalSettings, self.context.engine.messages.storySubscriptions(isHidden: true))
+                        |> deliverOnMainQueue
+                    )
+                        .startStrict(next: { [weak self] dalSettings, rawStoryArchiveSubscriptions in
                         guard let self else {
                             return
                         }
@@ -2102,7 +2146,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                         self.rawStoryArchiveSubscriptions = rawStoryArchiveSubscriptions
                         
                         let archiveStoryState: ChatListNodeState.StoryState?
-                        if rawStoryArchiveSubscriptions.items.isEmpty {
+
+                        if dalSettings.hideStories || rawStoryArchiveSubscriptions.items.isEmpty {
                             archiveStoryState = nil
                         } else {
                             var unseenCount = 0
@@ -2158,6 +2203,12 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         if chatListTitle.activity {
             return
         }
+        
+        if self.orderedStorySubscriptions?.items.isEmpty == true {
+            self.storyTooltip?.dismiss()
+            return
+        }
+        
         if self.displayedStoriesTooltip {
             return
         }
@@ -2171,8 +2222,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 if didDisplay {
                     return
                 }
-                
-                if let navigationBarView = self.chatListDisplayNode.navigationBarView.view as? ChatListNavigationBar.View, !navigationBarView.storiesUnlocked, !self.displayedStoriesTooltip {
+                if let navigationBarView = self.chatListDisplayNode.navigationBarView.view as? ChatListNavigationBar.View, !navigationBarView.storiesUnlocked,  !self.displayedStoriesTooltip, self.orderedStorySubscriptions?.items.isEmpty == false {
                     if let storyPeerListView = self.chatListHeaderView()?.storyPeerListView(), let (anchorView, anchorRect) = storyPeerListView.anchorForTooltip() {
                         self.displayedStoriesTooltip = true
                         
@@ -3477,7 +3527,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 hideNetworkActivityStatus: false,
                 containerNode: inlineNode,
                 isReorderingTabs: .single(false),
-                storyPostingAvailable: .single(false)
+                storyPostingAvailable: .single(false),
+                storyPostingHidden: .single(false)
             )
             
             self.pendingSecondaryContext = pendingSecondaryContext
@@ -6243,7 +6294,8 @@ private final class ChatListLocationContext {
         hideNetworkActivityStatus: Bool,
         containerNode: ChatListContainerNode,
         isReorderingTabs: Signal<Bool, NoError>,
-        storyPostingAvailable: Signal<Bool, NoError>
+        storyPostingAvailable: Signal<Bool, NoError>,
+        storyPostingHidden: Signal<Bool, NoError>
     ) {
         self.context = context
         self.location = location
@@ -6336,8 +6388,9 @@ private final class ChatListLocationContext {
                     isReorderingTabs,
                     peerStatus,
                     parentController.updatedPresentationData.1,
-                    storyPostingAvailable
-                ).startStrict(next: { [weak self] networkState, proxy, passcode, stateAndFilterId, isReorderingTabs, peerStatus, presentationData, storyPostingAvailable in
+                    storyPostingAvailable,
+                    storyPostingHidden
+                ).startStrict(next: { [weak self] networkState, proxy, passcode, stateAndFilterId, isReorderingTabs, peerStatus, presentationData, storyPostingAvailable, storyPostingHidden in
                     guard let self else {
                         return
                     }
@@ -6350,7 +6403,8 @@ private final class ChatListLocationContext {
                         isReorderingTabs: isReorderingTabs,
                         peerStatus: peerStatus,
                         presentationData: presentationData,
-                        storyPostingAvailable: storyPostingAvailable
+                        storyPostingAvailable: storyPostingAvailable,
+                        storyPostingHidden: storyPostingHidden
                     )
                 })
             } else {
@@ -6570,7 +6624,8 @@ private final class ChatListLocationContext {
         isReorderingTabs: Bool,
         peerStatus: NetworkStatusTitle.Status?,
         presentationData: PresentationData,
-        storyPostingAvailable: Bool
+        storyPostingAvailable: Bool,
+        storyPostingHidden: Bool
     ) {
         let defaultTitle: String
         switch location {
@@ -6679,7 +6734,7 @@ private final class ChatListLocationContext {
                     }
                 }
                 
-                if storyPostingAvailable {
+                if storyPostingAvailable && !storyPostingHidden {
                     self.storyButton = AnyComponentWithIdentity(id: "story", component: AnyComponent(NavigationButtonComponent(
                         content: .icon(imageName: "Chat List/AddStoryIcon"),
                         pressed: { [weak self] _ in
