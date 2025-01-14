@@ -4,6 +4,11 @@ import SwiftSignalKit
 import TelegramCore
 
 
+public enum CameraType: String, Codable, Equatable {
+    case front = "front"
+    case back = "back"
+}
+
 public struct DalSettings: Codable, Equatable {
     // Раздел Stories
     public var hidePublishStoriesButton: Bool
@@ -14,6 +19,7 @@ public struct DalSettings: Codable, Equatable {
     public var hidePhone: Bool
     public var disableReadHistory: Bool
     public var offlineMode: Bool
+    public var videoMessageCamera: CameraType
 
     public static var defaultSettings: DalSettings {
         return DalSettings(
@@ -22,7 +28,8 @@ public struct DalSettings: Codable, Equatable {
             hideViewedStories: false,
             hidePhone: false,
             disableReadHistory: false,
-            offlineMode: false
+            offlineMode: false,
+            videoMessageCamera: CameraType.front
         )
     }
     
@@ -32,7 +39,8 @@ public struct DalSettings: Codable, Equatable {
         hideViewedStories: Bool,
         hidePhone: Bool,
         disableReadHistory: Bool,
-        offlineMode: Bool
+        offlineMode: Bool,
+        videoMessageCamera: CameraType
     ) {
         self.hidePublishStoriesButton = hidePublishStoriesButton
         self.hideStories = hideStories
@@ -40,6 +48,7 @@ public struct DalSettings: Codable, Equatable {
         self.hidePhone = hidePhone
         self.disableReadHistory = disableReadHistory
         self.offlineMode = offlineMode
+        self.videoMessageCamera = videoMessageCamera
     }
     
     public init(from decoder: Decoder) throws {
@@ -52,6 +61,12 @@ public struct DalSettings: Codable, Equatable {
         self.hidePhone = (try container.decodeIfPresent(Int32.self, forKey: "hidePhone") ?? 0) != 0
         self.disableReadHistory = (try container.decodeIfPresent(Int32.self, forKey: "disableReadHistory") ?? 0) != 0
         self.offlineMode = (try container.decodeIfPresent(Int32.self, forKey: "offlineMode") ?? 0) != 0
+        if let cameraString = try container.decodeIfPresent(String.self, forKey: "videoMessageCamera"),
+           let cameraType = CameraType(rawValue: cameraString) {
+            self.videoMessageCamera = cameraType
+        } else {
+            self.videoMessageCamera = .front
+        }
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -64,6 +79,7 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.hidePhone ? 1 : 0) as Int32, forKey: "hidePhone")
         try container.encode((self.disableReadHistory ? 1 : 0) as Int32, forKey: "disableReadHistory")
         try container.encode((self.offlineMode ? 1 : 0) as Int32, forKey: "offlineMode")
+        try container.encode(self.videoMessageCamera.rawValue, forKey: "videoMessageCamera")
     }
 }
 

@@ -35,6 +35,7 @@
 "DahlSettings.OfflineMode" = "Режим невидимки";
 "DahlSettings.PrivacyHeader" = "Конфиденциальность";
 "DahlSettings.StoriesHeader" = "Истории";
-"DahlSettings.CameraSettings" = "Камера для видеосообщений";
+"DahlSettings.VideoMessage" = "Видеосообщения";
 "DahlSettings.FrontCamera" = "Фронтальная камера";
 "DahlSettings.BackCamera" = "Задняя камера";
+"DahlSettings.Camera" = "Камера";

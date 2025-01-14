@@ -2763,10 +2763,22 @@ extension ChatControllerImpl {
                 }) else {
                     return
                 }
+                
+                let isFrontCamera: Signal<Bool, NoError> = (strongSelf.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> map { sharedData -> Bool in
+                    var storyPostingHidden = CameraType.front
+                    if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                        storyPostingHidden = current.videoMessageCamera
+                    } else {
+                        storyPostingHidden = DalSettings.defaultSettings.videoMessageCamera
+                    }
+                    return storyPostingHidden == .front
+                })
+                
                 let hasOngoingCall: Signal<Bool, NoError> = strongSelf.context.sharedContext.hasOngoingCall.get()
-                let _ = (hasOngoingCall
+                let _ = (combineLatest(hasOngoingCall, isFrontCamera)
                 |> take(1)
-                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall in
+                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall, isFrontCamera in
                     guard let strongSelf = self, strongSelf.beginMediaRecordingRequestId == requestId else {
                         return
                     }
@@ -2775,7 +2787,7 @@ extension ChatControllerImpl {
                         })]), in: .window(.root))
                     } else {
                         if isVideo {
-                            strongSelf.requestVideoRecorder()
+                            strongSelf.requestVideoRecorder(isFrontCamera: isFrontCamera)
                         } else {
                             strongSelf.requestAudioRecorder(beginWithTone: false)
                         }

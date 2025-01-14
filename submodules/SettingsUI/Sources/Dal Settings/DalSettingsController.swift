@@ -29,6 +29,7 @@ private final class DalSettingsArguments {
     let updateHidePhone: (Bool) -> Void
     let updateDisableReadHistory: (Bool) -> Void
     let updateOfflineMode: (Bool) -> Void
+    let openCameraSettings: (String) -> Void
 
     init(
         context: AccountContext,
@@ -39,7 +40,8 @@ private final class DalSettingsArguments {
         updateHideViewedStories: @escaping (Bool) -> Void,
         updateHidePhone: @escaping (Bool) -> Void,
         updateDisableReadHistory: @escaping (Bool) -> Void,
-        updateOfflineMode: @escaping (Bool) -> Void
+        updateOfflineMode: @escaping (Bool) -> Void,
+        openCameraSettings: @escaping (String) -> Void
     ) {
         self.context = context
         self.presentController = presentController
@@ -50,12 +52,14 @@ private final class DalSettingsArguments {
         self.updateHidePhone = updateHidePhone
         self.updateDisableReadHistory = updateDisableReadHistory
         self.updateOfflineMode = updateOfflineMode
+        self.openCameraSettings = openCameraSettings
     }
 }
 
 private enum DalSettingsSection: Int32 {
     case stories
     case confidentiality
+    case camera
 }
 
 public enum DalSettingsEntryTag: ItemListItemTag {
@@ -98,11 +102,10 @@ private enum DalSettingsEntry: ItemListNodeEntry {
         case .storiesHeader, .hidePublishStoriesButton, .hideStories, .hideViewedStories:
             return DalSettingsSection.stories.rawValue
             
-            // Приватность находится в секции confidentiality
         case .privacyHeader, .hidePhone, .disableReadHistory, .offlineMode:
             return DalSettingsSection.confidentiality.rawValue
         case .cameraHeader, .cameraChoice:
-            return DalSettingsSection.confidentiality.rawValue
+            return DalSettingsSection.camera.rawValue
         }
     }
     
@@ -314,15 +317,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section,
                 style: .blocks,
                 action: {
-                    // Переход на контроллер выбора камеры
-//                    let cameraSettingsController = dalCameraSettingsController(
-//                        context: ,
-//                        selectedCamera: selectedCamera,
-//                        updateCamera: { newCamera in
-////                            arguments.updateCameraChoice(newCamera)
-//                        }
-//                    )
-//                    arguments.pushController(cameraSettingsController)
+                    arguments.openCameraSettings(selectedCamera)
                 },
                 tag: self.tag
             )
@@ -355,6 +350,7 @@ private func dalSettingsEntries(
     hidePhone: Bool,
     disableReadHistory: Bool,
     offlintMode: Bool,
+    videoMessageCamera: CameraType,
     presentationData: PresentationData
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
@@ -377,7 +373,7 @@ private func dalSettingsEntries(
         hideViewedStories
     ))
     
-    entries.append(.privacyHeader(presentationData.theme,         "DahlSettings.PrivacyHeader".tp_loc(lang: lang)))
+    entries.append(.privacyHeader(presentationData.theme, "DahlSettings.PrivacyHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePhone(
         presentationData.theme,
         "DahlSettings.HidePhone".tp_loc(lang: lang),
@@ -392,6 +388,13 @@ private func dalSettingsEntries(
         presentationData.theme,
         "DahlSettings.OfflineMode".tp_loc(lang: lang),
         offlintMode
+    ))
+    
+    entries.append(.cameraHeader(presentationData.theme, "DahlSettings.Camera".tp_loc(lang: lang).uppercased()))
+    entries.append(.cameraChoice(
+        presentationData.theme,
+        "DahlSettings.VideoMessage".tp_loc(lang: lang),
+        videoMessageCamera.rawValue
     ))
     
     return entries
@@ -468,6 +471,21 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
                     return settings
                 }
             ).start()
+        }, openCameraSettings: { _ in
+            let cameraSettingsController = dalCameraSettingsController(
+                context: context,
+                updateCamera: { newCamera in
+                    let _ = updateDalSettingsInteractively(
+                        accountManager: context.sharedContext.accountManager,
+                        { settings in
+                            var settings = settings
+                            settings.videoMessageCamera = newCamera == CameraType.back.rawValue ? .back : .front
+                            return settings
+                        }
+                    ).start()
+                }
+            )
+            pushControllerImpl?(cameraSettingsController)
         }
     )
     
@@ -493,6 +511,7 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
             hidePhone: dalSettings.hidePhone,
             disableReadHistory: dalSettings.disableReadHistory,
             offlintMode: dalSettings.offlineMode,
+            videoMessageCamera: dalSettings.videoMessageCamera,
             presentationData: presentationData
         )
         
@@ -502,7 +521,7 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
         
         var allEntries: [DalSettingsEntry] = []
         
-        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue] {
+        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue, DalSettingsSection.camera.rawValue] {
             if let entries = groupedEntries[section] {
                 allEntries.append(contentsOf: entries.sorted())
             }

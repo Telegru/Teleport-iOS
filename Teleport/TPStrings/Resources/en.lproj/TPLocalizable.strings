@@ -35,6 +35,7 @@
 "DahlSettings.OfflineMode" = "Invisible mode";
 "DahlSettings.PrivacyHeader" = "Privacy";
 "DahlSettings.StoriesHeader" = "Stories";
-"DahlSettings.CameraSettings" = "Video message camera";
+"DahlSettings.VideoMessage" = "Video message";
 "DahlSettings.FrontCamera" = "Front camera";
 "DahlSettings.BackCamera" = "Back camera";
+"DahlSettings.Camera" = "Camera";

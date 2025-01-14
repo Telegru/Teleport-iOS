@@ -891,7 +891,7 @@ public class VideoMessageCameraScreen: ViewController {
             self.previewContainerView.addSubview(self.previewContainerContentView)
                         
             let isDualCameraEnabled = Camera.isDualCameraSupported(forRoundVideo: true)
-            let isFrontPosition = "".isEmpty
+            let isFrontPosition = controller.isFrontCamera
             
             self.mainPreviewView = CameraSimplePreviewView(frame: .zero, main: true, roundVideo: true)
             self.additionalPreviewView = CameraSimplePreviewView(frame: .zero, main: false, roundVideo: true)
@@ -1539,6 +1539,7 @@ public class VideoMessageCameraScreen: ViewController {
         return self.displayNode as! Node
     }
 
+    private let isFrontCamera: Bool
     private let context: AccountContext
     private let updatedPresentationData: (initial: PresentationData, signal: Signal<PresentationData, NoError>)?
     private let inputPanelFrame: (CGRect, Bool)
@@ -1690,6 +1691,7 @@ public class VideoMessageCameraScreen: ViewController {
     public init(
         context: AccountContext,
         updatedPresentationData: (initial: PresentationData, signal: Signal<PresentationData, NoError>)?,
+        isFrontCamera: Bool,
         allowLiveUpload: Bool,
         viewOnceAvailable: Bool,
         inputPanelFrame: (CGRect, Bool),
@@ -1703,6 +1705,7 @@ public class VideoMessageCameraScreen: ViewController {
         self.inputPanelFrame = inputPanelFrame
         self.chatNode = chatNode
         self.completion = completion
+        self.isFrontCamera = isFrontCamera
         
         self.recordingStatus = RecordingStatus(micLevel: self.micLevelValue.get(), duration: self.durationValue.get())
 

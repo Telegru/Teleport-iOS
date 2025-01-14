@@ -8,6 +8,7 @@ import TelegramPresentationData
 import ItemListUI
 import AccountContext
 import PresentationDataUtils
+import TelegramUIPreferences
 
 
 
@@ -101,18 +102,31 @@ private func dalCameraSettingsEntries(selectedCamera: String, presentationData: 
     ]
 }
 
-public func dalCameraSettingsController(context: AccountContext, selectedCamera: String, updateCamera: @escaping (String) -> Void) -> ViewController {
+public func dalCameraSettingsController(context: AccountContext, updateCamera: @escaping (String) -> Void) -> ViewController {
     let arguments = DalCameraSettingsArguments(updateSelectedCamera: { newCamera in
         updateCamera(newCamera)
     })
 
-    let signal = context.sharedContext.presentationData
-    |> map { presentationData -> (ItemListControllerState, (ItemListNodeState, Any)) in
-        let entries = dalCameraSettingsEntries(selectedCamera: selectedCamera, presentationData: presentationData)
+    let selectedCamera = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> CameraType in
+        let dalSettings: DalSettings
+        if let entry = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+            dalSettings = entry
+        } else {
+            dalSettings = DalSettings.defaultSettings
+        }
+        return dalSettings.videoMessageCamera
+    }
+    |> distinctUntilChanged)
+
+    
+    let signal = combineLatest(context.sharedContext.presentationData, selectedCamera)
+    |> map { presentationData, selectedCamera -> (ItemListControllerState, (ItemListNodeState, Any)) in
+        let entries = dalCameraSettingsEntries(selectedCamera: selectedCamera.rawValue, presentationData: presentationData)
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .text("DahlSettings.CameraSettings".tp_loc(lang: presentationData.strings.baseLanguageCode)),
+            title: .text("DahlSettings.VideoMessage".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)
