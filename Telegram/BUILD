@@ -124,11 +124,11 @@ genrule(
     name = "GeneratedPresentationStrings",
     srcs = [
         "//build-system:GenerateStrings/GenerateStrings.py",
-        "Telegram-iOS/en.lproj/Localizable.strings",
+        "Telegram-iOS/ru.lproj/Localizable.strings",
     ],
     cmd = '''
         python3 $(location //build-system:GenerateStrings/GenerateStrings.py) \\
-            --source=$(location Telegram-iOS/en.lproj/Localizable.strings) \\
+            --source=$(location Telegram-iOS/ru.lproj/Localizable.strings) \\
             --outImplementation=$(location GeneratedPresentationStrings/Sources/PresentationStrings.m) \\
             --outHeader=$(location GeneratedPresentationStrings/PublicHeaders/PresentationStrings/PresentationStrings.h) \\
             --outData=$(location GeneratedPresentationStrings/Resources/PresentationStrings.data) \\
@@ -160,13 +160,14 @@ empty_languages = [
     #"nl",
     #"pl",
     #"pt",
-    "ru",
+    #"ru",
+    "en",
     #"tr",
     #"uk",
     #"uz",
 ]
 
-supported_languages = empty_languages + ["en"]
+supported_languages = empty_languages + ["ru"]
 
 [
     genrule(
@@ -251,7 +252,7 @@ filegroup(
 filegroup(
     name = "AppStringResources",
     srcs = [
-        "Telegram-iOS/en.lproj/Localizable.strings",
+        "Telegram-iOS/ru.lproj/Localizable.strings",
         "//Teleport/TPStrings:TPLocalizableStrings",
     ] + [
         "{}.lproj/Localizable.strings".format(language) for language in empty_languages

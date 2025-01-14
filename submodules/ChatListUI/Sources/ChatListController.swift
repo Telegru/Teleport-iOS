@@ -2429,14 +2429,14 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                             languageCode = code
                         }
                     } else {
-                        languageCode = "en"
+                        languageCode = "ru"
                     }
                     return languageCode
                 },
                 suggestedLocalization
             )
             |> mapToSignal({ value -> Signal<(String, SuggestedLocalizationInfo)?, NoError> in
-                guard let suggestedLocalization = value.1, !suggestedLocalization.isSeen && suggestedLocalization.languageCode != "en" && suggestedLocalization.languageCode != value.0 else {
+                guard let suggestedLocalization = value.1, !suggestedLocalization.isSeen && suggestedLocalization.languageCode != "ru" && suggestedLocalization.languageCode != value.0 else {
                     return .single(nil)
                 }
                 return context.engine.localization.suggestedLocalizationInfo(languageCode: suggestedLocalization.languageCode, extractKeys: LanguageSuggestionControllerStrings.keys)
