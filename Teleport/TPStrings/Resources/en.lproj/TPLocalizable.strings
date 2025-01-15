@@ -38,4 +38,20 @@
 "DahlSettings.VideoMessage" = "Video message";
 "DahlSettings.FrontCamera" = "Front camera";
 "DahlSettings.BackCamera" = "Back camera";
+"DahlSettings.AskBeforeRecording" = "Ask before";
 "DahlSettings.Camera" = "Camera";
+
+"DahlSettings.ActionConfirmationHeader" = "Action Confirmation";
+"DahlSettings.ConfirmCallToggle" = "Confirm before calling";
+"DahlSettings.ConfirmAudioMessageToggle" = "Confirm before sending audio message";
+"DahlSettings.VideoMessageCameraLink" = "Camera for video messages";
+
+// Chat
+"Chat.FrontCamera" = "Front camera";
+"Chat.BackCamera" = "Back camera";
+"Chat.SelectCamera" = "Select a camera";
+"Chat.SendAudioMessage" = "Send audio message?";
+"Chat.Yes" = "Yes";
+"Chat.No" = "No";
+"Chat.ConfirmVideoCall" = "Are you sure you want to start a video call?";
+"Chat.ConfirmCall" = "Are you sure you want to start an audio call?";

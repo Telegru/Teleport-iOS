@@ -38,4 +38,21 @@
 "DahlSettings.VideoMessage" = "Видеосообщения";
 "DahlSettings.FrontCamera" = "Фронтальная камера";
 "DahlSettings.BackCamera" = "Задняя камера";
+"DahlSettings.AskBeforeRecording" = "Спрашивать";
 "DahlSettings.Camera" = "Камера";
+
+"DahlSettings.ActionConfirmationHeader" = "Подтверждение действий";
+"DahlSettings.ConfirmCallToggle" = "Подтверждать звонок";
+"DahlSettings.ConfirmAudioMessageToggle" = "Подтверждать аудиосообщение";
+"DahlSettings.VideoMessageCameraLink" = "Камера для видеосообщений";
+
+
+// Chat
+"Chat.FrontCamera" = "Фронтальная камера";
+"Chat.BackCamera" = "Задняя камера";
+"Chat.SelectCamera" = "Выберите камеру";
+"Chat.SendAudioMessage" = "Отправить аудиосообщение?";
+"Chat.Yes" = "Да";
+"Chat.No" = "Нет";
+"Chat.ConfirmVideoCall" = "Вы действительно хотите начать видеозвонок?";
+"Chat.ConfirmCall" = "Вы действительно хотите начать аудиозвонок?";

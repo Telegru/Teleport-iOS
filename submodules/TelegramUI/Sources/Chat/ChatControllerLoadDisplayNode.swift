@@ -2764,21 +2764,15 @@ extension ChatControllerImpl {
                     return
                 }
                 
-                let isFrontCamera: Signal<Bool, NoError> = (strongSelf.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-                |> map { sharedData -> Bool in
-                    var storyPostingHidden = CameraType.front
-                    if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
-                        storyPostingHidden = current.videoMessageCamera
-                    } else {
-                        storyPostingHidden = DalSettings.defaultSettings.videoMessageCamera
-                    }
-                    return storyPostingHidden == .front
+                let dalSettings: Signal<DalSettings, NoError> = (strongSelf.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> map { sharedData -> DalSettings in
+                    return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
                 })
                 
                 let hasOngoingCall: Signal<Bool, NoError> = strongSelf.context.sharedContext.hasOngoingCall.get()
-                let _ = (combineLatest(hasOngoingCall, isFrontCamera)
+                let _ = (combineLatest(hasOngoingCall, dalSettings)
                 |> take(1)
-                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall, isFrontCamera in
+                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall, dalSettings in
                     guard let strongSelf = self, strongSelf.beginMediaRecordingRequestId == requestId else {
                         return
                     }
@@ -2787,8 +2781,39 @@ extension ChatControllerImpl {
                         })]), in: .window(.root))
                     } else {
                         if isVideo {
-                            strongSelf.requestVideoRecorder(isFrontCamera: isFrontCamera)
+                            if dalSettings.videoMessageCamera != .undefined  {
+                                strongSelf.requestVideoRecorder(isFrontCamera: dalSettings.videoMessageCamera == CameraType.front)
+                                strongSelf.needCameraSelectionForVideo = true
+                            } else if strongSelf.needCameraSelectionForVideo {
+                                let theme = ActionSheetControllerTheme(presentationData: strongSelf.presentationData)
+                                let actionSheet = ActionSheetController(theme: theme, allowInputInset: false)
+                                actionSheet.setItemGroups([
+                                    ActionSheetItemGroup(items: [
+                                        ActionSheetTextItem(title: "Chat.SelectCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)),
+                                        ActionSheetButtonItem(title: "Chat.FrontCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                            self?.isFrontCameraSelected = true
+                                            self?.needCameraSelectionForVideo = false
+                                        }),
+                                        ActionSheetButtonItem(title: "Chat.BackCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                            self?.isFrontCameraSelected = false
+                                            self?.needCameraSelectionForVideo = false
+                                        })
+                                    ]),
+                                    ActionSheetItemGroup(items: [
+                                        ActionSheetButtonItem(title: strongSelf.presentationData.strings.Common_Cancel, color: .accent, font: .bold, action: { [weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                        })
+                                    ])
+                                ])
+                                strongSelf.present(actionSheet, in: .window(.root))
+                            } else {
+                                strongSelf.requestVideoRecorder(isFrontCamera: strongSelf.isFrontCameraSelected)
+                                strongSelf.needCameraSelectionForVideo = true
+                            }
                         } else {
+                            strongSelf.confirmSendAudioMessage = dalSettings.sendAudioConfirmation
                             strongSelf.requestAudioRecorder(beginWithTone: false)
                         }
                     }

@@ -659,6 +659,16 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     var lastPostedScheduledMessagesToastTimestamp: Double = 0.0
     var postedScheduledMessagesEventsDisposable: Disposable?
     
+    
+    
+    
+    
+    
+    
+    var needCameraSelectionForVideo = true
+    var isFrontCameraSelected = true
+    var confirmSendAudioMessage = false
+    
     public init(
         context: AccountContext,
         chatLocation: ChatLocation,
@@ -2797,7 +2807,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             if let strongSelf = self {
                 let _ = strongSelf.presentVoiceMessageDiscardAlert(action: {
                     strongSelf.commitPurposefulAction()
-                    
+
                     let _ = (context.account.viewTracker.peerView(peerId)
                     |> take(1)
                     |> map { view -> Peer? in
@@ -2807,15 +2817,60 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         guard let peer = peer else {
                             return
                         }
-                        
+
                         if let cachedUserData = strongSelf.peerView?.cachedData as? CachedUserData, cachedUserData.callsPrivate {
                             let presentationData = context.sharedContext.currentPresentationData.with { $0 }
-                            
-                            strongSelf.present(textAlertController(context: strongSelf.context, updatedPresentationData: strongSelf.updatedPresentationData, title: presentationData.strings.Call_ConnectionErrorTitle, text: presentationData.strings.Call_PrivacyErrorMessage(EnginePeer(peer).compactDisplayTitle).string, actions: [TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})]), in: .window(.root))
+
+                            strongSelf.present(
+                                textAlertController(
+                                    context: strongSelf.context,
+                                    updatedPresentationData: strongSelf.updatedPresentationData,
+                                    title: presentationData.strings.Call_ConnectionErrorTitle,
+                                    text: presentationData.strings.Call_PrivacyErrorMessage(EnginePeer(peer).compactDisplayTitle).string,
+                                    actions: [
+                                        TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})
+                                    ]
+                                ),
+                                in: .window(.root)
+                            )
                             return
                         }
-                        
-                        context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+
+                        let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                        |> map { sharedData -> Bool in
+                            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                                return current.callConfirmation
+                            } else {
+                                return DalSettings.defaultSettings.callConfirmation
+                            }
+                        }
+                        |> take(1)
+                        |> deliverOnMainQueue).startStandalone(next: { (callConfirmation: Bool) in
+                            if callConfirmation {
+                                let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                                let text = isVideo
+                                    ? "Chat.ConfirmVideoCall".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)
+                                    : "Chat.ConfirmCall".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)
+
+                                let actions: [TextAlertAction] = [
+                                    TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {
+                                        context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+                                    }),
+                                    TextAlertAction(type: .genericAction, title: presentationData.strings.Common_Cancel, action: {})
+                                ]
+
+                                let alert = textAlertController(
+                                    context: strongSelf.context,
+                                    title: nil,
+                                    text: text,
+                                    actions: actions,
+                                    actionLayout: .horizontal
+                                )
+                                strongSelf.present(alert, in: .window(.root))
+                            } else {
+                                context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+                            }
+                        })
                     })
                 })
             }

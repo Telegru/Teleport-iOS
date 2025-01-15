@@ -7,6 +7,7 @@ import TelegramCore
 public enum CameraType: String, Codable, Equatable {
     case front = "front"
     case back = "back"
+    case undefined = "undefined"
 }
 
 public struct DalSettings: Codable, Equatable {
@@ -19,6 +20,10 @@ public struct DalSettings: Codable, Equatable {
     public var hidePhone: Bool
     public var disableReadHistory: Bool
     public var offlineMode: Bool
+    
+    // Подтверждение
+    public var sendAudioConfirmation: Bool
+    public var callConfirmation: Bool
     public var videoMessageCamera: CameraType
 
     public static var defaultSettings: DalSettings {
@@ -29,6 +34,8 @@ public struct DalSettings: Codable, Equatable {
             hidePhone: false,
             disableReadHistory: false,
             offlineMode: false,
+            sendAudioConfirmation: false,
+            callConfirmation: false,
             videoMessageCamera: CameraType.front
         )
     }
@@ -40,6 +47,8 @@ public struct DalSettings: Codable, Equatable {
         hidePhone: Bool,
         disableReadHistory: Bool,
         offlineMode: Bool,
+        sendAudioConfirmation: Bool,
+        callConfirmation: Bool,
         videoMessageCamera: CameraType
     ) {
         self.hidePublishStoriesButton = hidePublishStoriesButton
@@ -49,6 +58,8 @@ public struct DalSettings: Codable, Equatable {
         self.disableReadHistory = disableReadHistory
         self.offlineMode = offlineMode
         self.videoMessageCamera = videoMessageCamera
+        self.callConfirmation = callConfirmation
+        self.sendAudioConfirmation = sendAudioConfirmation
     }
     
     public init(from decoder: Decoder) throws {
@@ -67,6 +78,8 @@ public struct DalSettings: Codable, Equatable {
         } else {
             self.videoMessageCamera = .front
         }
+        self.sendAudioConfirmation = (try container.decodeIfPresent(Int32.self, forKey: "sendAudioConfirmation") ?? 0) != 0
+        self.callConfirmation = (try container.decodeIfPresent(Int32.self, forKey: "callConfirmation") ?? 0) != 0
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -80,6 +93,8 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.disableReadHistory ? 1 : 0) as Int32, forKey: "disableReadHistory")
         try container.encode((self.offlineMode ? 1 : 0) as Int32, forKey: "offlineMode")
         try container.encode(self.videoMessageCamera.rawValue, forKey: "videoMessageCamera")
+        try container.encode((self.sendAudioConfirmation ? 1 : 0) as Int32, forKey: "hidePublishStoriesButton")
+        try container.encode((self.callConfirmation ? 1 : 0) as Int32, forKey: "callConfirmation")
     }
 }
 
