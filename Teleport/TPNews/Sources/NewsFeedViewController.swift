@@ -18,6 +18,10 @@ public final class NewsFeedViewController: ViewController {
         displayNode as! NewsFeedViewControllerNode
     }
     
+    deinit {
+        disposableSet.dispose()
+    }
+    
     // MARK: - Initializations
     
     public init(context: AccountContext) {
