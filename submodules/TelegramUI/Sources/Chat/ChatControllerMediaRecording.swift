@@ -463,13 +463,13 @@ extension ChatControllerImpl {
             return
         }
                                                                                     
-        let text = "Отправить аудиосообщение?"
+        let text = "Chat.SendAudioMessage".tp_loc(lang: presentationData.strings.baseLanguageCode)
         
         let actions: [TextAlertAction] = [
-            TextAlertAction(type: .defaultAction, title: "Да") {
+            TextAlertAction(type: .defaultAction, title: "Chat.Yes".tp_loc(lang: presentationData.strings.baseLanguageCode)) {
                 onConfirm()
             },
-            TextAlertAction(type: .genericAction, title: "Нет", action: {
+            TextAlertAction(type: .genericAction, title: "Chat.No".tp_loc(lang: presentationData.strings.baseLanguageCode), action: {
                 onDecline()
             })
         ]
