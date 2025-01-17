@@ -34,6 +34,7 @@ public enum AvatarNodeClipStyle {
     case none
     case round
     case roundedRect
+    case rect
 }
 
 private class AvatarNodeParameters: NSObject {
@@ -500,7 +501,7 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .round,
+            clipStyle: AvatarNodeClipStyle = .rect,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false,
@@ -626,7 +627,7 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .round,
+            clipStyle: AvatarNodeClipStyle = .rect,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false
@@ -652,6 +653,9 @@ public final class AvatarNode: ASDisplayNode {
             case .roundedRect:
                 self.imageNode.clipsToBounds = true
                 self.imageNode.cornerRadius = displayDimensions.height * 0.25
+            case .rect:
+                self.imageNode.clipsToBounds = true
+                self.imageNode.cornerRadius = displayDimensions.height * 0.125
             }
             
             if let imageCache = genericContext.imageCache as? DirectMediaImageCache, let peer, let smallProfileImage = peer.smallProfileImage, let peerReference = PeerReference(peer._asPeer()) {
@@ -679,7 +683,7 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .round,
+            clipStyle: AvatarNodeClipStyle = .rect,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false,
@@ -860,6 +864,10 @@ public final class AvatarNode: ASDisplayNode {
                 } else if case .roundedRect = parameters.clipStyle {
                     context.beginPath()
                     context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height: bounds.size.height), cornerRadius: floor(bounds.size.width * 0.25)).cgPath)
+                    context.clip()
+                }  else if case .rect = parameters.clipStyle {
+                    context.beginPath()
+                    context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height: bounds.size.height), cornerRadius: floor(bounds.size.width * 0.125)).cgPath)
                     context.clip()
                 }
             } else {
@@ -1159,7 +1167,7 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .round,
+        clipStyle: AvatarNodeClipStyle = .rect,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false
@@ -1188,7 +1196,7 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .round,
+        clipStyle: AvatarNodeClipStyle = .rect,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false
@@ -1215,7 +1223,7 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .round,
+        clipStyle: AvatarNodeClipStyle = .rect,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false,
@@ -1342,7 +1350,8 @@ public final class AvatarNode: ASDisplayNode {
                         unseenCount: storyStats.unseenCount
                     ),
                     progress: mappedProgress,
-                    isRoundedRect: self.contentNode.clipStyle == .roundedRect || storyPresentationParams.forceRoundedRect
+                    isRoundedRect: self.contentNode.clipStyle == .roundedRect || storyPresentationParams.forceRoundedRect,
+                    isRectSimple: true
                 )),
                 environment: {},
                 containerSize: indicatorSize

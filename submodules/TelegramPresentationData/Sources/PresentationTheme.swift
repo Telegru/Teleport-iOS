@@ -72,8 +72,9 @@ public final class PresentationThemeRootTabBar {
     public let badgeBackgroundColor: UIColor
     public let badgeStrokeColor: UIColor
     public let badgeTextColor: UIColor
+    public let useSquareStyle: Bool
     
-    public init(backgroundColor: UIColor, separatorColor: UIColor, iconColor: UIColor, selectedIconColor: UIColor, textColor: UIColor, selectedTextColor: UIColor, badgeBackgroundColor: UIColor, badgeStrokeColor: UIColor, badgeTextColor: UIColor) {
+    public init(backgroundColor: UIColor, separatorColor: UIColor, iconColor: UIColor, selectedIconColor: UIColor, textColor: UIColor, selectedTextColor: UIColor, badgeBackgroundColor: UIColor, badgeStrokeColor: UIColor, badgeTextColor: UIColor, useSquareStyle: Bool) {
         self.backgroundColor = backgroundColor
         self.separatorColor = separatorColor
         self.iconColor = iconColor
@@ -83,10 +84,11 @@ public final class PresentationThemeRootTabBar {
         self.badgeBackgroundColor = badgeBackgroundColor
         self.badgeStrokeColor = badgeStrokeColor
         self.badgeTextColor = badgeTextColor
+        self.useSquareStyle = useSquareStyle
     }
     
-    public func withUpdated(backgroundColor: UIColor? = nil, separatorColor: UIColor? = nil, iconColor: UIColor? = nil, selectedIconColor: UIColor? = nil, textColor: UIColor? = nil, selectedTextColor: UIColor? = nil, badgeBackgroundColor: UIColor? = nil, badgeStrokeColor: UIColor? = nil, badgeTextColor: UIColor? = nil) -> PresentationThemeRootTabBar {
-        return PresentationThemeRootTabBar(backgroundColor: backgroundColor ?? self.backgroundColor, separatorColor: separatorColor ?? self.separatorColor, iconColor: iconColor ?? self.iconColor, selectedIconColor: selectedIconColor ?? self.selectedIconColor, textColor: textColor ?? self.textColor, selectedTextColor: selectedTextColor ?? self.selectedTextColor, badgeBackgroundColor: badgeBackgroundColor ?? self.badgeBackgroundColor, badgeStrokeColor: badgeStrokeColor ?? self.badgeStrokeColor, badgeTextColor: badgeTextColor ?? self.badgeTextColor)
+    public func withUpdated(backgroundColor: UIColor? = nil, separatorColor: UIColor? = nil, iconColor: UIColor? = nil, selectedIconColor: UIColor? = nil, textColor: UIColor? = nil, selectedTextColor: UIColor? = nil, badgeBackgroundColor: UIColor? = nil, badgeStrokeColor: UIColor? = nil, badgeTextColor: UIColor? = nil, useSquareStyle: Bool? = nil) -> PresentationThemeRootTabBar {
+        return PresentationThemeRootTabBar(backgroundColor: backgroundColor ?? self.backgroundColor, separatorColor: separatorColor ?? self.separatorColor, iconColor: iconColor ?? self.iconColor, selectedIconColor: selectedIconColor ?? self.selectedIconColor, textColor: textColor ?? self.textColor, selectedTextColor: selectedTextColor ?? self.selectedTextColor, badgeBackgroundColor: badgeBackgroundColor ?? self.badgeBackgroundColor, badgeStrokeColor: badgeStrokeColor ?? self.badgeStrokeColor, badgeTextColor: badgeTextColor ?? self.badgeTextColor, useSquareStyle: useSquareStyle ?? self.useSquareStyle)
     }
 }
 
@@ -1376,8 +1378,9 @@ public final class PresentationThemeChat {
     public let inputMediaPanel: PresentationThemeInputMediaPanel
     public let inputButtonPanel: PresentationThemeInputButtonPanel
     public let historyNavigation: PresentationThemeChatHistoryNavigation
-    
-    public init(defaultWallpaper: TelegramWallpaper, animateMessageColors: Bool, message: PresentationThemeChatMessage, serviceMessage: PresentationThemeServiceMessage, inputPanel: PresentationThemeChatInputPanel, inputMediaPanel: PresentationThemeInputMediaPanel, inputButtonPanel: PresentationThemeInputButtonPanel, historyNavigation: PresentationThemeChatHistoryNavigation) {
+    public let isRectangleCountMessageBadge: Bool
+
+    public init(defaultWallpaper: TelegramWallpaper, animateMessageColors: Bool, message: PresentationThemeChatMessage, serviceMessage: PresentationThemeServiceMessage, inputPanel: PresentationThemeChatInputPanel, inputMediaPanel: PresentationThemeInputMediaPanel, inputButtonPanel: PresentationThemeInputButtonPanel, historyNavigation: PresentationThemeChatHistoryNavigation, isRectangleCountMessageBadge: Bool) {
         self.defaultWallpaper = defaultWallpaper
         self.animateMessageColors = animateMessageColors
         self.message = message
@@ -1386,10 +1389,11 @@ public final class PresentationThemeChat {
         self.inputMediaPanel = inputMediaPanel
         self.inputButtonPanel = inputButtonPanel
         self.historyNavigation = historyNavigation
+        self.isRectangleCountMessageBadge = isRectangleCountMessageBadge
     }
     
-    public func withUpdated(defaultWallpaper: TelegramWallpaper? = nil, animateMessageColors: Bool? = nil, message: PresentationThemeChatMessage? = nil, serviceMessage: PresentationThemeServiceMessage? = nil, inputPanel: PresentationThemeChatInputPanel? = nil, inputMediaPanel: PresentationThemeInputMediaPanel? = nil, inputButtonPanel: PresentationThemeInputButtonPanel? = nil, historyNavigation: PresentationThemeChatHistoryNavigation? = nil) -> PresentationThemeChat {
-        return PresentationThemeChat(defaultWallpaper: defaultWallpaper ?? self.defaultWallpaper, animateMessageColors: animateMessageColors ?? self.animateMessageColors, message: message ?? self.message, serviceMessage: serviceMessage ?? self.serviceMessage, inputPanel: inputPanel ?? self.inputPanel, inputMediaPanel: inputMediaPanel ?? self.inputMediaPanel, inputButtonPanel: inputButtonPanel ?? self.inputButtonPanel, historyNavigation: historyNavigation ?? self.historyNavigation)
+    public func withUpdated(defaultWallpaper: TelegramWallpaper? = nil, animateMessageColors: Bool? = nil, message: PresentationThemeChatMessage? = nil, serviceMessage: PresentationThemeServiceMessage? = nil, inputPanel: PresentationThemeChatInputPanel? = nil, inputMediaPanel: PresentationThemeInputMediaPanel? = nil, inputButtonPanel: PresentationThemeInputButtonPanel? = nil, historyNavigation: PresentationThemeChatHistoryNavigation? = nil, isRectangleCountMessageBadge: Bool? = nil) -> PresentationThemeChat {
+        return PresentationThemeChat(defaultWallpaper: defaultWallpaper ?? self.defaultWallpaper, animateMessageColors: animateMessageColors ?? self.animateMessageColors, message: message ?? self.message, serviceMessage: serviceMessage ?? self.serviceMessage, inputPanel: inputPanel ?? self.inputPanel, inputMediaPanel: inputMediaPanel ?? self.inputMediaPanel, inputButtonPanel: inputButtonPanel ?? self.inputButtonPanel, historyNavigation: historyNavigation ?? self.historyNavigation, isRectangleCountMessageBadge: isRectangleCountMessageBadge ?? self.isRectangleCountMessageBadge)
     }
 }
 

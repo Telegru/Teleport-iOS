@@ -440,7 +440,8 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         selectedTextColor: defaultDayAccentColor,
         badgeBackgroundColor: UIColor(rgb: 0xff3b30),
         badgeStrokeColor: UIColor(rgb: 0xff3b30),
-        badgeTextColor: UIColor(rgb: 0xffffff)
+        badgeTextColor: UIColor(rgb: 0xffffff),
+        useSquareStyle: true
     )
     
     let navigationSearchBar = PresentationThemeNavigationSearchBar(
@@ -1015,7 +1016,8 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation
+        historyNavigation: historyNavigation,
+        isRectangleCountMessageBadge: true
     )
     
     let actionSheet = PresentationThemeActionSheet(

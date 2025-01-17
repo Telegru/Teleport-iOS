@@ -554,7 +554,8 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         selectedTextColor: accentColor,
         badgeBackgroundColor: UIColor(rgb: 0xef5b5b),
         badgeStrokeColor: UIColor(rgb: 0xef5b5b),
-        badgeTextColor: UIColor(rgb: 0xffffff)
+        badgeTextColor: UIColor(rgb: 0xffffff),
+        useSquareStyle: true
     )
 
     let rootNavigationBar = PresentationThemeRootNavigationBar(
@@ -944,7 +945,8 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation
+        historyNavigation: historyNavigation,
+        isRectangleCountMessageBadge: true
     )
 
     let actionSheet = PresentationThemeActionSheet(

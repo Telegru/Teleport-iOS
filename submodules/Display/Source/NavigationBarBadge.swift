@@ -11,7 +11,8 @@ public final class NavigationBarBadgeNode: ASDisplayNode {
     private let backgroundNode: ASImageNode
     
     private let font: UIFont = Font.regular(13.0)
-    
+    private var isRectangleShape: Bool = false
+
     var text: String = "" {
         didSet {
             self.textNode.attributedText = NSAttributedString(string: self.text, font: self.font, textColor: self.textColor)
@@ -19,7 +20,7 @@ public final class NavigationBarBadgeNode: ASDisplayNode {
         }
     }
     
-    public init(fillColor: UIColor, strokeColor: UIColor, textColor: UIColor) {
+    public init(fillColor: UIColor, strokeColor: UIColor, textColor: UIColor, isRectangleShape: Bool) {
         self.fillColor = fillColor
         self.strokeColor = strokeColor
         self.textColor = textColor
@@ -28,10 +29,11 @@ public final class NavigationBarBadgeNode: ASDisplayNode {
         self.textNode.isUserInteractionEnabled = false
         self.textNode.displaysAsynchronously = false
         
+        self.isRectangleShape = isRectangleShape
         self.backgroundNode = ASImageNode()
         self.backgroundNode.isLayerBacked = true
         self.backgroundNode.displaysAsynchronously = false
-        self.backgroundNode.image = generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
+        self.backgroundNode.image = isRectangleShape ? generateFilledRoundedRectImage(size: CGSize(width: 9, height: 9), cornerRadius: 1,color: fillColor, backgroundColor: nil) : generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
         
         super.init()
         
@@ -39,11 +41,12 @@ public final class NavigationBarBadgeNode: ASDisplayNode {
         self.addSubnode(self.textNode)
     }
     
-    func updateTheme(fillColor: UIColor, strokeColor: UIColor, textColor: UIColor) {
+    func updateTheme(fillColor: UIColor, strokeColor: UIColor, textColor: UIColor, isRectangleShape: Bool) {
         self.fillColor = fillColor
         self.strokeColor = strokeColor
         self.textColor = textColor
-        self.backgroundNode.image = generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
+        self.isRectangleShape = isRectangleShape
+        self.backgroundNode.image = isRectangleShape ? generateFilledRoundedRectImage(size: CGSize(width: 9, height: 9), cornerRadius: 1,color: fillColor, backgroundColor: nil) : generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
         self.textNode.attributedText = NSAttributedString(string: self.text, font: self.font, textColor: self.textColor)
         self.textNode.redrawIfPossible()
     }
