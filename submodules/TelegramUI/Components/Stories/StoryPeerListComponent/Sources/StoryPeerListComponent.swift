@@ -1085,7 +1085,6 @@ public final class StoryPeerListComponent: Component {
                         expandEffectFraction: collapsedState.expandEffectFraction,
                         leftNeighborDistance: leftNeighborDistance,
                         rightNeighborDistance: rightNeighborDistance,
-                        indicatorShape: .square,
                         action: component.peerAction,
                         contextGesture: component.contextPeerAction
                     )),
@@ -1224,7 +1223,6 @@ public final class StoryPeerListComponent: Component {
                         expandEffectFraction: collapsedState.expandEffectFraction,
                         leftNeighborDistance: leftNeighborDistance,
                         rightNeighborDistance: rightNeighborDistance,
-                        indicatorShape: .square,
                         action: component.peerAction,
                         contextGesture: component.contextPeerAction
                     )),

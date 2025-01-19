@@ -15,13 +15,6 @@ import StoryContainerScreen
 import MultilineTextComponent
 import HierarchyTrackingLayer
 
-// 1. Добавляем перечисление для типа индикатора (круг или квадрат)
-public enum IndicatorShape {
-    case circle
-    case square
-}
-
-// Оригинальная функция, считающая точки пересечения двух окружностей
 private func calculateCircleIntersection(center: CGPoint, otherCenter: CGPoint, radius: CGFloat) -> (point1Angle: CGFloat, point2Angle: CGFloat)? {
     let distanceVector = CGPoint(x: otherCenter.x - center.x, y: otherCenter.y - center.y)
     let distance = sqrt(distanceVector.x * distanceVector.x + distanceVector.y * distanceVector.y)
@@ -37,19 +30,11 @@ private func calculateCircleIntersection(center: CGPoint, otherCenter: CGPoint, 
     let r2 = radius
     let R = distance
     
-    let ix1: CGFloat = 0.5 * (x1 + x2)
-        + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (x2 - x1)
-        + 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (y2 - y1)
-    let ix2: CGFloat = 0.5 * (x1 + x2)
-        + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (x2 - x1)
-        - 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (y2 - y1)
+    let ix1: CGFloat = 0.5 * (x1 + x2) + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (x2 - x1) + 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (y2 - y1)
+    let ix2: CGFloat = 0.5 * (x1 + x2) + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (x2 - x1) - 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (y2 - y1)
     
-    let iy1: CGFloat = 0.5 * (y1 + y2)
-        + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (y2 - y1)
-        + 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (x1 - x2)
-    let iy2: CGFloat = 0.5 * (y1 + y2)
-        + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (y2 - y1)
-        - 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (x1 - x2)
+    let iy1: CGFloat = 0.5 * (y1 + y2) + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (y2 - y1) + 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (x1 - x2)
+    let iy2: CGFloat = 0.5 * (y1 + y2) + (pow(r1, 2.0) - pow(r2, 2.0)) / (2 * pow(R, 2.0)) * (y2 - y1) - 0.5 * sqrt(2.0 * (pow(r1, 2.0) + pow(r2, 2.0)) / pow(R, 2.0) - pow((pow(r1, 2.0) - pow(r2, 2.0)), 2.0) / pow(R, 4.0) - 1) * (x1 - x2)
     
     var v1 = CGPoint(x: ix1 - center.x, y: iy1 - center.y)
     let length1 = sqrt(v1.x * v1.x + v1.y * v1.y)
@@ -61,10 +46,9 @@ private func calculateCircleIntersection(center: CGPoint, otherCenter: CGPoint, 
     v2.x /= length2
     v2.y /= length2
     
-    var point1Angle = atan2(v1.y, v1.x)
-    var point2Angle = atan2(v2.y, v2.x)
+    var point1Angle = atan(v1.y / v1.x)
+    var point2Angle = atan(v2.y / v2.x)
     
-    // Поправка, если центр смещён влево
     if distanceVector.x < 0.0 {
         point1Angle += CGFloat.pi
         point2Angle += CGFloat.pi
@@ -73,18 +57,7 @@ private func calculateCircleIntersection(center: CGPoint, otherCenter: CGPoint, 
     return (point1Angle, point2Angle)
 }
 
-// Оригинальная функция для круга
-private func calculateMergingCircleShape(
-    center: CGPoint,
-    leftCenter: CGPoint?,
-    rightCenter: CGPoint?,
-    radius: CGFloat,
-    totalCount: Int,
-    unseenCount: Int,
-    isSeen: Bool,
-    segmentFraction: CGFloat,
-    rotationFraction: CGFloat
-) -> CGPath {
+private func calculateMergingCircleShape(center: CGPoint, leftCenter: CGPoint?, rightCenter: CGPoint?, radius: CGFloat, totalCount: Int, unseenCount: Int, isSeen: Bool, segmentFraction: CGFloat, rotationFraction: CGFloat) -> CGPath {
     var totalCount = totalCount
     var unseenCount = unseenCount
     
@@ -94,64 +67,41 @@ private func calculateMergingCircleShape(
         unseenCount = Int(CGFloat(unseenCount) / totalCountNorm)
     }
     
-    let leftAngles = leftCenter.flatMap {
-        calculateCircleIntersection(center: center, otherCenter: $0, radius: radius)
-    }
-    let rightAngles = rightCenter.flatMap {
-        calculateCircleIntersection(center: center, otherCenter: $0, radius: radius)
-    }
+    let leftAngles = leftCenter.flatMap { calculateCircleIntersection(center: center, otherCenter: $0, radius: radius) }
+    let rightAngles = rightCenter.flatMap { calculateCircleIntersection(center: center, otherCenter: $0, radius: radius) }
     
     let path = CGMutablePath()
+    
     let segmentCount = max(totalCount, 1)
     
     if isSeen {
-        if unseenCount >= totalCount {
-            // Все «новые», значит нам нечего рисовать для "seen"
+        if unseenCount < totalCount {
+        } else {
             return path
         }
     } else {
-        if unseenCount == 0 {
-            // Ничего «нового» нет, нечего рисовать
+        if unseenCount != 0 {
+        } else {
             return path
         }
     }
     
     if let leftAngles, let rightAngles {
-        // Добавляем дугу от левых пересечений к правым
-        path.addArc(center: center, radius: radius,
-                    startAngle: leftAngles.point1Angle,
-                    endAngle: rightAngles.point2Angle,
-                    clockwise: true)
+        path.addArc(center: center, radius: radius, startAngle: leftAngles.point1Angle, endAngle: rightAngles.point2Angle, clockwise: true)
         
-        path.move(to: CGPoint(
-            x: center.x + cos(rightAngles.point1Angle) * radius,
-            y: center.y + sin(rightAngles.point1Angle) * radius
-        ))
-        path.addArc(center: center, radius: radius,
-                    startAngle: rightAngles.point1Angle,
-                    endAngle: leftAngles.point2Angle,
-                    clockwise: true)
+        path.move(to: CGPoint(x: center.x + cos(rightAngles.point1Angle) * radius, y: center.y + sin(rightAngles.point1Angle) * radius))
+        path.addArc(center: center, radius: radius, startAngle: rightAngles.point1Angle, endAngle: leftAngles.point2Angle, clockwise: true)
     } else if let angles = leftAngles ?? rightAngles {
-        path.addArc(center: center, radius: radius,
-                    startAngle: angles.point1Angle,
-                    endAngle: angles.point2Angle,
-                    clockwise: true)
+        path.addArc(center: center, radius: radius, startAngle: angles.point1Angle, endAngle: angles.point2Angle, clockwise: true)
     } else {
-        // Если сегментов несколько, рисуем «шестерёнку» из дуг
         if segmentCount == 1 {
             if isSeen {
                 if unseenCount == 0 {
-                    path.addEllipse(in: CGRect(
-                        origin: CGPoint(x: center.x - radius, y: center.y - radius),
-                        size: CGSize(width: radius * 2.0, height: radius * 2.0)
-                    ))
+                    path.addEllipse(in: CGRect(origin: CGPoint(x: center.x - radius, y: center.y - radius), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
                 }
             } else {
                 if unseenCount != 0 {
-                    path.addEllipse(in: CGRect(
-                        origin: CGPoint(x: center.x - radius, y: center.y - radius),
-                        size: CGSize(width: radius * 2.0, height: radius * 2.0)
-                    ))
+                    path.addEllipse(in: CGRect(origin: CGPoint(x: center.x - radius, y: center.y - radius), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
                 }
             }
         } else {
@@ -160,29 +110,23 @@ private func calculateMergingCircleShape(
             let segmentAngle = (2.0 * CGFloat.pi - segmentSpacingAngle * CGFloat(segmentCount)) / CGFloat(segmentCount)
             for i in 0 ..< segmentCount {
                 if isSeen {
-                    if i > segmentCount - unseenCount - 1 {
+                    if i <= segmentCount - unseenCount - 1 {
+                    } else {
                         continue
                     }
                 } else {
-                    if i <= segmentCount - unseenCount - 1 {
+                    if i > segmentCount - unseenCount - 1 {
+                    } else {
                         continue
                     }
                 }
                 
-                var startAngle = segmentSpacingAngle * 0.5
-                    - CGFloat.pi * 0.5
-                    + CGFloat(i) * (segmentSpacingAngle + segmentAngle)
-                
-                // Небольшая «крутилка» при свайпе
+                var startAngle = segmentSpacingAngle * 0.5 - CGFloat.pi * 0.5 + CGFloat(i) * (segmentSpacingAngle + segmentAngle)
                 startAngle += -1.0 * (1.0 - rotationFraction) * CGFloat.pi * 2.0 * 0.25
                 
                 let endAngle = startAngle + segmentAngle
-                path.move(to: CGPoint(
-                    x: center.x + cos(startAngle) * radius,
-                    y: center.y + sin(startAngle) * radius
-                ))
-                path.addArc(center: center, radius: radius,
-                            startAngle: startAngle, endAngle: endAngle, clockwise: false)
+                path.move(to: CGPoint(x: center.x + cos(startAngle) * radius, y: center.y + sin(startAngle) * radius))
+                path.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle, clockwise: false)
             }
         }
     }
@@ -190,161 +134,6 @@ private func calculateMergingCircleShape(
     return path
 }
 
-// 2. Функция для «квадратных» индикаторов (упрощённая логика).
-//    Здесь показываем пример "сегментированного" квадратика,
-//    логика может быть модифицирована под ваши нужды.
-private func calculateMergingSquareShape(
-    center: CGPoint,
-    leftCenter: CGPoint?,
-    rightCenter: CGPoint?,
-    radius: CGFloat,
-    totalCount: Int,
-    unseenCount: Int,
-    isSeen: Bool,
-    segmentFraction: CGFloat,
-    rotationFraction: CGFloat
-) -> CGPath {
-    var totalCount = totalCount
-    var unseenCount = unseenCount
-
-    let totalCountNorm = CGFloat(totalCount) / 30.0
-    if totalCountNorm > 1.0 {
-        totalCount = Int(CGFloat(totalCount) / totalCountNorm)
-        unseenCount = Int(CGFloat(unseenCount) / totalCountNorm)
-    }
-
-    let path = CGMutablePath()
-    let segmentCount = max(totalCount, 1)
-
-    if isSeen {
-        if unseenCount >= totalCount {
-            return path
-        }
-    } else {
-        if unseenCount == 0 {
-            return path
-        }
-    }
-
-    let fullSide = radius * 2.0
-    let adjustedSegmentFraction = segmentFraction * 0.5
-    let segmentHeight: CGFloat = max(radius * 0.15, 2.0) // Минимальная высота = 2 пикселя
-
-    if segmentCount == 1 {
-        // Используем закругленный прямоугольник для одного сегмента
-        if (isSeen && unseenCount == 0) || (!isSeen && unseenCount != 0) {
-            let rect = CGRect(
-                x: center.x - radius,
-                y: center.y - radius,
-                width: fullSide,
-                height: fullSide
-            )
-            let cornerRadius = min(radius * 0.3, fullSide / 2) // Защита от выхода за пределы
-            path.addRoundedRect(in: rect, cornerWidth: cornerRadius, cornerHeight: cornerRadius)
-        }
-    } else {
-        let perimeter = 4.0 * fullSide
-        let segmentLength = (perimeter - (4.0 * adjustedSegmentFraction * CGFloat(segmentCount))) / CGFloat(segmentCount)
-
-        var currentOffset: CGFloat = 0.0
-        for i in 0 ..< segmentCount {
-            var skip = false
-            if isSeen {
-                if i > segmentCount - unseenCount - 1 {
-                    skip = true
-                }
-            } else {
-                if i <= segmentCount - unseenCount - 1 {
-                    skip = true
-                }
-            }
-            if skip {
-                currentOffset += segmentLength + adjustedSegmentFraction
-                continue
-            }
-
-            // Распределяем сегменты по сторонам квадрата
-            let sideIndex = i % 4  // Определяем, на какой стороне будем рисовать
-            var rect = CGRect.zero
-
-            switch sideIndex {
-            case 0: // Верхняя грань
-                let startX = center.x - radius + currentOffset
-                let endX = min(startX + segmentLength, center.x + radius)
-                rect = CGRect(x: startX, y: center.y - radius, width: endX - startX, height: segmentHeight)
-            case 1: // Правая грань
-                let startY = center.y - radius + currentOffset
-                let endY = min(startY + segmentLength, center.y + radius)
-                rect = CGRect(x: center.x + radius - segmentHeight, y: startY, width: segmentHeight, height: endY - startY)
-            case 2: // Нижняя грань
-                let startX = center.x + radius - currentOffset
-                let endX = max(startX - segmentLength, center.x - radius)
-                rect = CGRect(x: endX, y: center.y + radius - segmentHeight, width: startX - endX, height: segmentHeight)
-            case 3: // Левая грань
-                let startY = center.y + radius - currentOffset
-                let endY = max(startY - segmentLength, center.y - radius)
-                rect = CGRect(x: center.x - radius, y: endY, width: segmentHeight, height: startY - endY)
-            default:
-                break
-            }
-
-            if rect.width > 0 && rect.height > 0 {
-                let cornerRadius = min(rect.width / 2, rect.height / 2) // Гарантированно корректный угол
-                path.addRoundedRect(in: rect, cornerWidth: cornerRadius, cornerHeight: cornerRadius)
-            }
-
-            currentOffset += segmentLength + adjustedSegmentFraction
-        }
-    }
-
-    return path
-}
-
-// 3. Обёрточная функция, возвращающая либо круг, либо квадрат
-private func calculateMergingShape(
-    center: CGPoint,
-    leftCenter: CGPoint?,
-    rightCenter: CGPoint?,
-    radius: CGFloat,
-    totalCount: Int,
-    unseenCount: Int,
-    isSeen: Bool,
-    segmentFraction: CGFloat,
-    rotationFraction: CGFloat,
-    shape: IndicatorShape
-) -> CGPath {
-    switch shape {
-    case .circle:
-        return calculateMergingCircleShape(
-            center: center,
-            leftCenter: leftCenter,
-            rightCenter: rightCenter,
-            radius: radius,
-            totalCount: totalCount,
-            unseenCount: unseenCount,
-            isSeen: isSeen,
-            segmentFraction: segmentFraction,
-            rotationFraction: rotationFraction
-        )
-    case .square:
-        return calculateMergingSquareShape(
-            center: center,
-            leftCenter: leftCenter,
-            rightCenter: rightCenter,
-            radius: radius,
-            totalCount: totalCount,
-            unseenCount: unseenCount,
-            isSeen: isSeen,
-            segmentFraction: segmentFraction,
-            rotationFraction: rotationFraction
-        )
-    }
-}
-
-// Здесь всё осталось без изменений, кроме мест,
-// где ранее вызывалась calculateMergingCircleShape(...) —
-// теперь мы вызываем calculateMergingShape(..., shape: .circle)
-// или shape: .square, если хотим квадрат.
 private final class StoryProgressLayer: HierarchyTrackingLayer {
     enum Value: Equatable {
         case indefinite
@@ -509,22 +298,14 @@ private final class StoryProgressLayer: HierarchyTrackingLayer {
         let bounds = CGRect(origin: .zero, size: size)
         if self.uploadProgressLayer.path == nil {
             let path = CGMutablePath()
-            path.addEllipse(in: CGRect(
-                origin: CGPoint(x: (size.width - radius * 2.0) * 0.5,
-                                y: (size.height - radius * 2.0) * 0.5),
-                size: CGSize(width: radius * 2.0, height: radius * 2.0)
-            ))
+            path.addEllipse(in: CGRect(origin: CGPoint(x: (size.width - radius * 2.0) * 0.5, y: (size.height - radius * 2.0) * 0.5), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
             self.uploadProgressLayer.path = path
             self.uploadProgressLayer.frame = bounds
         }
         
         if self.indefiniteDashLayer.path == nil {
             let path = CGMutablePath()
-            path.addEllipse(in: CGRect(
-                origin: CGPoint(x: (size.width - radius * 2.0) * 0.5,
-                                y: (size.height - radius * 2.0) * 0.5),
-                size: CGSize(width: radius * 2.0, height: radius * 2.0)
-            ))
+            path.addEllipse(in: CGRect(origin: CGPoint(x: (size.width - radius * 2.0) * 0.5, y: (size.height - radius * 2.0) * 0.5), size: CGSize(width: radius * 2.0, height: radius * 2.0)))
             self.indefiniteDashLayer.path = path
             self.indefiniteReplicatorLayer.frame = bounds
             self.indefiniteDashLayer.frame = bounds
@@ -537,7 +318,48 @@ private final class StoryProgressLayer: HierarchyTrackingLayer {
 private var sharedAvatarBackgroundImage: UIImage?
 
 public final class StoryPeerListItemComponent: Component {
-    // Добавим поле shape, чтобы выбирать форму (круг/квадрат) при отрисовке
+    public final class TransitionView: UIView {
+        private weak var itemView: StoryPeerListItemComponent.View?
+        private var snapshotView: UIView?
+        private var portalView: PortalView?
+        
+        init(itemView: StoryPeerListItemComponent.View?) {
+            self.itemView = itemView
+            
+            super.init(frame: CGRect())
+            
+            if let itemView {
+                if let portalView = PortalView(matchPosition: false) {
+                    portalView.view.layer.rasterizationScale = UIScreenScale
+                    itemView.avatarContent.addPortal(view: portalView)
+                    self.portalView = portalView
+                    self.addSubview(portalView.view)
+                }
+                /*if let snapshotView = itemView.avatarContent.snapshotView(afterScreenUpdates: false) {
+                    self.addSubview(snapshotView)
+                    self.snapshotView = snapshotView
+                }*/
+            }
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(state: StoryContainerScreen.TransitionState, transition: ComponentTransition) {
+            let size = state.sourceSize.interpolate(to: state.destinationSize, amount: state.progress)
+            
+            if let snapshotView = self.snapshotView {
+                transition.setPosition(view: snapshotView, position: CGPoint(x: size.width * 0.5, y: size.height * 0.5))
+                transition.setScale(view: snapshotView, scale: size.width / state.destinationSize.width)
+            }
+            if let portalView = self.portalView {
+                transition.setPosition(view: portalView.view, position: CGPoint(x: size.width * 0.5, y: size.height * 0.5))
+                transition.setScale(view: portalView.view, scale: size.width / state.destinationSize.width)
+            }
+        }
+    }
+    
     public enum RingAnimation: Equatable {
         case progress(Float)
         case loading
@@ -558,10 +380,6 @@ public final class StoryPeerListItemComponent: Component {
     public let expandEffectFraction: CGFloat
     public let leftNeighborDistance: CGPoint?
     public let rightNeighborDistance: CGPoint?
-    
-    // Добавляем параметр для формы индикатора
-    public let indicatorShape: IndicatorShape
-    
     public let action: (EnginePeer) -> Void
     public let contextGesture: (ContextExtractedContentContainingNode, ContextGesture, EnginePeer) -> Void
     
@@ -581,7 +399,6 @@ public final class StoryPeerListItemComponent: Component {
         expandEffectFraction: CGFloat,
         leftNeighborDistance: CGPoint?,
         rightNeighborDistance: CGPoint?,
-        indicatorShape: IndicatorShape, // <-- новый параметр
         action: @escaping (EnginePeer) -> Void,
         contextGesture: @escaping (ContextExtractedContentContainingNode, ContextGesture, EnginePeer) -> Void
     ) {
@@ -600,7 +417,6 @@ public final class StoryPeerListItemComponent: Component {
         self.expandEffectFraction = expandEffectFraction
         self.leftNeighborDistance = leftNeighborDistance
         self.rightNeighborDistance = rightNeighborDistance
-        self.indicatorShape = indicatorShape
         self.action = action
         self.contextGesture = contextGesture
     }
@@ -651,50 +467,7 @@ public final class StoryPeerListItemComponent: Component {
         if lhs.rightNeighborDistance != rhs.rightNeighborDistance {
             return false
         }
-        if lhs.indicatorShape != rhs.indicatorShape {
-            return false
-        }
         return true
-    }
-    
-    public final class TransitionView: UIView {
-        private weak var itemView: StoryPeerListItemComponent.View?
-        private var snapshotView: UIView?
-        private var portalView: PortalView?
-        
-        init(itemView: StoryPeerListItemComponent.View?) {
-            self.itemView = itemView
-            super.init(frame: CGRect())
-            
-            if let itemView {
-                if let portalView = PortalView(matchPosition: false) {
-                    portalView.view.layer.rasterizationScale = UIScreenScale
-                    itemView.avatarContent.addPortal(view: portalView)
-                    self.portalView = portalView
-                    self.addSubview(portalView.view)
-                }
-            }
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        func update(state: StoryContainerScreen.TransitionState, transition: ComponentTransition) {
-            let size = state.sourceSize.interpolate(to: state.destinationSize, amount: state.progress)
-            if let snapshotView = self.snapshotView {
-                transition.setPosition(view: snapshotView,
-                                       position: CGPoint(x: size.width * 0.5, y: size.height * 0.5))
-                transition.setScale(view: snapshotView,
-                                    scale: size.width / state.destinationSize.width)
-            }
-            if let portalView = self.portalView {
-                transition.setPosition(view: portalView.view,
-                                       position: CGPoint(x: size.width * 0.5, y: size.height * 0.5))
-                transition.setScale(view: portalView.view,
-                                    scale: size.width / state.destinationSize.width)
-            }
-        }
     }
     
     public final class View: UIView {
@@ -798,7 +571,9 @@ public final class StoryPeerListItemComponent: Component {
             self.indicatorShapeUnseenLayer.lineCap = .round
             
             self.button.highligthedChanged = { [weak self] highlighted in
-                guard let self else { return }
+                guard let self else {
+                    return
+                }
                 if highlighted {
                     self.alpha = 0.7
                 } else {
@@ -815,7 +590,10 @@ public final class StoryPeerListItemComponent: Component {
                 }
                 self.button.isEnabled = false
                 DispatchQueue.main.async { [weak self] in
-                    self?.button.isEnabled = true
+                    guard let self else {
+                        return
+                    }
+                    self.button.isEnabled = true
                 }
                 component.contextGesture(self.extractedContainerNode, gesture, component.peer)
             }
@@ -827,14 +605,9 @@ public final class StoryPeerListItemComponent: Component {
                 }
                 
                 if isExtracted {
-                    self.extractedBackgroundView.image = generateStretchableFilledCircleImage(
-                        diameter: 24.0,
-                        color: component.theme.contextMenu.backgroundColor
-                    )
+                    self.extractedBackgroundView.image = generateStretchableFilledCircleImage(diameter: 24.0, color: component.theme.contextMenu.backgroundColor)
                 }
-                transition.updateAlpha(layer: self.extractedBackgroundView.layer,
-                                       alpha: isExtracted ? 1.0 : 0.0,
-                                       completion: { [weak self] _ in
+                transition.updateAlpha(layer: self.extractedBackgroundView.layer, alpha: isExtracted ? 1.0 : 0.0, completion: { [weak self] _ in
                     if !isExtracted {
                         self?.extractedBackgroundView.image = nil
                     }
@@ -862,21 +635,18 @@ public final class StoryPeerListItemComponent: Component {
             self.avatarBackgroundView.alpha = isPreviewing ? 0.0 : 1.0
         }
         
-        func update(
-            component: StoryPeerListItemComponent,
-            availableSize: CGSize,
-            state: EmptyComponentState,
-            environment: Environment<Empty>,
-            transition: ComponentTransition
-        ) -> CGSize {
+        func update(component: StoryPeerListItemComponent, availableSize: CGSize, state: EmptyComponentState, environment: Environment<Empty>, transition: ComponentTransition) -> CGSize {
             let size = availableSize
+            
             let themeUpdated = self.component?.theme !== component.theme
+            
             let previousComponent = self.component
             
             self.component = component
             self.componentState = state
             
             let effectiveWidth: CGFloat = component.scale * component.fullWidth
+            
             let effectiveScale: CGFloat = component.scale
             
             let avatarNode: AvatarNode
@@ -891,13 +661,12 @@ public final class StoryPeerListItemComponent: Component {
             }
             
             let avatarSize = CGSize(width: 52.0, height: 52.0)
+            
             let avatarBackgroundImage: UIImage?
-            if let sharedAvatarBackgroundImage = sharedAvatarBackgroundImage,
-               sharedAvatarBackgroundImage.size.width == avatarSize.width
-            {
+            if let sharedAvatarBackgroundImage = sharedAvatarBackgroundImage, sharedAvatarBackgroundImage.size.width == avatarSize.width {
                 avatarBackgroundImage = sharedAvatarBackgroundImage
             } else {
-                avatarBackgroundImage = component.indicatorShape == .circle ? generateFilledCircleImage(diameter: avatarSize.width, color: .white)?.withRenderingMode(.alwaysTemplate) : generateFilledRoundedRectImage(size: CGSize(width: avatarSize.width, height: avatarSize.width), cornerRadius: avatarSize.width / 16.0, color: .white)?.withRenderingMode(.alwaysTemplate)
+                avatarBackgroundImage = generateFilledCircleImage(diameter: avatarSize.width, color: .white)?.withRenderingMode(.alwaysTemplate)
             }
             self.avatarBackgroundView.image = avatarBackgroundImage
             
@@ -905,74 +674,45 @@ public final class StoryPeerListItemComponent: Component {
                 self.avatarBackgroundView.tintColor = component.theme.rootController.navigationBar.opaqueBackgroundColor
             }
             
-            let avatarFrame = CGRect(
-                origin: CGPoint(
-                    x: floor((availableSize.width - avatarSize.width) * 0.5)
-                        + (effectiveWidth - availableSize.width) * 0.5,
-                    y: 4.0
-                ),
-                size: avatarSize
-            )
+            let avatarFrame = CGRect(origin: CGPoint(x: floor((availableSize.width - avatarSize.width) * 0.5) + (effectiveWidth - availableSize.width) * 0.5, y: 4.0), size: avatarSize)
             
-            transition.setFrame(view: avatarNode.view,
-                                frame: CGRect(origin: .zero, size: avatarFrame.size))
-            transition.setFrame(view: self.avatarBackgroundView,
-                                frame: CGRect(
-                                    origin: .zero,
-                                    size: avatarFrame.size
-                                ).insetBy(
-                                    dx: -3.0 - UIScreenPixel * 2.0,
-                                    dy: -3.0 - UIScreenPixel * 2.0
-                                ))
+            transition.setFrame(view: avatarNode.view, frame: CGRect(origin: CGPoint(), size: avatarFrame.size))
+            transition.setFrame(view: self.avatarBackgroundView, frame: CGRect(origin: CGPoint(), size: avatarFrame.size).insetBy(dx: -3.0 - UIScreenPixel * 2.0, dy: -3.0 - UIScreenPixel * 2.0))
             
             let indicatorFrame = avatarFrame.insetBy(dx: -8.0, dy: -8.0)
+            
             let baseLineUnseenWidth: CGFloat = 2.33
             let baseLineSeenWidth: CGFloat = 1.33
-            let minimizedLineWidth: CGFloat = 4.3
-            let normalizedScale = max(0.0, min(1.0, component.scale))
-            let indicatorLineSeenWidth: CGFloat =
-                baseLineSeenWidth * normalizedScale
-                + minimizedLineWidth * (1.0 - normalizedScale)
-            let indicatorLineUnseenWidth: CGFloat =
-                baseLineUnseenWidth * normalizedScale
-                + minimizedLineWidth * (1.0 - normalizedScale)
             
-            avatarNode.setPeer(context: component.context,
-                               theme: component.theme,
-                               peer: component.peer)
+            let minimizedLineWidth: CGFloat = 4.3
+            
+            let normalizedScale = max(0.0, min(1.0, component.scale))
+            let indicatorLineSeenWidth: CGFloat = baseLineSeenWidth * normalizedScale + minimizedLineWidth * (1.0 - normalizedScale)
+            let indicatorLineUnseenWidth: CGFloat = baseLineUnseenWidth * normalizedScale + minimizedLineWidth * (1.0 - normalizedScale)
+            
+            avatarNode.setPeer(
+                context: component.context,
+                theme: component.theme,
+                peer: component.peer,
+                clipStyle: component.theme.useSquareStyle ? .round : .round // TODO: Добавить круглые сторис
+            )
             avatarNode.updateSize(size: avatarSize)
             
-            transition.setPosition(view: self.avatarContent,
-                                   position: CGPoint(
-                                     x: avatarFrame.midX,
-                                     y: avatarFrame.midY
-                                   ))
-            transition.setBounds(view: self.avatarContent,
-                                 bounds: CGRect(origin: .zero, size: avatarFrame.size))
+            transition.setPosition(view: self.avatarContent, position: CGPoint(x: avatarFrame.midX, y: avatarFrame.midY))
+            transition.setBounds(view: self.avatarContent, bounds: CGRect(origin: CGPoint(), size: avatarFrame.size))
             
-            transition.setPosition(view: self.avatarContainer,
-                                   position: CGPoint(
-                                     x: avatarFrame.width * 0.5,
-                                     y: avatarFrame.height * 0.5
-                                   ))
-            transition.setBounds(view: self.avatarContainer,
-                                 bounds: CGRect(origin: .zero, size: avatarFrame.size))
+            transition.setPosition(view: self.avatarContainer, position: CGPoint(x: avatarFrame.width * 0.5, y: avatarFrame.height * 0.5))
+            transition.setBounds(view: self.avatarContainer, bounds: CGRect(origin: CGPoint(), size: avatarFrame.size))
             
-            transition.setPosition(view: self.avatarBackgroundContainer,
-                                   position: avatarFrame.center)
-            transition.setBounds(view: self.avatarBackgroundContainer,
-                                 bounds: CGRect(origin: .zero, size: avatarFrame.size))
+            transition.setPosition(view: self.avatarBackgroundContainer, position: avatarFrame.center)
+            transition.setBounds(view: self.avatarBackgroundContainer, bounds: CGRect(origin: CGPoint(), size: avatarFrame.size))
             
             let scaledAvatarSize = effectiveScale * avatarSize.width
-            transition.setScale(view: self.avatarContainer,
-                                scale: scaledAvatarSize / avatarSize.width)
-            transition.setScale(view: self.avatarBackgroundContainer,
-                                scale: scaledAvatarSize / avatarSize.width)
             
-            if component.peer.id == component.context.account.peerId
-                && !component.hasItems
-                && component.ringAnimation == nil
-            {
+            transition.setScale(view: self.avatarContainer, scale: scaledAvatarSize / avatarSize.width)
+            transition.setScale(view: self.avatarBackgroundContainer, scale: scaledAvatarSize / avatarSize.width)
+            
+            if component.peer.id == component.context.account.peerId && !component.hasItems && component.ringAnimation == nil {
                 self.indicatorColorSeenLayer.isHidden = true
                 self.indicatorColorUnseenLayer.isHidden = true
                 
@@ -989,9 +729,9 @@ public final class StoryPeerListItemComponent: Component {
                 let badgeSize = CGSize(width: 16.0, height: 16.0)
                 if avatarAddBadgeView.image == nil || themeUpdated {
                     avatarAddBadgeView.image = generateImage(badgeSize, rotatedContext: { size, context in
-                        context.clear(CGRect(origin: .zero, size: size))
+                        context.clear(CGRect(origin: CGPoint(), size: size))
                         context.setFillColor(component.theme.list.itemCheckColors.fillColor.cgColor)
-                        context.fillEllipse(in: CGRect(origin: .zero, size: size))
+                        context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
                         
                         context.setStrokeColor(component.theme.list.itemCheckColors.foregroundColor.cgColor)
                         context.setLineWidth(UIScreenPixel * 3.0)
@@ -999,45 +739,31 @@ public final class StoryPeerListItemComponent: Component {
                         
                         let lineSize: CGFloat = 9.0 + UIScreenPixel
                         
-                        context.move(to: CGPoint(x: size.width * 0.5,
-                                                 y: (size.height - lineSize) * 0.5))
-                        context.addLine(to: CGPoint(x: size.width * 0.5,
-                                                    y: (size.height - lineSize) * 0.5 + lineSize))
+                        context.move(to: CGPoint(x: size.width * 0.5, y: (size.height - lineSize) * 0.5))
+                        context.addLine(to: CGPoint(x: size.width * 0.5, y: (size.height - lineSize) * 0.5 + lineSize))
                         context.strokePath()
                         
-                        context.move(to: CGPoint(x: (size.width - lineSize) * 0.5,
-                                                 y: size.height * 0.5))
-                        context.addLine(to: CGPoint(x: (size.width - lineSize) * 0.5 + lineSize,
-                                                    y: size.height * 0.5))
+                        context.move(to: CGPoint(x: (size.width - lineSize) * 0.5, y: size.height * 0.5))
+                        context.addLine(to: CGPoint(x: (size.width - lineSize) * 0.5 + lineSize, y: size.height * 0.5))
                         context.strokePath()
                     })
                 }
-                avatarAddBadgeTransition.setFrame(
-                    view: avatarAddBadgeView,
-                    frame: CGRect(
-                        origin: CGPoint(
-                            x: avatarFrame.width - 1.0 - badgeSize.width,
-                            y: avatarFrame.height - 2.0 - badgeSize.height
-                        ),
-                        size: badgeSize
-                    )
-                )
+                avatarAddBadgeTransition.setFrame(view: avatarAddBadgeView, frame: CGRect(origin: CGPoint(x: avatarFrame.width - 1.0 - badgeSize.width, y: avatarFrame.height - 2.0 - badgeSize.height), size: badgeSize))
             } else {
                 self.indicatorColorSeenLayer.isHidden = false
                 self.indicatorColorUnseenLayer.isHidden = false
+                
                 if let avatarAddBadgeView = self.avatarAddBadgeView {
                     self.avatarAddBadgeView = nil
                     avatarAddBadgeView.removeFromSuperview()
                 }
             }
             
-            self.avatarBackgroundView.isHidden = component.ringAnimation != nil
-                || self.indicatorColorSeenLayer.isHidden
+            self.avatarBackgroundView.isHidden = component.ringAnimation != nil || self.indicatorColorSeenLayer.isHidden
             
             let baseRadius: CGFloat = 30.66
             let collapsedRadius: CGFloat = 35.0
-            var indicatorRadius: CGFloat = baseRadius * normalizedScale
-                + collapsedRadius * (1.0 - normalizedScale)
+            var indicatorRadius: CGFloat = baseRadius * normalizedScale + collapsedRadius * (1.0 - normalizedScale)
             if component.scale > 1.0 {
                 indicatorRadius += max(0.0, component.scale - 1.0) * 0.0
             }
@@ -1050,20 +776,12 @@ public final class StoryPeerListItemComponent: Component {
             let unseenColors: [CGColor]
             
             if component.hasUnseenCloseFriendsItems {
-                unseenColors = [
-                    component.theme.chatList.storyUnseenPrivateColors.topColor.cgColor,
-                    component.theme.chatList.storyUnseenPrivateColors.bottomColor.cgColor
-                ]
+                unseenColors = [component.theme.chatList.storyUnseenPrivateColors.topColor.cgColor, component.theme.chatList.storyUnseenPrivateColors.bottomColor.cgColor]
             } else {
-                unseenColors = [
-                    component.theme.chatList.storyUnseenColors.topColor.cgColor,
-                    component.theme.chatList.storyUnseenColors.bottomColor.cgColor
-                ]
+                unseenColors = [component.theme.chatList.storyUnseenColors.topColor.cgColor, component.theme.chatList.storyUnseenColors.bottomColor.cgColor]
             }
-            seenColors = [
-                component.theme.chatList.storySeenColors.topColor.cgColor,
-                component.theme.chatList.storySeenColors.bottomColor.cgColor
-            ]
+            
+            seenColors = [component.theme.chatList.storySeenColors.topColor.cgColor, component.theme.chatList.storySeenColors.bottomColor.cgColor]
             
             self.indicatorColorSeenLayer.locations = locations.map { $0 as NSNumber }
             self.indicatorColorSeenLayer.colors = seenColors
@@ -1071,165 +789,71 @@ public final class StoryPeerListItemComponent: Component {
             self.indicatorColorUnseenLayer.locations = locations.map { $0 as NSNumber }
             self.indicatorColorUnseenLayer.colors = unseenColors
             
-            transition.setPosition(layer: self.indicatorColorSeenLayer,
-                                   position: indicatorFrame.offsetBy(
-                                     dx: -avatarFrame.minX, dy: -avatarFrame.minY
-                                   ).center)
-            transition.setPosition(layer: self.indicatorColorUnseenLayer,
-                                   position: indicatorFrame.offsetBy(
-                                     dx: -avatarFrame.minX, dy: -avatarFrame.minY
-                                   ).center)
+            transition.setPosition(layer: self.indicatorColorSeenLayer, position: indicatorFrame.offsetBy(dx: -avatarFrame.minX, dy: -avatarFrame.minY).center)
+            transition.setPosition(layer: self.indicatorColorUnseenLayer, position: indicatorFrame.offsetBy(dx: -avatarFrame.minX, dy: -avatarFrame.minY).center)
             
-            transition.setBounds(layer: self.indicatorColorSeenLayer,
-                                 bounds: CGRect(origin: .zero, size: indicatorFrame.size))
-            transition.setBounds(layer: self.indicatorColorUnseenLayer,
-                                 bounds: CGRect(origin: .zero, size: indicatorFrame.size))
+            transition.setBounds(layer: self.indicatorColorSeenLayer, bounds: CGRect(origin: CGPoint(), size: indicatorFrame.size))
+            transition.setBounds(layer: self.indicatorColorUnseenLayer, bounds: CGRect(origin: CGPoint(), size: indicatorFrame.size))
             
-            transition.setPosition(layer: self.indicatorShapeSeenLayer,
-                                   position: CGPoint(
-                                     x: indicatorFrame.width * 0.5,
-                                     y: indicatorFrame.height * 0.5
-                                   ))
-            transition.setPosition(layer: self.indicatorShapeUnseenLayer,
-                                   position: CGPoint(
-                                     x: indicatorFrame.width * 0.5,
-                                     y: indicatorFrame.height * 0.5
-                                   ))
+            transition.setPosition(layer: self.indicatorShapeSeenLayer, position: CGPoint(x: indicatorFrame.width * 0.5, y: indicatorFrame.height * 0.5))
+            transition.setPosition(layer: self.indicatorShapeUnseenLayer, position: CGPoint(x: indicatorFrame.width * 0.5, y: indicatorFrame.height * 0.5))
             
-            transition.setBounds(layer: self.indicatorShapeSeenLayer,
-                                 bounds: CGRect(origin: .zero, size: indicatorFrame.size))
-            transition.setBounds(layer: self.indicatorShapeUnseenLayer,
-                                 bounds: CGRect(origin: .zero, size: indicatorFrame.size))
+            transition.setBounds(layer: self.indicatorShapeSeenLayer, bounds: CGRect(origin: CGPoint(), size: indicatorFrame.size))
+            transition.setBounds(layer: self.indicatorShapeUnseenLayer, bounds: CGRect(origin: CGPoint(), size: indicatorFrame.size))
             
             transition.setScale(layer: self.indicatorColorSeenLayer, scale: effectiveScale)
             transition.setScale(layer: self.indicatorColorUnseenLayer, scale: effectiveScale)
             
-            let indicatorCenter = CGRect(origin: .zero, size: indicatorFrame.size).center
+            let indicatorCenter = CGRect(origin: CGPoint(), size: indicatorFrame.size).center
             
             var mappedLeftCenter: CGPoint?
             var mappedRightCenter: CGPoint?
+            
             if let leftNeighborDistance = component.leftNeighborDistance {
-                mappedLeftCenter = CGPoint(
-                    x: indicatorCenter.x - leftNeighborDistance.x * (1.0 / effectiveScale),
-                    y: indicatorCenter.y + leftNeighborDistance.y * (1.0 / effectiveScale)
-                )
+                mappedLeftCenter = CGPoint(x: indicatorCenter.x - leftNeighborDistance.x * (1.0 / effectiveScale), y: indicatorCenter.y + leftNeighborDistance.y * (1.0 / effectiveScale))
             }
             if let rightNeighborDistance = component.rightNeighborDistance {
-                mappedRightCenter = CGPoint(
-                    x: indicatorCenter.x + rightNeighborDistance.x * (1.0 / effectiveScale),
-                    y: indicatorCenter.y + rightNeighborDistance.y * (1.0 / effectiveScale)
-                )
+                mappedRightCenter = CGPoint(x: indicatorCenter.x + rightNeighborDistance.x * (1.0 / effectiveScale), y: indicatorCenter.y + rightNeighborDistance.y * (1.0 / effectiveScale))
             }
             
-            // Маска для аватара
             let avatarPath = CGMutablePath()
-            
-            if component.indicatorShape == .circle {
-                avatarPath.addEllipse(in: CGRect(origin: .zero, size: avatarSize)
-                    .insetBy(dx: -1.0, dy: -1.0))
-            } else {
-                avatarPath.addRoundedRect(in: CGRect(origin: .zero, size: avatarSize), cornerWidth: 8.0, cornerHeight: 8.0)
-            }
-           
-            // если свой аватар + нет сториз + ...
-            if component.peer.id == component.context.account.peerId
-                && !component.hasItems
-                && component.ringAnimation == nil
-            {
+            avatarPath.addEllipse(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -1.0, dy: -1.0))
+            if component.peer.id == component.context.account.peerId && !component.hasItems && component.ringAnimation == nil {
                 let cutoutSize: CGFloat = 18.0 + UIScreenPixel * 2.0
-                avatarPath.addEllipse(
-                    in: CGRect(
-                        origin: CGPoint(
-                            x: avatarSize.width - cutoutSize + UIScreenPixel,
-                            y: avatarSize.height - 1.0 - cutoutSize + UIScreenPixel
-                        ),
-                        size: CGSize(width: cutoutSize, height: cutoutSize)
-                    )
-                )
+                avatarPath.addEllipse(in: CGRect(origin: CGPoint(x: avatarSize.width - cutoutSize + UIScreenPixel, y: avatarSize.height - 1.0 - cutoutSize + UIScreenPixel), size: CGSize(width: cutoutSize, height: cutoutSize)))
+            } else if let mappedLeftCenter {
+                avatarPath.addEllipse(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -indicatorLineSeenWidth * 1.4, dy: -indicatorLineSeenWidth * 1.4).offsetBy(dx: -abs(indicatorCenter.x - mappedLeftCenter.x), dy: -abs(indicatorCenter.y - mappedLeftCenter.y)))
             }
-            ComponentTransition.immediate.setShapeLayerPath(
-                layer: self.avatarShapeLayer,
-                path: avatarPath
-            )
+            ComponentTransition.immediate.setShapeLayerPath(layer: self.avatarShapeLayer, path: avatarPath)
             
-            // 4. Вызываем не напрямую calculateMergingCircleShape, а нашу обёрточную calculateMergingShape
-            //    с передачей component.indicatorShape (круг или квадрат).
-            
-            ComponentTransition.immediate.setShapeLayerPath(
-                layer: self.indicatorShapeSeenLayer,
-                path: calculateMergingShape(
-                    center: indicatorCenter,
-                    leftCenter: mappedLeftCenter,
-                    rightCenter: mappedRightCenter,
-                    radius: indicatorRadius - indicatorLineUnseenWidth * 0.5,
-                    totalCount: component.totalCount,
-                    unseenCount: component.unseenCount,
-                    isSeen: true,
-                    segmentFraction: component.expandedAlphaFraction,
-                    rotationFraction: component.expandEffectFraction,
-                    shape: component.indicatorShape  // <-- тут
-                )
-            )
-            ComponentTransition.immediate.setShapeLayerPath(
-                layer: self.indicatorShapeUnseenLayer,
-                path: calculateMergingShape(
-                    center: indicatorCenter,
-                    leftCenter: mappedLeftCenter,
-                    rightCenter: mappedRightCenter,
-                    radius: indicatorRadius - indicatorLineUnseenWidth * 0.5,
-                    totalCount: component.totalCount,
-                    unseenCount: component.unseenCount,
-                    isSeen: false,
-                    segmentFraction: component.expandedAlphaFraction,
-                    rotationFraction: component.expandEffectFraction,
-                    shape: component.indicatorShape  // <-- и тут
-                )
-            )
+            ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeSeenLayer, path: calculateMergingCircleShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: true, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
+            ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeUnseenLayer, path: calculateMergingCircleShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: false, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
             
             let titleString: String
             if component.peer.id == component.context.account.peerId {
-                if let ringAnimation = component.ringAnimation,
-                   case .progress = ringAnimation
-                {
+                if let ringAnimation = component.ringAnimation, case .progress = ringAnimation {
                     titleString = component.strings.StoryFeed_MyUploading
                 } else {
                     titleString = component.strings.StoryFeed_MyStory
                 }
             } else {
-                titleString = component.peer.compactDisplayTitle
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                titleString = component.peer.compactDisplayTitle.trimmingCharacters(in: .whitespacesAndNewlines)
             }
             
             var titleTransition = transition
-            if let previousAnimation = previousComponent?.ringAnimation,
-               case .progress = previousAnimation,
-               component.ringAnimation == nil
-            {
-                if let titleView = self.title.view,
-                   let snapshotView = titleView.snapshotView(afterScreenUpdates: false)
-                {
+            if let previousAnimation = previousComponent?.ringAnimation, case .progress = previousAnimation, component.ringAnimation == nil {
+                if let titleView = self.title.view, let snapshotView = titleView.snapshotView(afterScreenUpdates: false) {
                     self.button.addSubview(snapshotView)
                     snapshotView.frame = titleView.frame
-                    snapshotView.layer.animateAlpha(
-                        from: component.expandedAlphaFraction,
-                        to: 0.0,
-                        duration: 0.25,
-                        removeOnCompletion: false,
-                        completion: { [weak snapshotView] _ in
-                            snapshotView?.removeFromSuperview()
-                        }
-                    )
-                    titleView.layer.animateAlpha(
-                        from: 0.0,
-                        to: component.expandedAlphaFraction,
-                        duration: 0.25
-                    )
+                    snapshotView.layer.animateAlpha(from: component.expandedAlphaFraction, to: 0.0, duration: 0.25, removeOnCompletion: false, completion: { [weak snapshotView] _ in
+                        snapshotView?.removeFromSuperview()
+                    })
+                    titleView.layer.animateAlpha(from: 0.0, to: component.expandedAlphaFraction, duration: 0.25)
                 }
                 titleTransition = .immediate
                 
                 self.avatarContent.layer.transform = CATransform3DMakeScale(1.08, 1.08, 1.0)
-                self.avatarContent.layer.animateScale(from: 1.0, to: 1.08, duration: 0.2,
-                                                      completion: { [weak self] _ in
+                self.avatarContent.layer.animateScale(from: 1.0, to: 1.08, duration: 0.2, completion: { [weak self] _ in
                     self?.avatarContent.layer.transform = CATransform3DMakeScale(1.0, 1.0, 1.0)
                     self?.avatarContent.layer.animateScale(from: 1.08, to: 1.0, duration: 0.15)
                 })
@@ -1237,19 +861,10 @@ public final class StoryPeerListItemComponent: Component {
                 let initialLineWidth: CGFloat = baseLineUnseenWidth
                 let targetLineWidth: CGFloat = baseLineUnseenWidth * 1.5
                 self.indicatorShapeSeenLayer.lineWidth = targetLineWidth
-                self.indicatorShapeSeenLayer.animateShapeLineWidth(
-                    from: initialLineWidth,
-                    to: targetLineWidth,
-                    duration: 0.2,
-                    completion: { [weak self] _ in
-                        self?.indicatorShapeSeenLayer.lineWidth = initialLineWidth
-                        self?.indicatorShapeSeenLayer.animateShapeLineWidth(
-                            from: targetLineWidth,
-                            to: initialLineWidth,
-                            duration: 0.15
-                        )
-                    }
-                )
+                self.indicatorShapeSeenLayer.animateShapeLineWidth(from: initialLineWidth, to: targetLineWidth, duration: 0.2, completion: { [weak self] _ in
+                    self?.indicatorShapeSeenLayer.lineWidth = initialLineWidth
+                    self?.indicatorShapeSeenLayer.animateShapeLineWidth(from: targetLineWidth, to: initialLineWidth, duration: 0.15)
+                })
                 
                 if self.window != nil {
                     HapticFeedback().success()
@@ -1259,30 +874,13 @@ public final class StoryPeerListItemComponent: Component {
             let titleSize = self.title.update(
                 transition: .immediate,
                 component: AnyComponent(MultilineTextComponent(
-                    text: .plain(NSAttributedString(
-                        string: titleString,
-                        font: Font.regular(11.0),
-                        textColor: (
-                            (component.unseenCount != 0
-                             || component.peer.id == component.context.account.peerId)
-                            ? component.theme.list.itemPrimaryTextColor
-                            : component.theme.list.itemPrimaryTextColor.withMultipliedAlpha(0.5)
-                        )
-                    )),
+                    text: .plain(NSAttributedString(string: titleString, font: Font.regular(11.0), textColor: (component.unseenCount != 0 || component.peer.id == component.context.account.peerId) ? component.theme.list.itemPrimaryTextColor : component.theme.list.itemPrimaryTextColor.withMultipliedAlpha(0.5))),
                     maximumNumberOfLines: 1
                 )),
                 environment: {},
                 containerSize: CGSize(width: availableSize.width + 12.0, height: 100.0)
             )
-            let titleFrame = CGRect(
-                origin: CGPoint(
-                    x: floor((availableSize.width - titleSize.width) * 0.5)
-                        + (effectiveWidth - availableSize.width) * 0.5,
-                    y: indicatorFrame.midY + (indicatorFrame.height * 0.5 + 2.0) * effectiveScale
-                ),
-                size: titleSize
-            )
-            
+            let titleFrame = CGRect(origin: CGPoint(x: floor((availableSize.width - titleSize.width) * 0.5) + (effectiveWidth - availableSize.width) * 0.5, y: indicatorFrame.midY + (indicatorFrame.height * 0.5 + 2.0) * effectiveScale), size: titleSize)
             if let titleView = self.title.view {
                 if titleView.superview == nil {
                     titleView.layer.anchorPoint = CGPoint(x: 0.5, y: 0.5)
@@ -1290,7 +888,7 @@ public final class StoryPeerListItemComponent: Component {
                     self.button.addSubview(titleView)
                 }
                 titleTransition.setPosition(view: titleView, position: titleFrame.center)
-                titleView.bounds = CGRect(origin: .zero, size: titleFrame.size)
+                titleView.bounds = CGRect(origin: CGPoint(), size: titleFrame.size)
                 titleTransition.setScale(view: titleView, scale: effectiveScale)
                 titleTransition.setAlpha(view: titleView, alpha: component.expandedAlphaFraction)
             }
@@ -1306,99 +904,62 @@ public final class StoryPeerListItemComponent: Component {
                     self.progressLayer = progressLayer
                     self.indicatorMaskUnseenLayer.addSublayer(progressLayer)
                 }
-                let progressFrame = CGRect(origin: .zero, size: indicatorFrame.size)
-                    .insetBy(dx: 4.0, dy: 4.0)
+                let progressFrame = CGRect(origin: CGPoint(), size: indicatorFrame.size).insetBy(dx: 4.0, dy: 4.0)
                 progressTransition.setFrame(layer: progressLayer, frame: progressFrame)
                 
                 switch ringAnimation {
                 case let .progress(progress):
-                    let actualTransition: ComponentTransition
+                    let progressTransition: ComponentTransition
                     if abs(progress - 0.028) < 0.001 {
-                        actualTransition = .immediate
+                        progressTransition = .immediate
                     } else {
-                        actualTransition = .easeInOut(duration: 0.3)
+                        progressTransition = .easeInOut(duration: 0.3)
                     }
-                    progressLayer.update(size: progressFrame.size,
-                                         lineWidth: indicatorLineUnseenWidth,
-                                         radius: indicatorRadius - indicatorLineUnseenWidth * 0.5,
-                                         value: .progress(progress),
-                                         transition: actualTransition)
+                    progressLayer.update(size: progressFrame.size, lineWidth: indicatorLineUnseenWidth, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, value: .progress(progress), transition: progressTransition)
                 case .loading:
-                    progressLayer.update(size: progressFrame.size,
-                                         lineWidth: indicatorLineUnseenWidth,
-                                         radius: indicatorRadius - indicatorLineUnseenWidth * 0.5,
-                                         value: .indefinite,
-                                         transition: transition)
+                    progressLayer.update(size: progressFrame.size, lineWidth: indicatorLineUnseenWidth, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, value: .indefinite, transition: transition)
                 }
                 
                 self.indicatorShapeSeenLayer.opacity = 0.0
                 self.indicatorShapeUnseenLayer.opacity = 0.0
                 
-                if let previousComponent = previousComponent,
-                   previousComponent.ringAnimation == nil
-                {
+                if let previousComponent = previousComponent, previousComponent.ringAnimation == nil {
                     progressLayer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
-                    self.indicatorShapeSeenLayer.animateAlpha(
-                        from: 1.0, to: 0.0, duration: 0.2)
-                    self.indicatorShapeUnseenLayer.animateAlpha(
-                        from: 1.0, to: 0.0, duration: 0.2)
+                    self.indicatorShapeSeenLayer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2)
+                    self.indicatorShapeUnseenLayer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2)
                 }
             } else {
                 self.indicatorShapeSeenLayer.opacity = 1.0
                 self.indicatorShapeUnseenLayer.opacity = 1.0
+                
                 if let progressLayer = self.progressLayer {
                     self.indicatorShapeSeenLayer.opacity = 1.0
                     self.indicatorShapeUnseenLayer.opacity = 1.0
                     
-                    self.indicatorShapeSeenLayer.animateAlpha(
-                        from: 0.0, to: 1.0, duration: 0.2)
-                    self.indicatorShapeUnseenLayer.animateAlpha(
-                        from: 0.0, to: 1.0, duration: 0.2)
+                    self.indicatorShapeSeenLayer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
+                    self.indicatorShapeUnseenLayer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
                     
                     self.progressLayer = nil
                     if transition.animation.isImmediate {
                         progressLayer.reset()
                         progressLayer.removeFromSuperlayer()
                     } else {
-                        progressLayer.animateAlpha(
-                            from: 1.0,
-                            to: 0.0,
-                            duration: 0.2,
-                            removeOnCompletion: false,
-                            completion: { [weak progressLayer] _ in
-                                progressLayer?.reset()
-                                progressLayer?.removeFromSuperlayer()
-                            }
-                        )
+                        progressLayer.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: { [weak progressLayer] _ in
+                            progressLayer?.reset()
+                            progressLayer?.removeFromSuperlayer()
+                        })
                     }
                 }
             }
             
             let extractedBackgroundWidth = max(size.width + 8.0, titleSize.width + 10.0)
-            transition.setFrame(view: self.button, frame: CGRect(origin: .zero, size: size))
-            transition.setFrame(view: self.extractedBackgroundView,
-                                frame: CGRect(
-                                    origin: CGPoint(
-                                        x: floor((size.width - extractedBackgroundWidth) * 0.5),
-                                        y: -4.0
-                                    ),
-                                    size: CGSize(width: extractedBackgroundWidth,
-                                                 height: size.height + 8.0)
-                                ))
+            transition.setFrame(view: self.button, frame: CGRect(origin: CGPoint(), size: size))
+            transition.setFrame(view: self.extractedBackgroundView, frame: CGRect(origin: CGPoint(x: floor((size.width - extractedBackgroundWidth) * 0.5), y: -4.0), size: CGSize(width: extractedBackgroundWidth, height: size.height + 8.0)))
             
-            self.extractedContainerNode.frame = CGRect(origin: .zero, size: size)
-            self.extractedContainerNode.contentNode.frame = CGRect(origin: .zero, size: size)
-            self.extractedContainerNode.contentRect = CGRect(
-                origin: CGPoint(
-                    x: self.extractedBackgroundView.frame.minX - 2.0,
-                    y: self.extractedBackgroundView.frame.minY
-                ),
-                size: CGSize(
-                    width: self.extractedBackgroundView.frame.width + 4.0,
-                    height: self.extractedBackgroundView.frame.height
-                )
-            )
-            self.containerNode.frame = CGRect(origin: .zero, size: size)
+            self.extractedContainerNode.frame = CGRect(origin: CGPoint(), size: size)
+            self.extractedContainerNode.contentNode.frame = CGRect(origin: CGPoint(), size: size)
+            self.extractedContainerNode.contentRect = CGRect(origin: CGPoint(x: self.extractedBackgroundView.frame.minX - 2.0, y: self.extractedBackgroundView.frame.minY), size: CGSize(width: self.extractedBackgroundView.frame.width + 4.0, height: self.extractedBackgroundView.frame.height))
+            self.containerNode.frame = CGRect(origin: CGPoint(), size: size)
             
             return availableSize
         }
@@ -1408,19 +969,7 @@ public final class StoryPeerListItemComponent: Component {
         return View(frame: CGRect())
     }
     
-    public func update(
-        view: View,
-        availableSize: CGSize,
-        state: EmptyComponentState,
-        environment: Environment<Empty>,
-        transition: ComponentTransition
-    ) -> CGSize {
-        return view.update(
-            component: self,
-            availableSize: availableSize,
-            state: state,
-            environment: environment,
-            transition: transition
-        )
+    public func update(view: View, availableSize: CGSize, state: EmptyComponentState, environment: Environment<Empty>, transition: ComponentTransition) -> CGSize {
+        return view.update(component: self, availableSize: availableSize, state: state, environment: environment, transition: transition)
     }
 }

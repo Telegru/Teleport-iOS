@@ -1734,8 +1734,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 }
             }
             
-            var avatarDiameter = min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
-            
+            var avatarDiameter = item.presentationData.theme.useSquareStyle ? min(48.0, floor(item.presentationData.fontSize.baseDisplaySize * 48.0 / 17.0)) : min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
+
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {
                 avatarDiameter = 40.0
             }
@@ -2199,7 +2199,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             let enableChatListPhotos = true
             
             // if changed, adjust setupItem accordingly
-            var avatarDiameter = min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
+            var avatarDiameter = item.presentationData.theme.useSquareStyle ? min(48.0, floor(item.presentationData.fontSize.baseDisplaySize * 48.0 / 17.0)) : min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
             let avatarLeftInset: CGFloat
             
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {

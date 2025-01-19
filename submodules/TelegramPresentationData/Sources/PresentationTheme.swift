@@ -1578,10 +1578,11 @@ public final class PresentationTheme: Equatable {
     public let chart: PresentationThemeChart
     public let preview: Bool
     public var forceSync: Bool = false
-    
+
     public let resourceCache: PresentationsResourceCache = PresentationsResourceCache()
-    
-    public init(name: PresentationThemeName, index: Int64, referenceTheme: PresentationBuiltinThemeReference, overallDarkAppearance: Bool, intro: PresentationThemeIntro, passcode: PresentationThemePasscode, rootController: PresentationThemeRootController, list: PresentationThemeList, chatList: PresentationThemeChatList, chat: PresentationThemeChat, actionSheet: PresentationThemeActionSheet, contextMenu: PresentationThemeContextMenu, inAppNotification: PresentationThemeInAppNotification, chart: PresentationThemeChart, preview: Bool = false) {
+    public var useSquareStyle: Bool = false
+
+    public init(name: PresentationThemeName, index: Int64, referenceTheme: PresentationBuiltinThemeReference, overallDarkAppearance: Bool, intro: PresentationThemeIntro, passcode: PresentationThemePasscode, rootController: PresentationThemeRootController, list: PresentationThemeList, chatList: PresentationThemeChatList, chat: PresentationThemeChat, actionSheet: PresentationThemeActionSheet, contextMenu: PresentationThemeContextMenu, inAppNotification: PresentationThemeInAppNotification, chart: PresentationThemeChart, preview: Bool = false, useSquareStyle: Bool = true) {
         var overallDarkAppearance = overallDarkAppearance
         if [.night, .tinted].contains(referenceTheme.baseTheme) {
             overallDarkAppearance = true
@@ -1602,6 +1603,7 @@ public final class PresentationTheme: Equatable {
         self.inAppNotification = inAppNotification
         self.chart = chart
         self.preview = preview
+        self.useSquareStyle = useSquareStyle
     }
     
     public func image(_ key: Int32, _ generate: (PresentationTheme) -> UIImage?) -> UIImage? {

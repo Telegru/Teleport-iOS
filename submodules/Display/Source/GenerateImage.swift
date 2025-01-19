@@ -235,9 +235,13 @@ public func generateStretchableFilledCircleImage(radius: CGFloat, color: UIColor
 }
 
 public func generateStretchableFilledRectImage(size: CGSize, cornerRadius: CGFloat, color: UIColor?, backgroundColor: UIColor? = nil) -> UIImage? {
-    let intRadius = Int(size.width)
-    let cap = intRadius == 1 ? 2 : intRadius
-    return generateFilledRoundedRectImage(size: size, cornerRadius: cornerRadius, color: color, backgroundColor: backgroundColor)?.stretchableImage(withLeftCapWidth: cap, topCapHeight: cap)
+    guard let image = generateFilledRoundedRectImage(size: size, cornerRadius: cornerRadius, color: color, backgroundColor: backgroundColor) else {
+        return nil
+    }
+    
+    let cap = Int(cornerRadius)
+    
+    return image.stretchableImage(withLeftCapWidth: cap, topCapHeight: cap)
 }
 
 public func generateStretchableFilledCircleImage(diameter: CGFloat, color: UIColor?, strokeColor: UIColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: UIColor? = nil) -> UIImage? {

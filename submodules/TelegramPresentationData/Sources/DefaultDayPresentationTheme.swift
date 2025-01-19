@@ -54,7 +54,7 @@ public func dateFillNeedsBlur(theme: PresentationTheme, wallpaper: TelegramWallp
 
 public let defaultServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
 public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
-public let defaultDayAccentColor = UIColor(rgb: 0x007aff)
+public let defaultDayAccentColor = UIColor(rgb: 0x3D4052)
 
 public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
     if (theme.referenceTheme != .day && theme.referenceTheme != .dayClassic) {
@@ -560,10 +560,10 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         muteIconColor: UIColor(rgb: 0xa7a7ad),
         unreadBadgeActiveBackgroundColor: defaultDayAccentColor,
         unreadBadgeActiveTextColor: UIColor(rgb: 0xffffff),
-        unreadBadgeInactiveBackgroundColor: UIColor(rgb: 0xb6b6bb),
-        unreadBadgeInactiveTextColor: UIColor(rgb: 0xffffff),
+        unreadBadgeInactiveBackgroundColor: UIColor(rgb: 0x787880, alpha: 0.20), // UIColor(rgb: 0xb6b6bb)
+        unreadBadgeInactiveTextColor: defaultDayAccentColor, // UIColor(rgb: 0xffffff),
         reactionBadgeActiveBackgroundColor: UIColor(rgb: 0xFF2D55),
-        pinnedBadgeColor: UIColor(rgb: 0xb6b6bb),
+        pinnedBadgeColor: defaultDayAccentColor, // UIColor(rgb: 0xb6b6bb),
         pinnedSearchBarColor: UIColor(rgb: 0xe5e5e5),
         regularSearchBarColor: UIColor(rgb: 0xe9e9e9),
         sectionHeaderFillColor: UIColor(rgb: 0xf7f7f7),
@@ -574,7 +574,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x72d5fd), bottomColor: UIColor(rgb: 0x2a9ef1)), foregroundColor: UIColor(rgb: 0xffffff)),
         unpinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0xdedee5), bottomColor: UIColor(rgb: 0xc5c6cc)), foregroundColor: UIColor(rgb: 0xffffff)),
         onlineDotColor: UIColor(rgb: 0x4cc91f),
-        storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x34C76F), bottomColor: UIColor(rgb: 0x3DA1FD)),
+        storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x4B75F2), bottomColor: UIColor(rgb: 0x282A36)), // PresentationThemeGradientColors(topColor: UIColor(rgb: 0x34C76F), bottomColor: UIColor(rgb: 0x3DA1FD)),
         storyUnseenPrivateColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x7CD636), bottomColor: UIColor(rgb: 0x26B470)),
         storySeenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0xD8D8E1), bottomColor: UIColor(rgb: 0xD8D8E1))
     )
