@@ -392,7 +392,7 @@ extension ChatControllerImpl {
                     guard let strongSelf = self else {
                         return
                     }
-                    strongSelf.stopMediaRecorder()
+                    strongSelf.stopMediaRecorder(pause: true)
                 })
             }
         } else if let videoRecorderValue = self.videoRecorderValue {
