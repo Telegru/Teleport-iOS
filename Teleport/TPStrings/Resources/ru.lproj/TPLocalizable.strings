@@ -26,6 +26,7 @@
 
 
 // Settings
+"DahlSettings.TabTitle" = "Настройки \"Даль\"";
 "DahlSettings.Title" = "Настройки Dahl";
 "DahlSettings.HidePublishStoriesButton" = "Скрыть кнопку публикации историй";
 "DahlSettings.HideStories" = "Скрыть истории";
@@ -38,3 +39,13 @@
 "DahlSettings.CameraSettings" = "Камера для видеосообщений";
 "DahlSettings.FrontCamera" = "Фронтальная камера";
 "DahlSettings.BackCamera" = "Задняя камера";
+"DahlSettings.TabBarSettings" = "Нижнее меню";
+
+"DahlSettings.TabBarSettings.Title" = "Нижнее меню";
+"DahlSettings.TabBarSettings.ActiveTabs.Header" = "Используемые пункты меню";
+"DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i из %i";
+"DahlSettings.TabBarSettings.ActiveTabs.Footer" = "Нижнее меню приложения можно настраивать под себя, удаляя и добавляя пункты из списка доступных.";
+"DahlSettings.TabBarSettings.AvailableTabs.Header" = "Еще пункты";
+
+// Wallet
+"Wallet.TabTitle" = "Кошелек";
