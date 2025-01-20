@@ -663,10 +663,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     
     
     
-    
-    
-    var needCameraSelectionForVideo = true
-    var isFrontCameraSelected = true
+        
     var confirmSendAudioMessage = false
     
     public init(

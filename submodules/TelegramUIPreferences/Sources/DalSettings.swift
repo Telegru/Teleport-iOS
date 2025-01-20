@@ -93,7 +93,7 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.disableReadHistory ? 1 : 0) as Int32, forKey: "disableReadHistory")
         try container.encode((self.offlineMode ? 1 : 0) as Int32, forKey: "offlineMode")
         try container.encode(self.videoMessageCamera.rawValue, forKey: "videoMessageCamera")
-        try container.encode((self.sendAudioConfirmation ? 1 : 0) as Int32, forKey: "hidePublishStoriesButton")
+        try container.encode((self.sendAudioConfirmation ? 1 : 0) as Int32, forKey: "sendAudioConfirmation")
         try container.encode((self.callConfirmation ? 1 : 0) as Int32, forKey: "callConfirmation")
     }
 }

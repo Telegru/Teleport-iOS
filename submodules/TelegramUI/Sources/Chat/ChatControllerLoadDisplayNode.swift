@@ -2783,8 +2783,7 @@ extension ChatControllerImpl {
                         if isVideo {
                             if dalSettings.videoMessageCamera != .undefined  {
                                 strongSelf.requestVideoRecorder(isFrontCamera: dalSettings.videoMessageCamera == CameraType.front)
-                                strongSelf.needCameraSelectionForVideo = true
-                            } else if strongSelf.needCameraSelectionForVideo {
+                            } else {
                                 let theme = ActionSheetControllerTheme(presentationData: strongSelf.presentationData)
                                 let actionSheet = ActionSheetController(theme: theme, allowInputInset: false)
                                 actionSheet.setItemGroups([
@@ -2792,13 +2791,13 @@ extension ChatControllerImpl {
                                         ActionSheetTextItem(title: "Chat.SelectCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)),
                                         ActionSheetButtonItem(title: "Chat.FrontCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
                                             actionSheet?.dismissAnimated()
-                                            self?.isFrontCameraSelected = true
-                                            self?.needCameraSelectionForVideo = false
+                                            self?.requestVideoRecorder(isFrontCamera: true)
+                                            self?.resumeMediaRecorder()
                                         }),
                                         ActionSheetButtonItem(title: "Chat.BackCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
                                             actionSheet?.dismissAnimated()
-                                            self?.isFrontCameraSelected = false
-                                            self?.needCameraSelectionForVideo = false
+                                            self?.requestVideoRecorder(isFrontCamera: false)
+                                            self?.resumeMediaRecorder()
                                         })
                                     ]),
                                     ActionSheetItemGroup(items: [
@@ -2808,9 +2807,6 @@ extension ChatControllerImpl {
                                     ])
                                 ])
                                 strongSelf.present(actionSheet, in: .window(.root))
-                            } else {
-                                strongSelf.requestVideoRecorder(isFrontCamera: strongSelf.isFrontCameraSelected)
-                                strongSelf.needCameraSelectionForVideo = true
                             }
                         } else {
                             strongSelf.confirmSendAudioMessage = dalSettings.sendAudioConfirmation
