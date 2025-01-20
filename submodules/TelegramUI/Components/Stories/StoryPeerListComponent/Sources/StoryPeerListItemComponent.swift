@@ -693,7 +693,8 @@ public final class StoryPeerListItemComponent: Component {
             avatarNode.setPeer(
                 context: component.context,
                 theme: component.theme,
-                peer: component.peer
+                peer: component.peer,
+                clipStyle: component.theme.useSquareStyle ? .round : .round // TODO: Добавить круглые сторис
             )
             avatarNode.updateSize(size: avatarSize)
             

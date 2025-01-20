@@ -426,6 +426,7 @@ public final class AvatarStoryIndicatorComponent: Component {
     public let counters: Counters?
     public let progress: Progress?
     public let isRoundedRect: Bool
+    public let isRectSimple: Bool
     
     public init(
         hasUnseen: Bool,
@@ -435,7 +436,8 @@ public final class AvatarStoryIndicatorComponent: Component {
         inactiveLineWidth: CGFloat,
         counters: Counters?,
         progress: Progress? = nil,
-        isRoundedRect: Bool = false
+        isRoundedRect: Bool = false,
+        isRectSimple: Bool = false
     ) {
         self.hasUnseen = hasUnseen
         self.hasUnseenCloseFriendsItems = hasUnseenCloseFriendsItems
@@ -445,6 +447,7 @@ public final class AvatarStoryIndicatorComponent: Component {
         self.counters = counters
         self.progress = progress
         self.isRoundedRect = isRoundedRect
+        self.isRectSimple = isRectSimple
     }
     
     public static func ==(lhs: AvatarStoryIndicatorComponent, rhs: AvatarStoryIndicatorComponent) -> Bool {
@@ -470,6 +473,9 @@ public final class AvatarStoryIndicatorComponent: Component {
             return false
         }
         if lhs.isRoundedRect != rhs.isRoundedRect {
+            return false
+        }
+        if lhs.isRectSimple != rhs.isRectSimple {
             return false
         }
         return true
@@ -682,7 +688,26 @@ public final class AvatarStoryIndicatorComponent: Component {
                 var locations: [CGFloat] = [0.0, 1.0]
                 
                 if let counters = component.counters, counters.totalCount > 1 {
-                    if component.isRoundedRect {
+                    if component.isRectSimple {
+                        let lineWidth: CGFloat = component.hasUnseen ? component.activeLineWidth : component.inactiveLineWidth
+                        context.setLineWidth(lineWidth)
+                        
+                        let rect = CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: CGSize(width: diameter, height: diameter))
+                        let cornerRadius = floor(diameter * 0.1) // задайте радиус округления по желанию
+                        let path = UIBezierPath(roundedRect: rect.insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5), cornerRadius: cornerRadius)
+                        
+                        context.addPath(path.cgPath)
+                        context.replacePathWithStrokedPath()
+                        context.clip()
+                        
+                        let colors: [CGColor] = component.hasUnseen ? activeColors : inactiveColors
+                        let colorSpace = CGColorSpaceCreateDeviceRGB()
+                        if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations) {
+                            context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: size.height), options: [])
+                        }
+                        
+                        return
+                    } else if component.isRoundedRect {
                         let lineWidth: CGFloat = component.hasUnseen ? component.activeLineWidth : component.inactiveLineWidth
                         context.setLineWidth(lineWidth)
                         let path = UIBezierPath(roundedRect: CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5), cornerRadius: floor(diameter * 0.27))
@@ -828,7 +853,17 @@ public final class AvatarStoryIndicatorComponent: Component {
                 } else {
                     let lineWidth: CGFloat = component.hasUnseen ? component.activeLineWidth : component.inactiveLineWidth
                     context.setLineWidth(lineWidth)
-                    if component.isRoundedRect {
+                    
+                    if component.isRectSimple {
+                        let rect = CGRect(
+                            origin: CGPoint(x: size.width * 0.5 - diameter * 0.5,
+                                            y: size.height * 0.5 - diameter * 0.5),
+                            size: CGSize(width: diameter, height: diameter)
+                        ).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5)
+                        let cornerRadius = floor(diameter * 0.1) 
+                        let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+                        context.addPath(path.cgPath)
+                    } else if component.isRoundedRect {
                         let path = UIBezierPath(roundedRect: CGRect(origin: CGPoint(x: size.width * 0.5 - diameter * 0.5, y: size.height * 0.5 - diameter * 0.5), size: size).insetBy(dx: lineWidth * 0.5, dy: lineWidth * 0.5), cornerRadius: floor(diameter * 0.27))
                         context.addPath(path.cgPath)
                     } else {
@@ -855,7 +890,7 @@ public final class AvatarStoryIndicatorComponent: Component {
             transition.setFrame(view: self.indicatorView, frame: indicatorFrame)
             
             let progressTransition = ComponentTransition(animation: .curve(duration: 0.3, curve: .easeInOut))
-            if let progress = component.progress, !component.isRoundedRect {
+            if let progress = component.progress, !component.isRoundedRect, !component.isRectSimple {
                 let colorLayer: SimpleGradientLayer
                 if let current = self.colorLayer {
                     colorLayer = current

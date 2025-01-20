@@ -397,7 +397,8 @@ extension PresentationThemeRootTabBar: Codable {
                   selectedTextColor: try decodeColor(values, .selectedText),
                   badgeBackgroundColor: try decodeColor(values, .badgeBackground),
                   badgeStrokeColor: try decodeColor(values, .badgeStroke),
-                  badgeTextColor: try decodeColor(values, .badgeText))
+                  badgeTextColor: try decodeColor(values, .badgeText),
+                  useSquareStyle: true)
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -1837,7 +1838,7 @@ extension PresentationThemeChat: Codable {
                   inputPanel: try values.decode(PresentationThemeChatInputPanel.self, forKey: .inputPanel),
                   inputMediaPanel: try values.decode(PresentationThemeInputMediaPanel.self, forKey: .inputMediaPanel),
                   inputButtonPanel: try values.decode(PresentationThemeInputButtonPanel.self, forKey: .inputButtonPanel),
-                  historyNavigation: try values.decode(PresentationThemeChatHistoryNavigation.self, forKey: .historyNav))
+                  historyNavigation: try values.decode(PresentationThemeChatHistoryNavigation.self, forKey: .historyNav), isRectangleCountMessageBadge: true)
     }
     
     public func encode(to encoder: Encoder) throws {

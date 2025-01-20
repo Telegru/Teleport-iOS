@@ -6,57 +6,11 @@ import TelegramUIPreferences
 import Postbox
 import SwiftSignalKit
 
-public func selectDateFillStaticColor(theme: PresentationTheme, wallpaper: TelegramWallpaper) -> UIColor {
-    if case .color(0xffffff) = wallpaper {
-        return theme.chat.serviceMessage.components.withDefaultWallpaper.dateFillStatic
-    } else if case .builtin = wallpaper {
-        return UIColor(rgb: 0x748391, alpha: 0.45)
-    } else {
-        return theme.chat.serviceMessage.components.withCustomWallpaper.dateFillStatic
-    }
-}
+public let defaultDahlServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
+public let defaultDahlPresentationTheme = makeDefaultDahlDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
+public let defaultDahlDayAccentColor = UIColor(rgb: 0x3D4052)
 
-public func selectReactionFillStaticColor(theme: PresentationTheme, wallpaper: TelegramWallpaper, isStars: Bool = false) -> UIColor {
-    if isStars {
-        return theme.chat.message.freeform.withoutWallpaper.reactionStarsInactiveBackground
-    }
-    
-    if case .color = wallpaper {
-        return theme.chat.message.freeform.withoutWallpaper.reactionInactiveBackground
-    } else if theme.overallDarkAppearance {
-        return theme.chat.message.freeform.withoutWallpaper.reactionInactiveBackground
-    } else if case .builtin = wallpaper {
-        return UIColor(rgb: 0x748391, alpha: 0.45)
-    } else {
-        return .clear//theme.chat.serviceMessage.components.withCustomWallpaper.dateFillStatic
-    }
-}
-
-public func dateFillNeedsBlur(theme: PresentationTheme, wallpaper: TelegramWallpaper) -> Bool {
-    if !DeviceMetrics.performance.isGraphicallyCapable {
-        return false
-    }
-    
-    if case .builtin = wallpaper {
-        return false
-    } else if case .color = wallpaper {
-        return false
-    } else if case let .file(file) = wallpaper {
-        if file.isPattern, let intensity = file.settings.intensity, intensity < 0 {
-            return false
-        } else {
-            return true
-        }
-    } else {
-        return true
-    }
-}
-
-public let defaultServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
-public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
-public let defaultDayAccentColor = UIColor(rgb: 0x3D4052)
-
-public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
+public func customizeDefaultDahlDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
     if (theme.referenceTheme != .day && theme.referenceTheme != .dayClassic) {
         return theme
     }
@@ -389,7 +343,7 @@ public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, ti
     )
 }
 
-public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool) -> PresentationTheme {
+public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool) -> PresentationTheme {
     var serviceBackgroundColor = serviceBackgroundColor ?? defaultServiceBackgroundColor
 
     if !day {
@@ -542,7 +496,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         backgroundColor: UIColor(rgb: 0xffffff),
         itemSeparatorColor: UIColor(rgb: 0xc8c7cc),
         itemBackgroundColor: UIColor(rgb: 0xffffff),
-        pinnedItemBackgroundColor: UIColor(rgb: 0xf7f7f7),
+        pinnedItemBackgroundColor: UIColor(rgb: 0x3C3C43, alpha: 0.12),
         itemHighlightedBackgroundColor: UIColor(rgb: 0xe5e5ea),
         pinnedItemHighlightedBackgroundColor: UIColor(rgb: 0xe5e5ea),
         itemSelectedBackgroundColor: UIColor(rgb: 0xe9f0fa),
@@ -1105,285 +1059,9 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
     )
 }
 
-public let legacyBuiltinWallpaperGradientColors: [UIColor] = [
-    UIColor(rgb: 0xd6e2ee)
-]
-
-public let defaultBuiltinWallpaperGradientColors: [UIColor] = [
+public let defaultDahlBuiltinWallpaperGradientColors: [UIColor] = [
     UIColor(rgb: 0xdbddbb),
     UIColor(rgb: 0x6ba587),
     UIColor(rgb: 0xd5d88d),
     UIColor(rgb: 0x88b884)
 ]
-
-public struct BuiltinWallpaperData {
-    var wallpaperId: Int64
-    var wallpaperAccessHash: Int64
-    var slug: String
-    var fileId: Int64
-    var fileAccessHash: Int64
-    var datacenterId: Int
-    var fileSize: Int
-}
-
-public extension BuiltinWallpaperData {
-    static let `default` = BuiltinWallpaperData(
-        wallpaperId: 5951821522514477057,
-        wallpaperAccessHash: 542913527008942388,
-        slug: "fqv01SQemVIBAAAApND8LDRUhRU",
-        fileId: 5789658100176783156,
-        fileAccessHash: 2106033778341319685,
-        datacenterId: 4,
-        fileSize: 183832
-    )
-    static let legacy = BuiltinWallpaperData(
-        wallpaperId: 5911458201550716931,
-        wallpaperAccessHash: -5164387148619674119,
-        slug: "Ye7DfT2kCVIKAAAAhzXfrkdOjxs",
-        fileId: 5911315028815907420,
-        fileAccessHash: 5205407890340371688,
-        datacenterId: 2,
-        fileSize: 71715
-    )
-    static let variant1 = BuiltinWallpaperData(
-        wallpaperId: 5784984711902265347,
-        wallpaperAccessHash: -7073897034484875424,
-        slug: "RlZs2PJkSFADAAAAElGaGwgJBgU",
-        fileId: 5924571028763183790,
-        fileAccessHash: 8131740629580593134,
-        datacenterId: 4,
-        fileSize: 175995
-    )
-    static let variant2 = BuiltinWallpaperData(
-        wallpaperId: 5785171457080295426,
-        wallpaperAccessHash: 7299737721761177260,
-        slug: "9LW_RcoOSVACAAAAFTk3DTyXN-M",
-        fileId: 5927041584146156278,
-        fileAccessHash: -5921024951834087382,
-        datacenterId: 4,
-        fileSize: 134539
-    )
-    static let variant3 = BuiltinWallpaperData(
-        wallpaperId: 5785191424383254532,
-        wallpaperAccessHash: 6428855567842967483,
-        slug: "CJNyxPMgSVAEAAAAvW9sMwc51cw",
-        fileId: 5785343895722264360,
-        fileAccessHash: 3407562549390786397,
-        datacenterId: 4,
-        fileSize: 312605
-    )
-    static let variant4 = BuiltinWallpaperData(
-        wallpaperId: 5785123761468473345,
-        wallpaperAccessHash: -6430405714673464374,
-        slug: "BQqgrGnjSFABAAAA8mQDBXQcARE",
-        fileId: 5924847998319201207,
-        fileAccessHash: 6746675725325490532,
-        datacenterId: 4,
-        fileSize: 55699
-    )
-    static let variant5 = BuiltinWallpaperData(
-        wallpaperId: 5785021373743104005,
-        wallpaperAccessHash: -1374597781576365315,
-        slug: "MIo6r0qGSFAFAAAAtL8TsDzNX60",
-        fileId: 5782630687571969871,
-        fileAccessHash: 8944679612701303524,
-        datacenterId: 4,
-        fileSize: 100992
-    )
-    static let variant6 = BuiltinWallpaperData(
-        wallpaperId: 5782920928576929793,
-        wallpaperAccessHash: -2397741670740938317,
-        slug: "9iklpvIPQVABAAAAORQXKur_Eyc",
-        fileId: 5924714386181589959,
-        fileAccessHash: -316419094644368953,
-        datacenterId: 4,
-        fileSize: 106249
-    )
-    static let variant7 = BuiltinWallpaperData(
-        wallpaperId: 5931406765567508492,
-        wallpaperAccessHash: 7991333610111953175,
-        slug: "H6rz6geXUFIMAAAAuUs7m6cXbcc",
-        fileId: 5931433527508732666,
-        fileAccessHash: -8637914243010610774,
-        datacenterId: 4,
-        fileSize: 76332
-    )
-    static let variant8 = BuiltinWallpaperData(
-        wallpaperId: 5785007509588672513,
-        wallpaperAccessHash: 8437532349638900210,
-        slug: "kO4jyq55SFABAAAA0WEpcLfahXk",
-        fileId: 5925009274341165314,
-        fileAccessHash: 5091210796362176800,
-        datacenterId: 4,
-        fileSize: 78338
-    )
-    static let variant9 = BuiltinWallpaperData(
-        wallpaperId: 5785068300555780101,
-        wallpaperAccessHash: -4335874468273472323,
-        slug: "mP3FG_iwSFAFAAAA2AklJO978pA",
-        fileId: 5924664689115007842,
-        fileAccessHash: -4490072684673383370,
-        datacenterId: 4,
-        fileSize: 51705
-    )
-    static let variant10 = BuiltinWallpaperData(
-        wallpaperId: 5785165465600917506,
-        wallpaperAccessHash: 4563443115749434444,
-        slug: "Ujx2TFcJSVACAAAARJ4vLa50MkM",
-        fileId: 5924792752154872619,
-        fileAccessHash: -2210879717040856036,
-        datacenterId: 4,
-        fileSize: 114694
-    )
-    static let variant11 = BuiltinWallpaperData(
-        wallpaperId: 5785225431934304257,
-        wallpaperAccessHash: 3814946612408881045,
-        slug: "RepJ5uE_SVABAAAAr4d0YhgB850",
-        fileId: 5927262354055105101,
-        fileAccessHash: -435932841948252811,
-        datacenterId: 4,
-        fileSize: 66465
-    )
-    static let variant12 = BuiltinWallpaperData(
-        wallpaperId: 5785328386595356675,
-        wallpaperAccessHash: -5900784223259948847,
-        slug: "9GcNVISdSVADAAAAUcw5BYjELW4",
-        fileId: 5926924928539429325,
-        fileAccessHash: -5306472339097647861,
-        datacenterId: 4,
-        fileSize: 57262
-    )
-    static let variant13 = BuiltinWallpaperData(
-        wallpaperId: 6041986402319597570,
-        wallpaperAccessHash: -8909137552203056986,
-        slug: "-Xc-np9y2VMCAAAARKr0yNNPYW0",
-        fileId: 5789856918507882132,
-        fileAccessHash: 2327344847690632249,
-        datacenterId: 4,
-        fileSize: 104932
-    )
-    static let variant14 = BuiltinWallpaperData(
-        wallpaperId: 5784981280223395841,
-        wallpaperAccessHash: 8334701614156015552,
-        slug: "JrNEYdNhSFABAAAA9WtRdJkPRbY",
-        fileId: 5924784243824658746,
-        fileAccessHash: -2563505106174626287,
-        datacenterId: 4,
-        fileSize: 122246
-    )
-
-    static func generate(account: Account) {
-        let slugToName: [(String, String)] = [
-            ("fqv01SQemVIBAAAApND8LDRUhRU", "`default`"),
-            ("Ye7DfT2kCVIKAAAAhzXfrkdOjxs", "legacy"),
-            ("RlZs2PJkSFADAAAAElGaGwgJBgU", "variant1"),
-            ("9LW_RcoOSVACAAAAFTk3DTyXN-M", "variant2"),
-            ("CJNyxPMgSVAEAAAAvW9sMwc51cw", "variant3"),
-            ("BQqgrGnjSFABAAAA8mQDBXQcARE", "variant4"),
-            ("MIo6r0qGSFAFAAAAtL8TsDzNX60", "variant5"),
-            ("9iklpvIPQVABAAAAORQXKur_Eyc", "variant6"),
-            ("H6rz6geXUFIMAAAAuUs7m6cXbcc", "variant7"),
-            ("kO4jyq55SFABAAAA0WEpcLfahXk", "variant8"),
-            ("mP3FG_iwSFAFAAAA2AklJO978pA", "variant9"),
-            ("Ujx2TFcJSVACAAAARJ4vLa50MkM", "variant10"),
-            ("RepJ5uE_SVABAAAAr4d0YhgB850", "variant11"),
-            ("9GcNVISdSVADAAAAUcw5BYjELW4", "variant12"),
-            ("-Xc-np9y2VMCAAAARKr0yNNPYW0", "variant13"),
-            ("JrNEYdNhSFABAAAA9WtRdJkPRbY", "variant14"),
-        ]
-
-        var signals: [Signal<String?, GetWallpaperError>] = []
-        for (slug, name) in slugToName {
-            signals.append(getWallpaper(network: account.network, slug: slug)
-            |> map { wallpaper -> String? in
-                switch wallpaper {
-                case let .file(file):
-                    guard let resource = file.file.resource as? CloudDocumentMediaResource else {
-                        return nil
-                    }
-                    guard let size = file.file.size else {
-                        return nil
-                    }
-                    return """
-static let \(name) = BuiltinWallpaperData(
-    wallpaperId: \(file.id),
-    wallpaperAccessHash: \(file.accessHash),
-    slug: "\(slug)",
-    fileId: \(file.file.fileId.id),
-    fileAccessHash: \(resource.accessHash),
-    datacenterId: \(resource.datacenterId),
-    fileSize: \(size)
-)
-"""
-                default:
-                    return nil
-                }
-            })
-        }
-
-        let _ = (combineLatest(signals)
-        |> map { strings -> String in
-            var result = ""
-            for case let string? in strings {
-                if !result.isEmpty {
-                    result.append("\n")
-                }
-                result.append(string)
-            }
-            return result
-        }
-        |> deliverOnMainQueue).start(next: { result in
-            print("\(result)")
-        })
-    }
-}
-
-public func defaultBuiltinWallpaper(data: BuiltinWallpaperData, colors: [UInt32], intensity: Int32 = 50, rotation: Int32? = nil) -> TelegramWallpaper {
-    return .file(TelegramWallpaper.File(
-        id: data.wallpaperId,
-        accessHash: data.wallpaperAccessHash,
-        isCreator: false,
-        isDefault: false,
-        isPattern: true,
-        isDark: false,
-        slug: data.slug,
-        file: TelegramMediaFile(
-            fileId: MediaId(namespace: Namespaces.Media.CloudFile, id: data.fileId),
-            partialReference: nil,
-            resource: CloudDocumentMediaResource(
-                datacenterId: data.datacenterId,
-                fileId: data.fileId,
-                accessHash: data.fileAccessHash,
-                size: Int64(data.fileSize),
-                fileReference: Data(),
-                fileName: "pattern.tgv"
-            ),
-            previewRepresentations: [
-                TelegramMediaImageRepresentation(
-                    dimensions: PixelDimensions(width: 155, height: 320),
-                    resource: CloudDocumentSizeMediaResource(
-                        datacenterId: 1,
-                        documentId: data.fileId,
-                        accessHash: data.fileAccessHash,
-                        sizeSpec: "m",
-                        fileReference: Data()
-                    ),
-                    progressiveSizes: [],
-                    immediateThumbnailData: nil,
-                    hasVideo: false,
-                    isPersonal: false
-                )
-            ],
-            videoThumbnails: [],
-            immediateThumbnailData: nil,
-            mimeType: "application/x-tgwallpattern",
-            size: Int64(data.fileSize),
-            attributes: [
-                .ImageSize(size: PixelDimensions(width: 1440, height: 2960)),
-                .FileName(fileName: "pattern.tgv")
-            ],
-            alternativeRepresentations: []
-        ),
-        settings: WallpaperSettings(colors: colors, intensity: intensity, rotation: rotation)
-    ))
-}

@@ -4,8 +4,8 @@ import TelegramCore
 import TelegramUIPreferences
 import Postbox
 
-private let defaultDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
-public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false)
+private let defaultDahlDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
+public let defaultDahlDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false)
 
 private extension PresentationThemeBaseColor {
     var colorWallpaper: (BuiltinWallpaperData, Int32, [UInt32])? {
@@ -38,14 +38,14 @@ private extension PresentationThemeBaseColor {
     }
 }
 
-public func customizeDefaultDarkTintedPresentationTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, baseColor: PresentationThemeBaseColor? = nil) -> PresentationTheme {
+public func customizeDefaultDahlDarkTintedPresentationTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, baseColor: PresentationThemeBaseColor? = nil) -> PresentationTheme {
     if (theme.referenceTheme != .nightAccent) {
         return theme
     }
     
     var accentColor = accentColor
     if accentColor == PresentationThemeBaseColor.blue.color {
-        accentColor = defaultDarkTintedAccentColor
+        accentColor = defaultDahlDarkTintedAccentColor
     }
     
     var intro = theme.intro
@@ -85,7 +85,7 @@ public func customizeDefaultDarkTintedPresentationTheme(theme: PresentationTheme
             }
         }
         
-        let accentColor = accentColor ?? defaultDarkTintedAccentColor
+        let accentColor = accentColor ?? defaultDahlDarkTintedAccentColor
         let bottomColor = accentColor.withMultiplied(hue: 1.019, saturation: 0.731, brightness: 0.59)
         let topColor = bottomColor.withMultiplied(hue: 0.966, saturation: 0.61, brightness: 0.98)
         bubbleColors = [topColor.rgb, bottomColor.rgb]
@@ -509,8 +509,8 @@ public func customizeDefaultDarkTintedPresentationTheme(theme: PresentationTheme
     )
 }
 
-public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool) -> PresentationTheme {
-    let accentColor = defaultDarkTintedAccentColor
+public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool) -> PresentationTheme {
+    let accentColor = defaultDahlDarkTintedAccentColor
     
     let secondaryBadgeTextColor: UIColor
     let lightness = accentColor.lightness
@@ -520,13 +520,13 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         secondaryBadgeTextColor = .white
     }
     
-    let mainBackgroundColor = accentColor.withMultiplied(hue: 1.024, saturation: 0.585, brightness: 0.25)
+    let mainBackgroundColor = UIColor(rgb: 0x252525, alpha: 0.82)
     let mainSelectionColor = accentColor.withMultiplied(hue: 1.03, saturation: 0.585, brightness: 0.12)
-    let additionalBackgroundColor = accentColor.withMultiplied(hue: 1.024, saturation: 0.573, brightness: 0.18)
+    let additionalBackgroundColor = UIColor.black
     let mainSeparatorColor = accentColor.withMultiplied(hue: 1.033, saturation: 0.426, brightness: 0.34)
     let mainForegroundColor = accentColor.withMultiplied(hue: 0.99, saturation: 0.256, brightness: 0.62)
     let mainSecondaryColor = accentColor.withMultiplied(hue: 1.019, saturation: 0.109, brightness: 0.59)
-    let mainSecondaryTextColor = accentColor.withMultiplied(hue: 0.956, saturation: 0.17, brightness: 1.0)
+    let mainSecondaryTextColor = UIColor(rgb: 0xEBEBF5)
     let mainFreeTextColor = accentColor.withMultiplied(hue: 1.019, saturation: 0.097, brightness: 0.56)
     
     let outgoingBubbleFillGradientColor = accentColor.withMultiplied(hue: 1.019, saturation: 0.731, brightness: 0.59)
@@ -574,7 +574,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         segmentedBackgroundColor: mainInputColor,
         segmentedForegroundColor: mainBackgroundColor,
         segmentedTextColor: UIColor(rgb: 0xffffff),
-        segmentedDividerColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        segmentedDividerColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         clearButtonBackgroundColor: UIColor(rgb: 0xffffff, alpha: 0.1),
         clearButtonForegroundColor: UIColor(rgb: 0xffffff)
     )
@@ -582,7 +582,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
     let navigationSearchBar = PresentationThemeNavigationSearchBar(
         backgroundColor: mainBackgroundColor,
         accentColor: accentColor,
-        inputFillColor: mainInputColor,
+        inputFillColor: UIColor.black,
         inputTextColor: UIColor(rgb: 0xffffff),
         inputPlaceholderTextColor: mainSecondaryColor,
         inputIconColor: mainSecondaryColor,
@@ -613,7 +613,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
     )
 
     let switchColors = PresentationThemeSwitch(
-        frameColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        frameColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         handleColor: UIColor(rgb: 0x121212),
         contentColor: accentColor,
         positiveColor: UIColor(rgb: 0x08a723),
@@ -626,18 +626,18 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         plainBackgroundColor: additionalBackgroundColor,
         modalPlainBackgroundColor: mainBackgroundColor,
         itemPrimaryTextColor: UIColor(rgb: 0xffffff),
-        itemSecondaryTextColor: mainSecondaryTextColor.withAlphaComponent(0.5),
-        itemDisabledTextColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        itemSecondaryTextColor: mainSecondaryTextColor.withAlphaComponent(0.6),
+        itemDisabledTextColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         itemAccentColor: accentColor,
         itemHighlightedColor: UIColor(rgb: 0x28b772),
         itemDestructiveColor: UIColor(rgb: 0xff6767),
-        itemPlaceholderTextColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        itemPlaceholderTextColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         itemBlocksBackgroundColor: mainBackgroundColor,
         itemModalBlocksBackgroundColor: mainBackgroundColor,
         itemHighlightedBackgroundColor: mainSelectionColor,
         itemBlocksSeparatorColor: mainSeparatorColor,
         itemPlainSeparatorColor: mainSeparatorColor,
-        disclosureArrowColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        disclosureArrowColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         sectionHeaderTextColor: mainFreeTextColor,
         freeTextColor: mainFreeTextColor,
         freeTextErrorColor: UIColor(rgb: 0xff6767),

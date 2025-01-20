@@ -135,6 +135,8 @@ final class PeerInfoEditingAvatarOverlayNode: ASDisplayNode {
                     self.updatingAvatarOverlay.image = generateFilledCircleImage(diameter: avatarSize, color: UIColor(white: 0.0, alpha: 0.4), backgroundColor: nil)
                 case .roundedRect:
                     self.updatingAvatarOverlay.image = generateFilledRoundedRectImage(size: CGSize(width: avatarSize, height: avatarSize), cornerRadius: avatarSize * 0.25, color: UIColor(white: 0.0, alpha: 0.4), backgroundColor: nil)
+                case .rect:
+                    self.updatingAvatarOverlay.image = generateFilledRoundedRectImage(size: CGSize(width: avatarSize, height: avatarSize), cornerRadius: avatarSize * 0.125, color: UIColor(white: 0.0, alpha: 0.4), backgroundColor: nil)
                 default:
                     break
                 }

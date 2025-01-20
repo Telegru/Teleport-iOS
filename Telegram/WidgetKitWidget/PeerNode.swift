@@ -26,6 +26,7 @@ private let gradientColors: [NSArray] = [
 enum AvatarClipStyle {
     case round
     case roundedRect
+    case rect
 }
 private func avatarRoundImage(size: CGSize, source: UIImage, style: AvatarClipStyle) -> UIImage? {
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
@@ -37,6 +38,8 @@ private func avatarRoundImage(size: CGSize, source: UIImage, style: AvatarClipSt
         context?.addEllipse(in: CGRect(origin: .zero, size: size))
     case .roundedRect:
         context?.addPath(UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * 0.25).cgPath)
+    case .rect:
+        context?.addPath(UIBezierPath(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: size.width * 0.125).cgPath)
     }
     
     context?.clip()

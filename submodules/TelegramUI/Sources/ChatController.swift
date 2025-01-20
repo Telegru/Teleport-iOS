@@ -5498,7 +5498,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 } else {
                                     imageOverride = nil
                                 }
-                                (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.setPeer(context: strongSelf.context, theme: strongSelf.presentationData.theme, peer: EnginePeer(peer), overrideImage: imageOverride)
+                                (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.setPeer(context: strongSelf.context, theme: strongSelf.presentationData.theme, peer: EnginePeer(peer), overrideImage: imageOverride, clipStyle: strongSelf.presentationData.theme.chat.isRectangleCountMessageBadge ? .rect : .round)
                                 if case .standard(.previewing) = strongSelf.mode {
                                     (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.contextActionIsEnabled = false
                                 } else {

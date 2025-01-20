@@ -120,7 +120,7 @@ private final class BubbleSettingsControllerNode: ASDisplayNode, ASScrollViewDel
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.presentationThemeSettings.chatBubbleSettings.mainRadius = Int32(value)
+            strongSelf.presentationThemeSettings.chatBubbleSettings.mainRadius = 8
             strongSelf.presentationThemeSettings.chatBubbleSettings.auxiliaryRadius = Int32(value / 2)
             strongSelf.updatePresentationThemeSettings(strongSelf.presentationThemeSettings)
         }

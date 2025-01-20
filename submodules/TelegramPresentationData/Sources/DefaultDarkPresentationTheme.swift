@@ -365,7 +365,8 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         selectedTextColor: UIColor(rgb: 0xffffff),
         badgeBackgroundColor:  UIColor(rgb: 0xffffff),
         badgeStrokeColor: UIColor(rgb: 0x1c1c1d),
-        badgeTextColor:  UIColor(rgb: 0x000000)
+        badgeTextColor:  UIColor(rgb: 0x000000),
+        useSquareStyle: true
     )
 
     let navigationSearchBar = PresentationThemeNavigationSearchBar(
@@ -735,7 +736,8 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation
+        historyNavigation: historyNavigation,
+        isRectangleCountMessageBadge: true
     )
 
     let actionSheet = PresentationThemeActionSheet(

@@ -391,7 +391,43 @@ private func calculateTextFieldRealInsets(presentationInterfaceState: ChatPresen
 }
 
 private var currentTextInputBackgroundImage: (UIColor, UIColor, CGFloat, CGFloat, UIImage)?
-private func textInputBackgroundImage(backgroundColor: UIColor?, inputBackgroundColor: UIColor?, strokeColor: UIColor, diameter: CGFloat, strokeWidth: CGFloat) -> UIImage? {
+private func textInputRectBackgroundImage(
+    backgroundColor: UIColor?,
+    inputBackgroundColor: UIColor?,
+    strokeColor: UIColor,
+    size: CGSize,
+    cornerRadius: CGFloat,
+    strokeWidth: CGFloat
+) -> UIImage? {
+    let width = size.width
+    let height = size.height
+    return generateImage(CGSize(width: width, height: height), rotatedContext: { size, context in
+        context.clear(CGRect(origin: .zero, size: size))
+        
+        // Заполнение фона прямоугольником с закругленными углами
+        let rect = CGRect(origin: .zero, size: size)
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+        
+        if let inputBackgroundColor = inputBackgroundColor {
+            context.setBlendMode(.normal)
+            context.setFillColor(inputBackgroundColor.cgColor)
+        } else {
+            context.setBlendMode(.clear)
+            context.setFillColor(UIColor.clear.cgColor)
+        }
+        context.addPath(path.cgPath)
+        context.fillPath()
+        
+        // Обводка прямоугольника с закругленными углами
+        context.setBlendMode(.normal)
+        context.setStrokeColor(strokeColor.cgColor)
+        context.setLineWidth(strokeWidth)
+        context.addPath(path.cgPath)
+        context.strokePath()
+    })?.stretchableImage(withLeftCapWidth: Int(width) / 2, topCapHeight: Int(height) / 2)
+}
+
+private func textInputCircleBackgroundImage(backgroundColor: UIColor?, inputBackgroundColor: UIColor?, strokeColor: UIColor, diameter: CGFloat, strokeWidth: CGFloat) -> UIImage? {
     if let backgroundColor = backgroundColor, let current = currentTextInputBackgroundImage {
         if current.0.isEqual(backgroundColor) && current.1.isEqual(strokeColor) && current.2.isEqual(to: diameter) && current.3.isEqual(to: strokeWidth) {
             return current.4
@@ -1846,9 +1882,13 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
                     strokeWidth = UIScreenPixel
                 }
                 
-                self.textInputBackgroundNode.image = textInputBackgroundImage(backgroundColor: backgroundColor, inputBackgroundColor: nil, strokeColor: interfaceState.theme.chat.inputPanel.inputStrokeColor, diameter: minimalInputHeight, strokeWidth: strokeWidth)
-                self.transparentTextInputBackgroundImage = textInputBackgroundImage(backgroundColor: nil, inputBackgroundColor: interfaceState.theme.chat.inputPanel.inputBackgroundColor, strokeColor: interfaceState.theme.chat.inputPanel.inputStrokeColor, diameter: minimalInputHeight, strokeWidth: strokeWidth)
-                self.textInputContainerBackgroundNode.image = generateStretchableFilledCircleImage(diameter: minimalInputHeight, color: interfaceState.theme.chat.inputPanel.inputBackgroundColor)
+                let useSquareStyle = interfaceState.theme.useSquareStyle
+                
+                self.textInputBackgroundNode.image = useSquareStyle ? textInputRectBackgroundImage(backgroundColor: backgroundColor, inputBackgroundColor: nil, strokeColor: interfaceState.theme.chat.inputPanel.inputStrokeColor, size: CGSize(width: minimalInputHeight, height: minimalInputHeight), cornerRadius: 4, strokeWidth: strokeWidth) : textInputCircleBackgroundImage(backgroundColor: backgroundColor, inputBackgroundColor: nil, strokeColor: interfaceState.theme.chat.inputPanel.inputStrokeColor, diameter: minimalInputHeight, strokeWidth: strokeWidth)
+                
+                self.transparentTextInputBackgroundImage = useSquareStyle ? textInputRectBackgroundImage(backgroundColor: nil, inputBackgroundColor: interfaceState.theme.chat.inputPanel.inputBackgroundColor, strokeColor: interfaceState.theme.chat.inputPanel.inputStrokeColor, size: CGSize(width: minimalInputHeight, height: minimalInputHeight), cornerRadius: 4, strokeWidth: strokeWidth) : textInputCircleBackgroundImage(backgroundColor: backgroundColor, inputBackgroundColor: nil, strokeColor: interfaceState.theme.chat.inputPanel.inputStrokeColor, diameter: minimalInputHeight, strokeWidth: strokeWidth)
+                
+                self.textInputContainerBackgroundNode.image = useSquareStyle ? generateStretchableFilledRectImage(size: CGSize(width: minimalInputHeight, height: minimalInputHeight), cornerRadius: 4, color: interfaceState.theme.chat.inputPanel.inputBackgroundColor) : generateStretchableFilledCircleImage(diameter: minimalInputHeight, color: interfaceState.theme.chat.inputPanel.inputBackgroundColor)
                 
                 self.searchLayoutClearImageNode.image = PresentationResourcesChat.chatInputTextFieldClearImage(interfaceState.theme)
                 
