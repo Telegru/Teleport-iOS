@@ -4,7 +4,7 @@
 
 static NSDictionary *fallbackDict(NSString *code) {
     if (code == nil) {
-        code = @"en";
+        code = @"ru";
     }
     static NSMutableDictionary *dicts = nil;
     static dispatch_once_t onceToken;
@@ -27,7 +27,7 @@ static NSDictionary *fallbackDict(NSString *code) {
 static NSString *fallbackString(NSString *key, NSString *code) {
     NSString *value = fallbackDict(code)[key];
     if (value == nil) {
-        value = fallbackDict(@"en")[key];
+        value = fallbackDict(@"ru")[key];
     }
     
     if (value == nil) {

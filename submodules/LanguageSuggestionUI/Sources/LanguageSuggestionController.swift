@@ -237,8 +237,8 @@ private final class LanguageSuggestionAlertContentNode: AlertContentNode {
         items.append(LanguageSuggestionItem(type: .localization(suggestedLocalization.languageCode), title: suggestedLocalization.localizedTitle, subtitle: suggestedLocalization.title, action: {
                 selectedLocalization.set(suggestedLocalization.languageCode)
         }))
-        items.append(LanguageSuggestionItem(type: .localization("en"), title: strings.English, subtitle: englishStrings.English, action: {
-            selectedLocalization.set("en")
+        items.append(LanguageSuggestionItem(type: .localization("ru"), title: strings.English, subtitle: englishStrings.English, action: {
+            selectedLocalization.set("ru")
         }))
         items.append(LanguageSuggestionItem(type: .disclosure, title: strings.Other, subtitle: englishStrings.Other != strings.Other ? englishStrings.Other : nil, action: {
             openSelection()
@@ -335,7 +335,7 @@ public func languageSuggestionController(context: AccountContext, suggestedLocal
     
     let presentationData = context.sharedContext.currentPresentationData.with { $0 }
     let strings = LanguageSuggestionControllerStrings(localization: suggestedLocalization)
-    guard let mainPath = getAppBundle().path(forResource: "en", ofType: "lproj") else {
+    guard let mainPath = getAppBundle().path(forResource: "ru", ofType: "lproj") else {
         return nil
     }
     let englishStrings = LanguageSuggestionControllerStrings(bundle: Bundle(path: mainPath))
