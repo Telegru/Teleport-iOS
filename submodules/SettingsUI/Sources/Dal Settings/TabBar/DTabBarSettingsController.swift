@@ -200,8 +200,7 @@ private let maxAllowedNumberOfTabs: Int = 5
 private func dTabBarSettingsControllerEntries(
     context: AccountContext,
     presentationData: PresentationData,
-    activeTabs: [DAppTab],
-    updatedTabsOrder: [Int]?
+    activeTabs: [DAppTab]
 ) -> [DTabBarSettingsEntry] {
     var entries: [DTabBarSettingsEntry] = []
     let languageCode = presentationData.strings.baseLanguageCode
@@ -214,7 +213,7 @@ private func dTabBarSettingsControllerEntries(
         )
     )
     
-    tabsWithAppliedOrder(tabs: activeTabs, order: updatedTabsOrder).enumerated().forEach {
+    activeTabs.enumerated().forEach {
         entries.append(.activeTab(index: Int32($0.offset), tab: $0.element))
     }
     
@@ -244,43 +243,48 @@ public func dTabBarSettingsController(
     |> map {
         ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings).tabBarSettings.currentTabs
     }
-    |> distinctUntilChanged
+    |> take(1)
     |> mapToSignal { tabs -> Signal<[DAppTab], NoError> in
         return .single(tabs)
     }
     
     let activeTabs = Promise<[DAppTab]>()
-    let updatedTabsOrder = Promise<[Int]?>(nil)
     activeTabs.set(activeTabsSignal)
     
     let arguments = DTabBarSettingsControllerArguments(
-        context: context) { tab in
-            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
-                var settings = $0
-                var tabs = settings.tabBarSettings.currentTabs
-                tabs.append(tab)
-                settings.tabBarSettings.currentTabs = tabs
-                updatedTabsOrder.set(.single(tabs.map(\.rawValue)))
-                return settings
-            }.start()
-        } removeTab: { tab in
-            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
-                var settings = $0
-                var tabs = settings.tabBarSettings.currentTabs
-                tabs.removeAll(where: { $0.rawValue == tab.rawValue })
-                settings.tabBarSettings.currentTabs = tabs
-                updatedTabsOrder.set(.single(tabs.map(\.rawValue)))
-                return settings
-            }.start()
-        }
+        context: context,
+        addTab: { tab in
+            let _ = (activeTabs.get() |> take(1) |> deliverOnMainQueue)
+                .start(next: { tabs in
+                    let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
+                        var settings = $0
+                        var _tabs = tabs
+                        _tabs.append(tab)
+                        settings.tabBarSettings.currentTabs = _tabs
+                        activeTabs.set(.single(_tabs))
+                        return settings
+                    }.start()
+                })
+        },
+        removeTab: { tab in
+            let _ = (activeTabs.get() |> take(1) |> deliverOnMainQueue)
+                .start(next: { tabs in
+                    let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
+                        var settings = $0
+                        var _tabs = tabs
+                        _tabs.removeAll(where: { $0.rawValue == tab.rawValue })
+                        settings.tabBarSettings.currentTabs = _tabs
+                        activeTabs.set(.single(_tabs))
+                        return settings
+                    }.start()
+                })
+        })
     
     let signal = combineLatest(queue: .mainQueue(),
         context.sharedContext.presentationData,
-        activeTabs.get(),
-        updatedTabsOrder.get(),
-        context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        activeTabs.get()
     )
-    |> map { presentationData, activeTabsValue, updatedTabsOrderValue, sharedData -> (ItemListControllerState, (ItemListNodeState, Any)) in
+    |> map { presentationData, activeTabsValue -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let title = "DahlSettings.TabBarSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
@@ -294,8 +298,7 @@ public func dTabBarSettingsController(
         let entries = dTabBarSettingsControllerEntries(
             context: context,
             presentationData: presentationData,
-            activeTabs: activeTabsValue,
-            updatedTabsOrder: updatedTabsOrderValue
+            activeTabs: activeTabsValue
         )
         
         let listState = ItemListNodeState(
@@ -306,9 +309,6 @@ public func dTabBarSettingsController(
         )
         return (controllerState, (listState, arguments))
     }
-    
-    let _ = updatedTabsOrder.get()
-    |> deliverOnMainQueue
     
     let controller = ItemListController(context: context, state: signal)
     
@@ -335,12 +335,8 @@ public func dTabBarSettingsController(
             afterAll = true
         }
         
-        return combineLatest(
-            updatedTabsOrder.get() |> take(1),
-            activeTabs.get() |> take(1)
-        )
-        |> mapToSignal { updatedTabsOrderValue, activeTabsValue -> Signal<Bool, NoError> in
-            var tabs = tabsWithAppliedOrder(tabs: activeTabsValue, order: updatedTabsOrderValue)
+        return activeTabs.get() |> take(1) |> mapToSignal { activeTabsValue -> Signal<Bool, NoError> in
+            var tabs = activeTabsValue
             let initialOrder = tabs.map { $0.rawValue }
             
             if let index = tabs.firstIndex(where: { $0 == fromTab }) {
@@ -371,7 +367,7 @@ public func dTabBarSettingsController(
             
             let updatedOrder = tabs.map(\.rawValue)
             if initialOrder != updatedOrder {
-                updatedTabsOrder.set(.single(updatedOrder))
+                activeTabs.set(.single(tabs))
                 return .single(true)
             } else {
                 return .single(false)
@@ -379,52 +375,25 @@ public func dTabBarSettingsController(
         }
     }
     
-    controller.setReorderCompleted { (entries: [DTabBarSettingsEntry]) in
-        let _ = (combineLatest(
-            updatedTabsOrder.get() |> take(1),
-            activeTabs.get()
-        ) |> deliverOnMainQueue)
-        .start(next: { order, tabs in
-            updatedTabsOrder.set(.single(order))
-        })
-    }
-    
     controller.willDisappear = { _ in
-        let _ =  (updatedTabsOrder.get()
-        |> take(1)
-        |> deliverOnMainQueue)
-        .start(next: { order in
-            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
+        let _ = (combineLatest(
+            activeTabs.get() |> take(1),
+            context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> take(1)
+            |> map {
+                ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings).tabBarSettings.currentTabs
+            }
+        )
+        |> filter { $0 != $1 }
+        |> mapToSignal { activeTabsValue, _ -> Signal<Void, NoError> in
+            return updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
                 var settings = $0
-                let tabs = tabsWithAppliedOrder(tabs: settings.tabBarSettings.currentTabs, order: order)
-                settings.tabBarSettings.currentTabs = tabs
+                settings.tabBarSettings.currentTabs = activeTabsValue
                 return settings
-            }.start()
+            }
         })
+        .start()
     }
     
     return controller
-}
-
-private func tabsWithAppliedOrder(tabs: [DAppTab], order: [Int]?) -> [DAppTab] {
-    let sortedTabs: [DAppTab]
-    if let updatedTabsOrder = order {
-        var updatedTabs: [DAppTab] = []
-        for rawValue in updatedTabsOrder {
-            if let tab = DAppTab(rawValue: rawValue) {
-                updatedTabs.append(tab)
-            }
-        }
-        if tabs.count != order?.count {
-            for tab in tabs {
-                if order?.contains(tab.rawValue) == false {
-                    updatedTabs.append(tab)
-                }
-            }
-        }
-        sortedTabs = updatedTabs
-    } else {
-        sortedTabs = tabs
-    }
-    return sortedTabs
 }
