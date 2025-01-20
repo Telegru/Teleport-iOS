@@ -653,7 +653,7 @@ public struct PresentationThemeSettings: Codable {
     }
     
     public static var defaultSettings: PresentationThemeSettings {
-        return PresentationThemeSettings(theme: .builtin(.dayClassic), themePreferredBaseTheme: [:], themeSpecificAccentColors: [:], themeSpecificChatWallpapers: [:], useSystemFont: true, fontSize: .regular, listsFontSize: .regular, chatBubbleSettings: .default, automaticThemeSwitchSetting: AutomaticThemeSwitchSetting(force: false, trigger: .system, theme: .builtin(.night)), largeEmoji: true, reduceMotion: false)
+        return PresentationThemeSettings(theme: .builtin(.dayClassic), themePreferredBaseTheme: [:], themeSpecificAccentColors: [:], themeSpecificChatWallpapers: [:], useSystemFont: true, fontSize: .regular, listsFontSize: .regular, chatBubbleSettings: .default, automaticThemeSwitchSetting: AutomaticThemeSwitchSetting(force: true, trigger: .system, theme: .builtin(.nightAccent)), largeEmoji: true, reduceMotion: false)
     }
     
     public init(theme: PresentationThemeReference, themePreferredBaseTheme: [Int64: TelegramBaseTheme], themeSpecificAccentColors: [Int64: PresentationThemeAccentColor], themeSpecificChatWallpapers: [Int64: TelegramWallpaper], useSystemFont: Bool, fontSize: PresentationFontSize, listsFontSize: PresentationFontSize, chatBubbleSettings: PresentationChatBubbleSettings, automaticThemeSwitchSetting: AutomaticThemeSwitchSetting, largeEmoji: Bool, reduceMotion: Bool) {
@@ -710,7 +710,7 @@ public struct PresentationThemeSettings: Codable {
         self.listsFontSize = PresentationFontSize(rawValue: try container.decodeIfPresent(Int32.self, forKey: "lf") ?? PresentationFontSize.regular.rawValue) ?? fontSize
 
         self.chatBubbleSettings = try container.decodeIfPresent(PresentationChatBubbleSettings.self, forKey: "chatBubbleSettings") ?? PresentationChatBubbleSettings.default
-        self.automaticThemeSwitchSetting = try container.decodeIfPresent(AutomaticThemeSwitchSetting.self, forKey: "automaticThemeSwitchSetting") ?? AutomaticThemeSwitchSetting(force: false, trigger: .system, theme: .builtin(.night))
+        self.automaticThemeSwitchSetting = try container.decodeIfPresent(AutomaticThemeSwitchSetting.self, forKey: "automaticThemeSwitchSetting") ?? AutomaticThemeSwitchSetting(force: true, trigger: .system, theme: .builtin(.night))
 
         self.largeEmoji = try container.decodeIfPresent(Bool.self, forKey: "largeEmoji") ?? true
         self.reduceMotion = try container.decodeIfPresent(Bool.self, forKey: "reduceMotion") ?? false
