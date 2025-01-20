@@ -26,6 +26,7 @@
 
 
 // Settings
+"DahlSettings.TabTitle" = "Настройки \"Даль\"";
 "DahlSettings.Title" = "Настройки Dahl";
 "DahlSettings.HidePublishStoriesButton" = "Скрыть кнопку публикации историй";
 "DahlSettings.HideStories" = "Скрыть истории";
@@ -40,12 +41,21 @@
 "DahlSettings.BackCamera" = "Задняя камера";
 "DahlSettings.AskBeforeRecording" = "Спрашивать";
 "DahlSettings.Camera" = "Камера";
+"DahlSettings.TabBarSettings" = "Нижнее меню";
 
 "DahlSettings.ActionConfirmationHeader" = "Подтверждение действий";
 "DahlSettings.ConfirmCallToggle" = "Подтверждать звонок";
 "DahlSettings.ConfirmAudioMessageToggle" = "Подтверждать аудиосообщение";
 "DahlSettings.VideoMessageCameraLink" = "Камера для видеосообщений";
 
+"DahlSettings.TabBarSettings.Title" = "Нижнее меню";
+"DahlSettings.TabBarSettings.ActiveTabs.Header" = "Используемые пункты меню";
+"DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i из %i";
+"DahlSettings.TabBarSettings.ActiveTabs.Footer" = "Нижнее меню приложения можно настраивать под себя, удаляя и добавляя пункты из списка доступных.";
+"DahlSettings.TabBarSettings.AvailableTabs.Header" = "Еще пункты";
+
+// Wallet
+"Wallet.TabTitle" = "Кошелек";
 
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";

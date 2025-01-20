@@ -62,7 +62,8 @@ private final class DalSettingsArguments {
     }
 }
 
-private enum DalSettingsSection: Int32 {
+private enum DalSettingsSection: Int32, CaseIterable {
+    case tabBar
     case stories
     case confidentiality
     case confirmation
@@ -93,6 +94,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case privacyHeader(PresentationTheme, String)
     case confirmationHeader(PresentationTheme, String)
 
+	// Раздел нижнего меню
+    case tabBar
+
     // Раздел Stories
     case hidePublishStoriesButton(PresentationTheme, String, Bool)
     case hideStories(PresentationTheme, String, Bool)
@@ -110,6 +114,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
 
     var section: ItemListSectionId {
         switch self {
+        case .tabBar:
+            return DalSettingsSection.tabBar.rawValue
+            
         case .storiesHeader, .hidePublishStoriesButton, .hideStories, .hideViewedStories:
             return DalSettingsSection.stories.rawValue
             
@@ -122,6 +129,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     
     var stableId: Int32 {
         switch self {
+        case .tabBar:
+            return -1
+            
         case .storiesHeader:
             return 0
         case .hidePublishStoriesButton:
@@ -169,7 +179,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.callConfirmation
         case .sendAudioConfirmation:
             return DalSettingsEntryTag.sendAudioConfirmation
-        case .storiesHeader, .privacyHeader, .confirmationHeader:
+        case .storiesHeader, .privacyHeader, .confirmationHeader, .tabBar:
             return nil
         }
     }
@@ -257,7 +267,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_):
+        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .tabBar:
             if lhs.stableId != rhs.stableId {
                 return false
             }
@@ -400,6 +410,19 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 text: text,
                 sectionId: self.section
             )
+            
+        case .tabBar:
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: "DahlSettings.TabBarSettings".tp_loc(lang: presentationData.strings.baseLanguageCode),
+                label: "",
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    let tabBarSettingsController = dTabBarSettingsController(context: arguments.context)
+                    arguments.pushController(tabBarSettingsController)
+                }
+            )
         }
     }
 }
@@ -418,6 +441,9 @@ private func dalSettingsEntries(
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
     let lang = presentationData.strings.baseLanguageCode
+    
+    // Tab ba
+    entries.append(.tabBar)
     
     entries.append(.storiesHeader(presentationData.theme, "DahlSettings.StoriesHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePublishStoriesButton(
@@ -614,7 +640,7 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
         
         var allEntries: [DalSettingsEntry] = []
         
-        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue, DalSettingsSection.confirmation.rawValue] {
+        for section in DalSettingsSection.allCases.map(\.rawValue) {
             if let entries = groupedEntries[section] {
                 allEntries.append(contentsOf: entries.sorted())
             }
