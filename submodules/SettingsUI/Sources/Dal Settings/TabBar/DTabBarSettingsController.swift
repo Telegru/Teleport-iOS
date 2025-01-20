@@ -254,7 +254,7 @@ public func dTabBarSettingsController(
     let arguments = DTabBarSettingsControllerArguments(
         context: context,
         addTab: { tab in
-            let _ = (activeTabs.get() |> take(1) |> deliverOnMainQueue)
+            let _ = (activeTabs.get() |> take(1) |> filter { !$0.contains(tab) } |> deliverOnMainQueue )
                 .start(next: { tabs in
                     let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
                         var settings = $0
