@@ -2763,10 +2763,16 @@ extension ChatControllerImpl {
                 }) else {
                     return
                 }
+                
+                let dalSettings: Signal<DalSettings, NoError> = (strongSelf.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> map { sharedData -> DalSettings in
+                    return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+                })
+                
                 let hasOngoingCall: Signal<Bool, NoError> = strongSelf.context.sharedContext.hasOngoingCall.get()
-                let _ = (hasOngoingCall
+                let _ = (combineLatest(hasOngoingCall, dalSettings)
                 |> take(1)
-                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall in
+                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall, dalSettings in
                     guard let strongSelf = self, strongSelf.beginMediaRecordingRequestId == requestId else {
                         return
                     }
@@ -2775,8 +2781,35 @@ extension ChatControllerImpl {
                         })]), in: .window(.root))
                     } else {
                         if isVideo {
-                            strongSelf.requestVideoRecorder()
+                            if dalSettings.videoMessageCamera != .undefined  {
+                                strongSelf.requestVideoRecorder(isFrontCamera: dalSettings.videoMessageCamera == CameraType.front)
+                            } else {
+                                let theme = ActionSheetControllerTheme(presentationData: strongSelf.presentationData)
+                                let actionSheet = ActionSheetController(theme: theme, allowInputInset: false)
+                                actionSheet.setItemGroups([
+                                    ActionSheetItemGroup(items: [
+                                        ActionSheetTextItem(title: "Chat.SelectCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)),
+                                        ActionSheetButtonItem(title: "Chat.FrontCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                            self?.requestVideoRecorder(isFrontCamera: true)
+                                            self?.resumeMediaRecorder()
+                                        }),
+                                        ActionSheetButtonItem(title: "Chat.BackCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                            self?.requestVideoRecorder(isFrontCamera: false)
+                                            self?.resumeMediaRecorder()
+                                        })
+                                    ]),
+                                    ActionSheetItemGroup(items: [
+                                        ActionSheetButtonItem(title: strongSelf.presentationData.strings.Common_Cancel, color: .accent, font: .bold, action: { [weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                        })
+                                    ])
+                                ])
+                                strongSelf.present(actionSheet, in: .window(.root))
+                            }
                         } else {
+                            strongSelf.confirmSendAudioMessage = dalSettings.sendAudioConfirmation
                             strongSelf.requestAudioRecorder(beginWithTone: false)
                         }
                     }

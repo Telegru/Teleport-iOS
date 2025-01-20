@@ -29,6 +29,9 @@ private final class DalSettingsArguments {
     let updateHidePhone: (Bool) -> Void
     let updateDisableReadHistory: (Bool) -> Void
     let updateOfflineMode: (Bool) -> Void
+    let openCameraSettings: (String) -> Void
+    let updateCallConfirmation: (Bool) -> Void
+    let updateSendAudioConfirmation: (Bool) -> Void
 
     init(
         context: AccountContext,
@@ -39,7 +42,10 @@ private final class DalSettingsArguments {
         updateHideViewedStories: @escaping (Bool) -> Void,
         updateHidePhone: @escaping (Bool) -> Void,
         updateDisableReadHistory: @escaping (Bool) -> Void,
-        updateOfflineMode: @escaping (Bool) -> Void
+        updateOfflineMode: @escaping (Bool) -> Void,
+        openCameraSettings: @escaping (String) -> Void,
+        updateCallConfirmation: @escaping (Bool) -> Void,
+        updateSendAudioConfirmation: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.presentController = presentController
@@ -50,12 +56,16 @@ private final class DalSettingsArguments {
         self.updateHidePhone = updateHidePhone
         self.updateDisableReadHistory = updateDisableReadHistory
         self.updateOfflineMode = updateOfflineMode
+        self.openCameraSettings = openCameraSettings
+        self.updateCallConfirmation = updateCallConfirmation
+        self.updateSendAudioConfirmation = updateSendAudioConfirmation
     }
 }
 
 private enum DalSettingsSection: Int32 {
     case stories
     case confidentiality
+    case confirmation
 }
 
 public enum DalSettingsEntryTag: ItemListItemTag {
@@ -66,6 +76,8 @@ public enum DalSettingsEntryTag: ItemListItemTag {
     case disableReadHistory
     case offlineMode
     case cameraChoice
+    case callConfirmation
+    case sendAudioConfirmation
 
     public func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? DalSettingsEntryTag, self == other {
@@ -79,7 +91,7 @@ public enum DalSettingsEntryTag: ItemListItemTag {
 private enum DalSettingsEntry: ItemListNodeEntry {
     case storiesHeader(PresentationTheme, String)
     case privacyHeader(PresentationTheme, String)
-    case cameraHeader(PresentationTheme, String)
+    case confirmationHeader(PresentationTheme, String)
 
     // Раздел Stories
     case hidePublishStoriesButton(PresentationTheme, String, Bool)
@@ -90,19 +102,21 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case hidePhone(PresentationTheme, String, Bool)
     case disableReadHistory(PresentationTheme, String, Bool)
     case offlineMode(PresentationTheme, String, Bool)
+    
+    // Подтверждение
+    case callConfirmation(PresentationTheme, String, Bool)
+    case sendAudioConfirmation(PresentationTheme, String, Bool)
     case cameraChoice(PresentationTheme, String, String)
 
     var section: ItemListSectionId {
         switch self {
-            // Истории находятся в секции stories
         case .storiesHeader, .hidePublishStoriesButton, .hideStories, .hideViewedStories:
             return DalSettingsSection.stories.rawValue
             
-            // Приватность находится в секции confidentiality
         case .privacyHeader, .hidePhone, .disableReadHistory, .offlineMode:
             return DalSettingsSection.confidentiality.rawValue
-        case .cameraHeader, .cameraChoice:
-            return DalSettingsSection.confidentiality.rawValue
+        case .confirmationHeader, .callConfirmation, .sendAudioConfirmation, .cameraChoice:
+            return DalSettingsSection.confirmation.rawValue
         }
     }
     
@@ -124,10 +138,14 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return 6
         case .offlineMode:
             return 7
-        case .cameraHeader:
+        case .confirmationHeader:
             return 8
-        case .cameraChoice:
+        case .callConfirmation:
             return 9
+        case .sendAudioConfirmation:
+            return 10
+        case .cameraChoice:
+            return 11
         }
     }
 
@@ -147,7 +165,11 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.disableReadHistory
         case .cameraChoice:
             return DalSettingsEntryTag.cameraChoice
-        case .storiesHeader, .privacyHeader, .cameraHeader:
+        case .callConfirmation:
+            return DalSettingsEntryTag.callConfirmation
+        case .sendAudioConfirmation:
+            return DalSettingsEntryTag.sendAudioConfirmation
+        case .storiesHeader, .privacyHeader, .confirmationHeader:
             return nil
         }
     }
@@ -217,7 +239,25 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case .storiesHeader(_, _), .privacyHeader(_, _), .cameraHeader(_,_):
+        case let .sendAudioConfirmation(lhsTheme, lhsText, lhsValue):
+            if case let .sendAudioConfirmation(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case let .callConfirmation(lhsTheme, lhsText, lhsValue):
+            if case let .callConfirmation(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_):
             if lhs.stableId != rhs.stableId {
                 return false
             }
@@ -310,19 +350,35 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return ItemListDisclosureItem(
                 presentationData: presentationData,
                 title: text,
-                label: selectedCamera == "front" ?  "DahlSettings.FrontCamera".tp_loc(lang: presentationData.strings.baseLanguageCode) : "DahlSettings.BackCamera".tp_loc(lang: presentationData.strings.baseLanguageCode),
+                label: selectedCamera == CameraType.front.rawValue ?  "DahlSettings.FrontCamera".tp_loc(lang: presentationData.strings.baseLanguageCode) : selectedCamera == CameraType.back.rawValue ? "DahlSettings.BackCamera".tp_loc(lang: presentationData.strings.baseLanguageCode) : "DahlSettings.AskBeforeRecording".tp_loc(lang: presentationData.strings.baseLanguageCode),
                 sectionId: self.section,
                 style: .blocks,
                 action: {
-                    // Переход на контроллер выбора камеры
-//                    let cameraSettingsController = dalCameraSettingsController(
-//                        context: ,
-//                        selectedCamera: selectedCamera,
-//                        updateCamera: { newCamera in
-////                            arguments.updateCameraChoice(newCamera)
-//                        }
-//                    )
-//                    arguments.pushController(cameraSettingsController)
+                    arguments.openCameraSettings(selectedCamera)
+                },
+                tag: self.tag
+            )
+        case let .callConfirmation(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateCallConfirmation(updatedValue)
+                },
+                tag: self.tag
+            )
+        case let .sendAudioConfirmation(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateSendAudioConfirmation(updatedValue)
                 },
                 tag: self.tag
             )
@@ -338,7 +394,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 text: text,
                 sectionId: self.section
             )
-        case let .cameraHeader(_, text):
+        case let .confirmationHeader(_, text):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
                 text: text,
@@ -355,6 +411,9 @@ private func dalSettingsEntries(
     hidePhone: Bool,
     disableReadHistory: Bool,
     offlintMode: Bool,
+    callConfirmation: Bool,
+    sendAudioConfirmation: Bool,
+    videoMessageCamera: CameraType,
     presentationData: PresentationData
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
@@ -377,7 +436,7 @@ private func dalSettingsEntries(
         hideViewedStories
     ))
     
-    entries.append(.privacyHeader(presentationData.theme,         "DahlSettings.PrivacyHeader".tp_loc(lang: lang)))
+    entries.append(.privacyHeader(presentationData.theme, "DahlSettings.PrivacyHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePhone(
         presentationData.theme,
         "DahlSettings.HidePhone".tp_loc(lang: lang),
@@ -392,6 +451,23 @@ private func dalSettingsEntries(
         presentationData.theme,
         "DahlSettings.OfflineMode".tp_loc(lang: lang),
         offlintMode
+    ))
+    
+    entries.append(.confirmationHeader(presentationData.theme, "DahlSettings.ActionConfirmationHeader".tp_loc(lang: lang).uppercased()))
+    entries.append(.callConfirmation(
+        presentationData.theme,
+        "DahlSettings.ConfirmCallToggle".tp_loc(lang: lang),
+        callConfirmation
+    ))
+    entries.append(.sendAudioConfirmation(
+        presentationData.theme,
+        "DahlSettings.ConfirmAudioMessageToggle".tp_loc(lang: lang),
+        sendAudioConfirmation
+    ))
+    entries.append(.cameraChoice(
+        presentationData.theme,
+        "DahlSettings.VideoMessage".tp_loc(lang: lang),
+        videoMessageCamera.rawValue
     ))
     
     return entries
@@ -468,6 +544,39 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
                     return settings
                 }
             ).start()
+        }, openCameraSettings: { _ in
+            let cameraSettingsController = dalCameraSettingsController(
+                context: context,
+                updateCamera: { newCamera in
+                    let _ = updateDalSettingsInteractively(
+                        accountManager: context.sharedContext.accountManager,
+                        { settings in
+                            var settings = settings
+                            settings.videoMessageCamera = CameraType(rawValue: newCamera) ?? .undefined
+                            return settings
+                        }
+                    ).start()
+                }
+            )
+            pushControllerImpl?(cameraSettingsController)
+        }, updateCallConfirmation: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.callConfirmation = value
+                    return settings
+                }
+            ).start()
+        }, updateSendAudioConfirmation: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.sendAudioConfirmation = value
+                    return settings
+                }
+            ).start()
         }
     )
     
@@ -493,6 +602,9 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
             hidePhone: dalSettings.hidePhone,
             disableReadHistory: dalSettings.disableReadHistory,
             offlintMode: dalSettings.offlineMode,
+            callConfirmation: dalSettings.callConfirmation,
+            sendAudioConfirmation: dalSettings.sendAudioConfirmation,
+            videoMessageCamera: dalSettings.videoMessageCamera,
             presentationData: presentationData
         )
         
@@ -502,7 +614,7 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
         
         var allEntries: [DalSettingsEntry] = []
         
-        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue] {
+        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue, DalSettingsSection.confirmation.rawValue] {
             if let entries = groupedEntries[section] {
                 allEntries.append(contentsOf: entries.sorted())
             }

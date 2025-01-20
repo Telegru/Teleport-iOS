@@ -7262,7 +7262,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
         }
     }
     
-    private func requestCall(isVideo: Bool, gesture: ContextGesture? = nil, contextController: ContextControllerProtocol? = nil, result: ((ContextMenuActionResult) -> Void)? = nil, backAction: ((ContextControllerProtocol) -> Void)? = nil) {
+    private func _requestCall(isVideo: Bool, gesture: ContextGesture? = nil, contextController: ContextControllerProtocol? = nil, result: ((ContextMenuActionResult) -> Void)? = nil, backAction: ((ContextControllerProtocol) -> Void)? = nil) {
         let peerId = self.peerId
         let requestCall: (PeerId?, EngineGroupCallDescription?) -> Void = { [weak self] defaultJoinAsPeerId, activeCall in
             if let activeCall = activeCall {
@@ -7298,6 +7298,52 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
         }
         
         self.context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+    }
+    
+    private func requestCall(
+        isVideo: Bool,
+        gesture: ContextGesture? = nil,
+        contextController: ContextControllerProtocol? = nil,
+        result: ((ContextMenuActionResult) -> Void)? = nil,
+        backAction: ((ContextControllerProtocol) -> Void)? = nil
+    ) {
+        let _ = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        |> map { sharedData -> Bool in
+            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                return current.callConfirmation
+            } else {
+                return DalSettings.defaultSettings.callConfirmation
+            }
+        }
+        |> take(1)
+        |> deliverOnMainQueue).startStandalone(next: { [weak self] (callConfirmation: Bool) in
+                guard let strongSelf = self else { return }
+                
+                if callConfirmation {
+                    let text = isVideo
+                    ? "Chat.ConfirmVideoCall".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)
+                    : "Chat.ConfirmCall".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)
+                    
+                    let actions: [TextAlertAction] = [
+                        TextAlertAction(type: .defaultAction, title: "Chat.Yes".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)) { [weak self] in
+                            guard let self = self else { return }
+                            self._requestCall(isVideo: isVideo, gesture: gesture, contextController: contextController, result: result, backAction: backAction)
+                        },
+                        TextAlertAction(type: .genericAction, title: "Chat.No".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), action: {})
+                    ]
+                    
+                    let alert = textAlertController(
+                        context: strongSelf.context,
+                        title: nil,
+                        text: text,
+                        actions: actions,
+                        actionLayout: .horizontal
+                    )
+                    strongSelf.controller?.present(alert, in: .window(.root))
+                } else {
+                    strongSelf._requestCall(isVideo: isVideo, gesture: gesture, contextController: contextController, result: result, backAction: backAction)
+                }
+            })
     }
     
     private func scheduleGroupCall() {

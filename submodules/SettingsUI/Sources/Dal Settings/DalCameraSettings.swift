@@ -8,6 +8,7 @@ import TelegramPresentationData
 import ItemListUI
 import AccountContext
 import PresentationDataUtils
+import TelegramUIPreferences
 
 
 
@@ -28,6 +29,7 @@ private enum DalCameraSettingsSection: Int32 {
 private enum DalCameraSettingsEntry: ItemListNodeEntry {
     case frontCamera(PresentationTheme, String, Bool)
     case backCamera(PresentationTheme, String, Bool)
+    case askBeforeRecord(PresentationTheme, String, Bool)
 
     var section: ItemListSectionId {
         return DalCameraSettingsSection.main.rawValue
@@ -39,6 +41,8 @@ private enum DalCameraSettingsEntry: ItemListNodeEntry {
             return 0
         case .backCamera:
             return 1
+        case .askBeforeRecord:
+            return 2
         }
     }
 
@@ -52,6 +56,12 @@ private enum DalCameraSettingsEntry: ItemListNodeEntry {
             }
         case let .backCamera(lhsTheme, lhsText, lhsValue):
             if case let .backCamera(rhsTheme, rhsText, rhsValue) = rhs, lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case let .askBeforeRecord(lhsTheme, lhsText, lhsValue):
+            if case let .askBeforeRecord(rhsTheme, rhsText, rhsValue) = rhs, lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue {
                 return true
             } else {
                 return false
@@ -75,7 +85,7 @@ private enum DalCameraSettingsEntry: ItemListNodeEntry {
                 zeroSeparatorInsets: false,
                 sectionId: self.section,
                 action: {
-                    arguments.updateSelectedCamera("front")
+                    arguments.updateSelectedCamera(CameraType.front.rawValue)
                 }
             )
         case let .backCamera(_, text, value):
@@ -87,7 +97,19 @@ private enum DalCameraSettingsEntry: ItemListNodeEntry {
                 zeroSeparatorInsets: false,
                 sectionId: self.section,
                 action: {
-                    arguments.updateSelectedCamera("back")
+                    arguments.updateSelectedCamera(CameraType.back.rawValue)
+                }
+            )
+        case let .askBeforeRecord(_, text, value):
+            return ItemListCheckboxItem(
+                presentationData: presentationData,
+                title: text,
+                style: .left,
+                checked: value,
+                zeroSeparatorInsets: false,
+                sectionId: self.section,
+                action: {
+                    arguments.updateSelectedCamera(CameraType.undefined.rawValue)
                 }
             )
         }
@@ -96,23 +118,37 @@ private enum DalCameraSettingsEntry: ItemListNodeEntry {
 
 private func dalCameraSettingsEntries(selectedCamera: String, presentationData: PresentationData) -> [DalCameraSettingsEntry] {
     return [
-        .frontCamera(presentationData.theme, "DahlSettings.FrontCamera".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == "front"),
-        .backCamera(presentationData.theme, "DahlSettings.BackCamera".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == "back")
+        .frontCamera(presentationData.theme, "DahlSettings.FrontCamera".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == CameraType.front.rawValue),
+        .backCamera(presentationData.theme, "DahlSettings.BackCamera".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == CameraType.back.rawValue),
+        .askBeforeRecord(presentationData.theme, "DahlSettings.AskBeforeRecording".tp_loc(lang: presentationData.strings.baseLanguageCode), selectedCamera == CameraType.undefined.rawValue)
     ]
 }
 
-public func dalCameraSettingsController(context: AccountContext, selectedCamera: String, updateCamera: @escaping (String) -> Void) -> ViewController {
+public func dalCameraSettingsController(context: AccountContext, updateCamera: @escaping (String) -> Void) -> ViewController {
     let arguments = DalCameraSettingsArguments(updateSelectedCamera: { newCamera in
         updateCamera(newCamera)
     })
 
-    let signal = context.sharedContext.presentationData
-    |> map { presentationData -> (ItemListControllerState, (ItemListNodeState, Any)) in
-        let entries = dalCameraSettingsEntries(selectedCamera: selectedCamera, presentationData: presentationData)
+    let selectedCamera = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> CameraType in
+        let dalSettings: DalSettings
+        if let entry = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+            dalSettings = entry
+        } else {
+            dalSettings = DalSettings.defaultSettings
+        }
+        return dalSettings.videoMessageCamera
+    }
+    |> distinctUntilChanged)
+
+    
+    let signal = combineLatest(context.sharedContext.presentationData, selectedCamera)
+    |> map { presentationData, selectedCamera -> (ItemListControllerState, (ItemListNodeState, Any)) in
+        let entries = dalCameraSettingsEntries(selectedCamera: selectedCamera.rawValue, presentationData: presentationData)
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .text("DahlSettings.CameraSettings".tp_loc(lang: presentationData.strings.baseLanguageCode)),
+            title: .text("DahlSettings.VideoMessage".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)
