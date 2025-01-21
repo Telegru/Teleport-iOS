@@ -651,7 +651,7 @@ public func dalsettingsController(
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .text("DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)),
+            title: .navigationItemTitle("DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back),

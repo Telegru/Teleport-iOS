@@ -270,7 +270,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                         url: url,
                         concealed: concealed,
                         present: { [weak self] c in
-                            self?.present(c, animated: true)
+                            self?.rootTabController?.present(c, in: .window(.root))
                         },
                         openResolved: { [weak self] result in
                             guard let self else { return }
