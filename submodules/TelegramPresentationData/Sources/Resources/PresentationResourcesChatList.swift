@@ -38,9 +38,23 @@ private func generateBadgeBackgroundImage(theme: PresentationTheme, diameter: CG
                 context.setFillColor(theme.chatList.unreadBadgeInactiveBackgroundColor.cgColor)
             }
         }
-        context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+        
+        if theme.chat.isRectangleCountMessageBadge {
+            let rect = CGRect(origin: .zero, size: size)
+            let cornerRadius: CGFloat = diameter * 0.2
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+            context.addPath(path.cgPath)
+            context.fillPath()
+        } else {
+            context.fillEllipse(in: CGRect(origin: .zero, size: size))
+        }
+        
         if let icon = icon, let cgImage = icon.cgImage {
-            context.draw(cgImage, in: CGRect(origin: CGPoint(x: floor((size.width - icon.size.width) / 2.0), y: floor((size.height - icon.size.height) / 2.0)), size: icon.size))
+            let iconOrigin = CGPoint(
+                x: floor((size.width - icon.size.width) / 2.0),
+                y: floor((size.height - icon.size.height) / 2.0)
+            )
+            context.draw(cgImage, in: CGRect(origin: iconOrigin, size: icon.size))
         }
     })?.stretchableImage(withLeftCapWidth: Int(diameter / 2.0), topCapHeight: Int(diameter / 2.0))
 }

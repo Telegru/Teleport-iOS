@@ -1202,7 +1202,7 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                                         } else if case let .channel(channel) = peer, channel.flags.contains(.isForum) {
                                             clipStyle = .roundedRect
                                         } else {
-                                            clipStyle = .round
+                                            clipStyle = item.presentationData.theme.useSquareStyle ? .rect : .round
                                         }
                                         
                                         strongSelf.avatarNode.setPeer(context: item.context, theme: item.presentationData.theme, peer: peer, overrideImage: overrideImage, emptyColor: item.presentationData.theme.list.mediaPlaceholderColor, clipStyle: clipStyle, synchronousLoad: synchronousLoads, displayDimensions: displayDimensions)

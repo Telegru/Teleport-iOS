@@ -369,7 +369,7 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
         self.separatorNode.isOpaque = true
         self.separatorNode.isLayerBacked = true
         
-        self.badgeImage = generateStretchableFilledCircleImage(diameter: 18.0, color: theme.tabBarBadgeBackgroundColor, strokeColor: theme.tabBarBadgeStrokeColor, strokeWidth: 1.0, backgroundColor: nil)!
+        self.badgeImage = theme.useSquareStyle ? generateStretchableFilledRectImage(size: CGSize(width: 18, height: 18), cornerRadius: 4, color: theme.tabBarBadgeBackgroundColor, backgroundColor: nil)! : generateStretchableFilledCircleImage(diameter: 18.0, color: theme.tabBarBadgeBackgroundColor, strokeColor: theme.tabBarBadgeStrokeColor, strokeWidth: 1.0, backgroundColor: nil)!
         
         super.init()
         
@@ -424,7 +424,8 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
             self.separatorNode.backgroundColor = theme.tabBarSeparatorColor
             self.backgroundNode.updateColor(color: theme.tabBarBackgroundColor, transition: .immediate)
             
-            self.badgeImage = generateStretchableFilledCircleImage(diameter: 18.0, color: theme.tabBarBadgeBackgroundColor, strokeColor: theme.tabBarBadgeStrokeColor, strokeWidth: 1.0, backgroundColor: nil)!
+            self.badgeImage = theme.useSquareStyle ? generateStretchableFilledRectImage(size: CGSize(width: 18, height: 18), cornerRadius: 4, color: theme.tabBarBadgeBackgroundColor, backgroundColor: nil)! : generateStretchableFilledCircleImage(diameter: 18.0, color: theme.tabBarBadgeBackgroundColor, strokeColor: theme.tabBarBadgeStrokeColor, strokeWidth: 1.0, backgroundColor: nil)!
+            
             for container in self.tabBarNodeContainers {
                 if let attributedText = container.badgeTextNode.attributedText, !attributedText.string.isEmpty {
                     container.badgeTextNode.attributedText = NSAttributedString(string: attributedText.string, font: badgeFont, textColor: self.theme.tabBarBadgeTextColor)
