@@ -3,6 +3,7 @@ import UIKit
 import Display
 import AppBundle
 import PresentationStrings
+import TPUI
 
 private func generateStatusCheckImage(theme: PresentationTheme, single: Bool) -> UIImage? {
     return generateImage(CGSize(width: single ? 13.0 : 18.0, height: 13.0), rotatedContext: { size, context in
@@ -231,7 +232,7 @@ public struct PresentationResourcesChatList {
     
     public static func badgeBackgroundPinned(_ theme: PresentationTheme, diameter: CGFloat) -> UIImage? {
         return theme.image(PresentationResourceParameterKey.chatListBadgeBackgroundPinned(diameter), { theme in
-            return generateTintedImage(image: UIImage(bundleImageName: "Chat List/PeerPinnedIcon"), color: theme.chatList.pinnedBadgeColor)
+            return generateTintedImage(image: TPIconManager.shared.icon(.peerPinnedIcon), color: theme.chatList.pinnedBadgeColor)
         })
     }
     

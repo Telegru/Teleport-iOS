@@ -9,6 +9,7 @@ import AppBundle
 import StoryPeerListComponent
 import TelegramCore
 import MoreHeaderButton
+import TPUI
 
 public final class HeaderNetworkStatusComponent: Component {
     public enum Content: Equatable {
@@ -1134,7 +1135,7 @@ public final class NavigationButtonComponent: Component {
     public enum Content: Equatable {
         case text(title: String, isBold: Bool)
         case more
-        case icon(imageName: String)
+        case icon(iconType: IconType)
         case proxy(status: ChatTitleProxyStatus)
     }
     
@@ -1219,7 +1220,7 @@ public final class NavigationButtonComponent: Component {
             let iconOffset: CGFloat = 4.0
             
             var textString: NSAttributedString?
-            var imageName: String?
+            var image: UIImage?
             var proxyStatus: ChatTitleProxyStatus?
             var isMore: Bool = false
             
@@ -1228,8 +1229,8 @@ public final class NavigationButtonComponent: Component {
                 textString = NSAttributedString(string: title, font: isBold ? Font.bold(17.0) : Font.regular(17.0), textColor: theme.rootController.navigationBar.accentTextColor)
             case .more:
                 isMore = true
-            case let .icon(imageNameValue):
-                imageName = imageNameValue
+            case let .icon(iconType):
+                image = TPIconManager.shared.icon(iconType)
             case let .proxy(status):
                 proxyStatus = status
             }
@@ -1257,7 +1258,7 @@ public final class NavigationButtonComponent: Component {
                 textView.removeFromSuperview()
             }
             
-            if let imageName = imageName {
+            if let image = image {
                 let iconView: UIImageView
                 if let current = self.iconView {
                     iconView = current
@@ -1267,9 +1268,8 @@ public final class NavigationButtonComponent: Component {
                     self.iconView = iconView
                     self.addSubview(iconView)
                 }
-                if self.iconImageName != imageName || themeUpdated {
-                    self.iconImageName = imageName
-                    iconView.image = generateTintedImage(image: UIImage(bundleImageName: imageName), color: theme.rootController.navigationBar.accentTextColor)
+                if self.imageView?.image != image || themeUpdated {
+                    iconView.image = generateTintedImage(image: image, color: theme.rootController.navigationBar.accentTextColor)
                 }
                 
                 if let iconSize = iconView.image?.size {

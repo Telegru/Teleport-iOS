@@ -14,12 +14,13 @@ import Accelerate
 import ComponentFlow
 import AvatarStoryIndicatorComponent
 import DirectMediaImageCache
+import TPUI
 
 private let deletedIcon = UIImage(bundleImageName: "Avatar/DeletedIcon")?.precomposed()
 private let phoneIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/PhoneIcon"), color: .white)
-public let savedMessagesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/SavedMessagesIcon"), color: .white)
+public let savedMessagesIcon = generateTintedImage(image: TPIconManager.shared.icon(.avatarSaved), color: .white)
 public let repostStoryIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/RepostStoryIcon"), color: .white)
-private let archivedChatsIcon = UIImage(bundleImageName: "Avatar/ArchiveAvatarIcon")?.precomposed()
+private let archivedChatsIcon = TPIconManager.shared.icon(.avatarArchive).precomposed()
 private let repliesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/RepliesMessagesIcon"), color: .white)
 private let anonymousSavedMessagesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/AnonymousSenderIcon"), color: .white)
 private let anonymousSavedMessagesDarkIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/AnonymousSenderIcon"), color: UIColor(white: 1.0, alpha: 0.4))
@@ -27,7 +28,7 @@ private let myNotesIcon = generateTintedImage(image: UIImage(bundleImageName: "A
 private let cameraIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/CameraIcon"), color: .white)
 
 public func avatarPlaceholderFont(size: CGFloat) -> UIFont {
-    return Font.with(size: size, design: .round, weight: .bold)
+    return Font.with(size: size * 1.4, design: .novgorod, weight: .bold)
 }
 
 public enum AvatarNodeClipStyle {
