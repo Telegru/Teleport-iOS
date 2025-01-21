@@ -22,22 +22,22 @@ public enum DAppTab: Int, Codable, CaseIterable {
 
 public struct TabBarSettings: Codable, Hashable {
     
-    public var currentTabs: [DAppTab]
+    public var activeTabs: [DAppTab]
     
     public init(currentTabs: [DAppTab]) {
-        self.currentTabs = currentTabs
+        self.activeTabs = currentTabs
     }
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
-        self.currentTabs = try container
+        self.activeTabs = try container
             .decodeIfPresent([Int32].self, forKey: "currentTabs")?
             .compactMap { DAppTab(rawValue: Int($0)) } ?? []
     }
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
-        try container.encode(self.currentTabs.map { Int32($0.rawValue) }, forKey: "currentTabs")
+        try container.encode(self.activeTabs.map { Int32($0.rawValue) }, forKey: "currentTabs")
     }
 }
 

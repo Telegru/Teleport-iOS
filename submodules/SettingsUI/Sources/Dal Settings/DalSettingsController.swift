@@ -499,7 +499,10 @@ private func dalSettingsEntries(
     return entries
 }
 
-public func dalsettingsController(context: AccountContext) -> ViewController {
+public func dalsettingsController(
+    context: AccountContext,
+    tabBarItem: ItemListControllerTabBarItem? = nil
+) -> ViewController {
     var presentControllerImpl: ((ViewController, ViewControllerPresentationArguments?) -> Void)?
     var pushControllerImpl: ((ViewController) -> Void)?
     
@@ -651,7 +654,8 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
             title: .text("DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
-            backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)
+            backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back),
+            tabBarItem: tabBarItem
         )
         let listState = ItemListNodeState(
             presentationData: ItemListPresentationData(presentationData),
@@ -664,7 +668,13 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
         return (controllerState, (listState, arguments))
     }
     
-    let controller = ItemListController(context: context, state: signal)
+    let controller: ItemListController
+    
+    if let tabBarItem {
+        controller = ItemListController(context: context, state: signal, tabBarItem: .single(tabBarItem))
+    } else {
+        controller = ItemListController(context: context, state: signal)
+    }
     presentControllerImpl = { [weak controller] c, a in
         controller?.present(c, in: .window(.root), with: a)
     }

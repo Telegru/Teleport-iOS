@@ -26,6 +26,7 @@
 
 
 // Settings
+"Dahl.TabTitle" = "Dahl";
 "DahlSettings.TabTitle" = "\"Dahl\" settings";
 "DahlSettings.Title" = "Dahl Settings";
 "DahlSettings.HidePublishStoriesButton" = "Hide Publish Stories Button";

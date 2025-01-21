@@ -155,7 +155,12 @@ final class AuthorizedApplicationContext {
     private var showCallsTabDisposable: Disposable?
     private var enablePostboxTransactionsDiposable: Disposable?
     
-    init(sharedApplicationContext: SharedApplicationContext, mainWindow: Window1, watchManagerArguments: Signal<WatchManagerArguments?, NoError>, context: AccountContextImpl, accountManager: AccountManager<TelegramAccountManagerTypes>, showCallsTab: Bool, reinitializedNotificationSettings: @escaping () -> Void) {
+    private var appTabs: [DAppTab]
+    private var appTabsDisposable: Disposable?
+    
+    private var walletBot: AttachMenuBot?
+    
+    init(sharedApplicationContext: SharedApplicationContext, mainWindow: Window1, watchManagerArguments: Signal<WatchManagerArguments?, NoError>, context: AccountContextImpl, accountManager: AccountManager<TelegramAccountManagerTypes>, showCallsTab: Bool, appTabs: [DAppTab], walletBot: AttachMenuBot?, reinitializedNotificationSettings: @escaping () -> Void) {
         self.sharedApplicationContext = sharedApplicationContext
         
         setupLegacyComponents(context: context)
@@ -167,6 +172,9 @@ final class AuthorizedApplicationContext {
         self.context = context
         
         self.showCallsTab = showCallsTab
+        
+        self.appTabs = appTabs
+        self.walletBot = walletBot
         
         self.notificationController = NotificationContainerController(context: context)
         
@@ -249,7 +257,7 @@ final class AuthorizedApplicationContext {
         }
         
         if self.rootController.rootTabController == nil {
-            self.rootController.addRootControllers(showCallsTab: self.showCallsTab)
+            self.rootController.addRootControllers(tabs: appTabs, walletBot: walletBot)
         }
         if let tabsController = self.rootController.viewControllers.first as? TabBarController, !tabsController.controllers.isEmpty, tabsController.selectedIndex >= 0 {
             let controller = tabsController.controllers[tabsController.selectedIndex]
@@ -779,20 +787,36 @@ final class AuthorizedApplicationContext {
             }
         })
         
-        let showCallsTabSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.callListSettings])
-        |> map { sharedData -> Bool in
-            var value = CallListSettings.defaultSettings.showTab
-            if let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.callListSettings]?.get(CallListSettings.self) {
-                value = settings.showTab
+//        let showCallsTabSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.callListSettings])
+//        |> map { sharedData -> Bool in
+//            var value = CallListSettings.defaultSettings.showTab
+//            if let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.callListSettings]?.get(CallListSettings.self) {
+//                value = settings.showTab
+//            }
+//            return value
+//        }
+//        self.showCallsTabDisposable = (showCallsTabSignal |> deliverOnMainQueue).start(next: { [weak self] value in
+//            if let strongSelf = self {
+//                if strongSelf.showCallsTab != value {
+//                    strongSelf.showCallsTab = value
+//                    strongSelf.rootController.updateRootControllers(showCallsTab: value)
+//                }
+//            }
+//        })
+        
+        let appTabsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        |> map { sharedData -> [DAppTab] in
+            var value = TabBarSettings.default
+            if let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                value = settings.tabBarSettings
             }
-            return value
+            return value.activeTabs
         }
-        self.showCallsTabDisposable = (showCallsTabSignal |> deliverOnMainQueue).start(next: { [weak self] value in
-            if let strongSelf = self {
-                if strongSelf.showCallsTab != value {
-                    strongSelf.showCallsTab = value
-                    strongSelf.rootController.updateRootControllers(showCallsTab: value)
-                }
+        self.appTabsDisposable = (appTabsSignal |> deliverOnMainQueue).start(next: { [weak self] value in
+            guard let self else { return }
+            if self.appTabs != value {
+                self.appTabs = value
+                self.rootController.updateRootControllers(tabs: value)
             }
         })
         

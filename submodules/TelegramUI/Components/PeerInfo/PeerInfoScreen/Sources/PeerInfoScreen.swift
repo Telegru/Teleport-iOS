@@ -12525,11 +12525,13 @@ public final class PeerInfoScreenImpl: ViewController, PeerInfoScreen, KeyShortc
             }
             
             let icon: UIImage?
-            if useSpecialTabBarIcons() {
-                icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconSettings")
-            } else {
-                icon = UIImage(bundleImageName: "Chat List/Tabs/IconSettings")
-            }
+//            if useSpecialTabBarIcons() {
+//                icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconSettings")
+//            } else {
+//                icon = UIImage(bundleImageName: "Chat List/Tabs/IconSettings")
+//            }
+            
+            icon = UIImage(bundleImageName: "Chat List/Tabs/DIconSettings")
             
             let tabBarItem: Signal<(String, UIImage?, UIImage?, String?, Bool, Bool), NoError> = combineLatest(queue: .mainQueue(), self.context.sharedContext.presentationData, notificationsAuthorizationStatus.get(), notificationsWarningSuppressed.get(), context.engine.notices.getServerProvidedSuggestions(), accountTabBarAvatar, accountTabBarAvatarBadge)
             |> map { presentationData, notificationsAuthorizationStatus, notificationsWarningSuppressed, suggestions, accountTabBarAvatar, accountTabBarAvatarBadge -> (String, UIImage?, UIImage?, String?, Bool, Bool) in
@@ -12548,7 +12550,7 @@ public final class PeerInfoScreenImpl: ViewController, PeerInfoScreen, KeyShortc
                     strongSelf.tabBarItem.title = title
                     strongSelf.tabBarItem.image = image
                     strongSelf.tabBarItem.selectedImage = selectedImage
-                    strongSelf.tabBarItem.animationName = isAvatar || reduceMotion ? nil : "TabSettings"
+//                    strongSelf.tabBarItem.animationName = isAvatar || reduceMotion ? nil : "TabSettings"
                     strongSelf.tabBarItem.ringSelection = isAvatar
                     strongSelf.tabBarItem.badgeValue = badgeValue
                 }
@@ -12786,7 +12788,7 @@ public final class PeerInfoScreenImpl: ViewController, PeerInfoScreen, KeyShortc
         self.controllerNode.openAvatarForEditing(mode: mode, fromGallery: fromGallery, completion: completion)
     }
         
-    static func openPeer(context: AccountContext, peerId: PeerId, navigation: ChatControllerInteractionNavigateToPeer, navigationController: NavigationController) {
+    public static func openPeer(context: AccountContext, peerId: PeerId, navigation: ChatControllerInteractionNavigateToPeer, navigationController: NavigationController) {
         let _ = (context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
         |> deliverOnMainQueue).startStandalone(next: { peer in
             guard let peer else {

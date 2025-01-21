@@ -241,7 +241,7 @@ public func dTabBarSettingsController(
 ) -> ViewController {
     let activeTabsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
     |> map {
-        ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings).tabBarSettings.currentTabs
+        ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings).tabBarSettings.activeTabs
     }
     |> take(1)
     |> mapToSignal { tabs -> Signal<[DAppTab], NoError> in
@@ -260,7 +260,7 @@ public func dTabBarSettingsController(
                         var settings = $0
                         var _tabs = tabs
                         _tabs.append(tab)
-                        settings.tabBarSettings.currentTabs = _tabs
+                        settings.tabBarSettings.activeTabs = _tabs
                         activeTabs.set(.single(_tabs))
                         return settings
                     }.start()
@@ -273,7 +273,7 @@ public func dTabBarSettingsController(
                         var settings = $0
                         var _tabs = tabs
                         _tabs.removeAll(where: { $0.rawValue == tab.rawValue })
-                        settings.tabBarSettings.currentTabs = _tabs
+                        settings.tabBarSettings.activeTabs = _tabs
                         activeTabs.set(.single(_tabs))
                         return settings
                     }.start()
@@ -381,14 +381,14 @@ public func dTabBarSettingsController(
             context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
             |> take(1)
             |> map {
-                ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings).tabBarSettings.currentTabs
+                ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings).tabBarSettings.activeTabs
             }
         )
         |> filter { $0 != $1 }
         |> mapToSignal { activeTabsValue, _ -> Signal<Void, NoError> in
             return updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
                 var settings = $0
-                settings.tabBarSettings.currentTabs = activeTabsValue
+                settings.tabBarSettings.activeTabs = activeTabsValue
                 return settings
             }
         })

@@ -3,6 +3,7 @@ import Postbox
 public final class EngineChatList: Equatable {
     public enum Group {
         case root
+        case channels
         case archive
     }
 
@@ -411,6 +412,8 @@ public extension EngineChatList.Group {
             return .root
         case .archive:
             return Namespaces.PeerGroup.archive
+        case .channels:
+            return Namespaces.PeerGroup.channels
         }
     }
 }

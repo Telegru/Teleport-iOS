@@ -26,6 +26,7 @@
 
 
 // Settings
+"Dahl.TabTitle" = "Даль";
 "DahlSettings.TabTitle" = "Настройки \"Даль\"";
 "DahlSettings.Title" = "Настройки Dahl";
 "DahlSettings.HidePublishStoriesButton" = "Скрыть кнопку публикации историй";

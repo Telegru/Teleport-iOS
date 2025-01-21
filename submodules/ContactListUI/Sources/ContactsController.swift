@@ -152,17 +152,18 @@ public class ContactsController: ViewController {
         self.tabBarItem.title = self.presentationData.strings.Contacts_Title
         
         let icon: UIImage?
-        if useSpecialTabBarIcons() {
-            icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconContacts")
-        } else {
-            icon = UIImage(bundleImageName: "Chat List/Tabs/IconContacts")
-        }
+        icon = UIImage(bundleImageName: "Chat List/Tabs/DIconContacts")
+//        if useSpecialTabBarIcons() {
+//            icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconContacts")
+//        } else {
+//            icon = UIImage(bundleImageName: "Chat List/Tabs/IconContacts")
+//        }
         
         self.tabBarItem.image = icon
         self.tabBarItem.selectedImage = icon
-        if !self.presentationData.reduceMotion {
-            self.tabBarItem.animationName = "TabContacts"
-        }
+//        if !self.presentationData.reduceMotion {
+//            self.tabBarItem.animationName = "TabContacts"
+//        }
         
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
         
