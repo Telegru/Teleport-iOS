@@ -327,8 +327,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 controllers.append(chatListController)
             case .contacts:
                 controllers.append(contactsController)
-            case .channels:
-                break
+//            case .channels:
+//                break
             case .dahlSettings:
                 controllers.append(dahlSettingsController)
             case .settings:
@@ -367,8 +367,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 controllers.append(chatListController!)
             case .contacts:
                 controllers.append(contactsController!)
-            case .channels:
-                break
+//            case .channels:
+//                break
             case .dahlSettings:
                 controllers.append(dahlSettingsController!)
             case .settings:

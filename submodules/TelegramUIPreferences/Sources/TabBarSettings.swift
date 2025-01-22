@@ -8,7 +8,7 @@ public enum DAppTab: Int, Codable, CaseIterable {
     case calls
     case dahlSettings
     case wallet
-    case channels
+//    case channels
     
     public var isAlwaysShow: Bool {
         switch self {
@@ -45,9 +45,10 @@ extension TabBarSettings {
     
     public static var `default`: TabBarSettings {
         TabBarSettings(currentTabs: [
+            .contacts,
             .chats,
             .settings,
-            .channels,
+//            .channels,
             .wallet,
             .dahlSettings
         ])

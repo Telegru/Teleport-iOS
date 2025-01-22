@@ -26,8 +26,8 @@ public extension DAppTab {
             return "DahlSettings.TabTitle".tp_loc(lang: strings.baseLanguageCode)
         case .wallet:
             return "Wallet.TabTitle".tp_loc(lang: strings.baseLanguageCode)
-        case .channels:
-            return strings.ChatListFolder_NameChannels
+//        case .channels:
+//            return strings.ChatListFolder_NameChannels
         }
     }
 }
