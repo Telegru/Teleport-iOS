@@ -115,6 +115,7 @@ import VerifyAlertController
 
 import TPSettings
 import TPStrings
+import TPUI
 
 public enum PeerInfoAvatarEditingMode {
     case generic
@@ -901,7 +902,7 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
             interaction.openSettings(.profile)
         }))
         
-        items[.dal]!.append(PeerInfoScreenDisclosureItem(id: 0, text: "DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode), icon: UIImage.tpSettingsIcon, action: {
+        items[.dal]!.append(PeerInfoScreenDisclosureItem(id: 0, text: "DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode), icon: TPIconManager.shared.icon(.dahl), action: {
             interaction.openSettings(.dal)
         }))
         
@@ -2058,7 +2059,7 @@ private func editingItems(data: PeerInfoScreenData?, state: PeerInfoState, chatL
                     setText = presentationData.strings.UserInfo_SetCustomPhoto(compactName).string
                 }
                 
-                items[.peerDataSettings]!.append(PeerInfoScreenActionItem(id: ItemCustom, text: setText, color: .accent, icon: UIImage(bundleImageName: "Settings/SetAvatar"), action: {
+                items[.peerDataSettings]!.append(PeerInfoScreenActionItem(id: ItemCustom, text: setText, color: .accent, icon: TPIconManager.shared.icon(.setAvatar), action: {
                     interaction.setCustomPhoto()
                 }))
                 

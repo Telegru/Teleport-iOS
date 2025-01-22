@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "notification_disable_24.pdf",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

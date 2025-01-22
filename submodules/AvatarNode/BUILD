@@ -24,6 +24,7 @@ swift_library(
         "//submodules/ComponentFlow",
         "//submodules/TelegramUI/Components/Stories/AvatarStoryIndicatorComponent",
         "//submodules/DirectMediaImageCache",
+        "//Teleport/TPUI:TPUI",
     ],
     visibility = [
         "//visibility:public",

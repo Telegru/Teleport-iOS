@@ -1,6 +1,7 @@
 import UIKit
 import AsyncDisplayKit
 import SwiftSignalKit
+import TPUI
 
 private var backArrowImageCache: [Int32: UIImage] = [:]
 
@@ -485,7 +486,7 @@ open class NavigationBar: ASDisplayNode {
         }
     }
     
-    public static let thinBackArrowImage = generateTintedImage(image: UIImage(bundleImageName: "Navigation/BackArrow"), color: .white)?.withRenderingMode(.alwaysTemplate)
+    public static let thinBackArrowImage = generateTintedImage(image: TPIconManager.shared.icon(.backArrow), color: .white)?.withRenderingMode(.alwaysTemplate)
 
     public static let titleFont = Font.with(size: 17.0, design: .regular, weight: .semibold, traits: [.monospacedNumbers])
     

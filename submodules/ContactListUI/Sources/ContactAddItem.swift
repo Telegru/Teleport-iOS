@@ -9,6 +9,10 @@ import AppBundle
 import PhoneNumberFormat
 import AccountContext
 
+
+
+import TPUI
+
 private let titleFont = Font.regular(17.0)
 
 public class ContactsAddItem: ListViewItem {
@@ -185,7 +189,7 @@ class ContactsAddItemNode: ListViewItemNode {
             var updatedIcon: UIImage?
             if currentItem?.theme !== item.theme {
                 updatedTheme = item.theme
-                updatedIcon = generateTintedImage(image: UIImage(bundleImageName: "Contact List/AddMemberIcon"), color: item.theme.list.itemAccentColor)
+                updatedIcon = generateTintedImage(image: TPIconManager.shared.icon(.addMemberIcon), color: item.theme.list.itemAccentColor)
             }
             let leftInset: CGFloat = 65.0 + params.leftInset
             let rightInset: CGFloat = 10.0 + params.rightInset

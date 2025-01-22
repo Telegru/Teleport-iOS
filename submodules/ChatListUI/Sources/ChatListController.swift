@@ -328,7 +328,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     )))
                     
                     self.primaryContext?.rightButton = AnyComponentWithIdentity(id: "compose", component: AnyComponent(NavigationButtonComponent(
-                        content: .icon(imageName: "Chat List/ComposeIcon"),
+                        content: .icon(iconType: .storyCompose),
                         pressed: { [weak self] _ in
                             self?.composePressed()
                         }
@@ -6703,7 +6703,7 @@ private final class ChatListLocationContext {
                     )))
                 } else {
                     self.rightButton = AnyComponentWithIdentity(id: "compose", component: AnyComponent(NavigationButtonComponent(
-                        content: .icon(imageName: "Chat List/ComposeIcon"),
+                        content: .icon(iconType: .storyCompose),
                         pressed: { [weak self] _ in
                             self?.parentController?.composePressed()
                         }
@@ -6737,7 +6737,7 @@ private final class ChatListLocationContext {
                 
                 if storyPostingAvailable && !storyPostingHidden {
                     self.storyButton = AnyComponentWithIdentity(id: "story", component: AnyComponent(NavigationButtonComponent(
-                        content: .icon(imageName: "Chat List/AddStoryIcon"),
+                        content: .icon(iconType: .addStory),
                         pressed: { [weak self] _ in
                             guard let self, let parentController = self.parentController else {
                                 return
