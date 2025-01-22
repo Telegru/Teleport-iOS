@@ -46,6 +46,7 @@ swift_library(
         "//submodules/UndoUI",
         "//submodules/TelegramIntents",
         "//submodules/ContextUI",
+        "//Teleport/TPUI:TPUI",
     ],
     visibility = [
         "//visibility:public",

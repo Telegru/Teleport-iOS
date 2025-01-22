@@ -23,6 +23,7 @@ swift_library(
         "//submodules/FastBlur:FastBlur",
         "//Teleport/TPAuth:TPAuth",
         "//Telegram:PresentationStrings",
+        "//Teleport/TPUI:TPUI"
     ],
     visibility = [
         "//visibility:public",
