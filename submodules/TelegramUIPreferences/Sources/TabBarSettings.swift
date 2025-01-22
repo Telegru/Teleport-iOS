@@ -45,12 +45,10 @@ extension TabBarSettings {
     
     public static var `default`: TabBarSettings {
         TabBarSettings(currentTabs: [
-            .contacts,
-            .chats,
-            .settings,
-//            .channels,
             .wallet,
-            .dahlSettings
+            .chats,
+            .dahlSettings,
+            .settings
         ])
     }
 }

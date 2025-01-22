@@ -278,13 +278,12 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         
         let dahlSettingsController = {
             let icon = UIImage(bundleImageName: "Chat List/Tabs/IconDahl")
-            let selectedIcon = UIImage(bundleImageName: "Chat List/Tabs/IconDahlSelected")
             let controller = dalsettingsController(
                 context: self.context,
                 tabBarItem: ItemListControllerTabBarItem(
                     title: "Dahl.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode),
                     image: icon,
-                    selectedImage: selectedIcon
+                    selectedImage: icon
                 )
             )
             return controller
@@ -299,7 +298,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         }
         accountSettingsController.parentController = self
         
-        walletController = walletControllerIfPossible()
+        let walletController = walletControllerIfPossible()
         
         tabs.forEach {
             switch $0 {
@@ -320,7 +319,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             }
         }
                 
-        let index = (restoreSettignsController != nil ? tabs.firstIndex(where: { $0 == .settings }) : tabs.firstIndex(where: { $0 == .chats })) ?? 0
+        let index = (restoreSettignsController != nil ? controllers.firstIndex(where: { $0 === accountSettingsController }) : controllers.firstIndex(where: { $0 === chatListController })) ?? 0
         tabBarController.setControllers(controllers, selectedIndex: index)
         
         self.contactsController = contactsController
@@ -329,6 +328,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.newsFeedController = newsFeedController
         self.accountSettingsController = accountSettingsController
         self.dahlSettingsController = dahlSettingsController
+        self.walletController = walletController
         self.rootTabController = tabBarController
         self.pushViewController(tabBarController, animated: false)
     }
@@ -359,7 +359,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             }
         }
         
-        let selectedIndex = controllers.firstIndex { $0 === rootTabController.currentController } ?? tabs.firstIndex(where: { $0 == .settings })
+        let selectedIndex = controllers.firstIndex { $0 === rootTabController.currentController } ?? controllers.firstIndex { $0 === accountSettingsController }
         rootTabController.setControllers(controllers, selectedIndex: selectedIndex)
     }
     
