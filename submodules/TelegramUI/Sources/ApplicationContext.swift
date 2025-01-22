@@ -158,9 +158,7 @@ final class AuthorizedApplicationContext {
     private var appTabs: [DAppTab]
     private var appTabsDisposable: Disposable?
     
-    private var walletBot: AttachMenuBot?
-    
-    init(sharedApplicationContext: SharedApplicationContext, mainWindow: Window1, watchManagerArguments: Signal<WatchManagerArguments?, NoError>, context: AccountContextImpl, accountManager: AccountManager<TelegramAccountManagerTypes>, showCallsTab: Bool, appTabs: [DAppTab], walletBot: AttachMenuBot?, reinitializedNotificationSettings: @escaping () -> Void) {
+    init(sharedApplicationContext: SharedApplicationContext, mainWindow: Window1, watchManagerArguments: Signal<WatchManagerArguments?, NoError>, context: AccountContextImpl, accountManager: AccountManager<TelegramAccountManagerTypes>, showCallsTab: Bool, appTabs: [DAppTab], reinitializedNotificationSettings: @escaping () -> Void) {
         self.sharedApplicationContext = sharedApplicationContext
         
         setupLegacyComponents(context: context)
@@ -174,7 +172,6 @@ final class AuthorizedApplicationContext {
         self.showCallsTab = showCallsTab
         
         self.appTabs = appTabs
-        self.walletBot = walletBot
         
         self.notificationController = NotificationContainerController(context: context)
         
@@ -257,7 +254,7 @@ final class AuthorizedApplicationContext {
         }
         
         if self.rootController.rootTabController == nil {
-            self.rootController.addRootControllers(tabs: appTabs, walletBot: walletBot)
+            self.rootController.addRootControllers(tabs: appTabs)
         }
         if let tabsController = self.rootController.viewControllers.first as? TabBarController, !tabsController.controllers.isEmpty, tabsController.selectedIndex >= 0 {
             let controller = tabsController.controllers[tabsController.selectedIndex]

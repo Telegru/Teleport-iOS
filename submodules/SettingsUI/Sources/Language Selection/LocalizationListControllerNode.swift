@@ -411,7 +411,7 @@ final class LocalizationListControllerNode: ViewControllerTracingNode {
                     if let settings = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) {
                         if settings.primaryComponent.languageCode == id {
                             for item in state.availableOfficialLocalizations {
-                                if item.languageCode == "en" {
+                                if item.languageCode == "ru" {
                                     return item
                                 }
                             }

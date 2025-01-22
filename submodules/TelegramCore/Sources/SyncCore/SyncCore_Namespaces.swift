@@ -150,7 +150,6 @@ public struct Namespaces {
     
     public struct PeerGroup {
         public static let archive = PeerGroupId(rawValue: 1)
-        public static let channels = PeerGroupId(rawValue: -1)
     }
 }
 

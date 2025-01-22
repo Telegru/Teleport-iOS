@@ -268,10 +268,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         case let .chatList(groupId):
             if groupId == .root {
                 title = self.presentationData.strings.DialogList_Title
-            } else if groupId == .archive {
-                title = self.presentationData.strings.ChatList_ArchivedChatsTitle
             } else {
-                title = "Channels"
+                title = self.presentationData.strings.ChatList_ArchivedChatsTitle
             }
             self.plainTitle = title
         case let .forum(peerId):
@@ -339,7 +337,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     //let backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.DialogList_Title, style: .plain, target: nil, action: nil)
                     //backBarButtonItem.accessibilityLabel = self.presentationData.strings.Common_Back
                     //self.navigationItem.backBarButtonItem = backBarButtonItem
-                } else if groupId == .archive {
+                } else {
                     switch self.location {
                     case .chatList:
                         self.primaryContext?.rightButton = AnyComponentWithIdentity(id: "edit", component: AnyComponent(NavigationButtonComponent(
@@ -357,38 +355,6 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     let backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
                     backBarButtonItem.accessibilityLabel = self.presentationData.strings.Common_Back
                     self.navigationItem.backBarButtonItem = backBarButtonItem
-                } else {
-                    self.tabBarItem.title = "Channels"
-                    
-                    let icon: UIImage?
-                    
-                    icon = UIImage(bundleImageName: "Chat List/Tabs/DIconChats")
-//                    if useSpecialTabBarIcons() {
-//                        icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconChats")
-//                    } else {
-//                        icon = UIImage(bundleImageName: "Chat List/Tabs/IconChats")
-//                    }
-                    
-                    self.tabBarItem.image = icon
-                    self.tabBarItem.selectedImage = icon
-//                    if !self.presentationData.reduceMotion {
-//                        self.tabBarItem.animationName = "TabChats"
-//                        self.tabBarItem.animationOffset = CGPoint(x: 0.0, y: UIScreenPixel)
-//                    }
-                    
-                    self.primaryContext?.leftButton = AnyComponentWithIdentity(id: "edit", component: AnyComponent(NavigationButtonComponent(
-                        content: .text(title: self.presentationData.strings.Common_Edit, isBold: false),
-                        pressed: { [weak self] _ in
-                            self?.editPressed()
-                        }
-                    )))
-                    
-                    self.primaryContext?.rightButton = AnyComponentWithIdentity(id: "compose", component: AnyComponent(NavigationButtonComponent(
-                        content: .icon(imageName: "Chat List/ComposeIcon"),
-                        pressed: { [weak self] _ in
-                            self?.composePressed()
-                        }
-                    )))
                 }
             case .forum:
                 break
@@ -972,11 +938,11 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             backBarButtonItem.accessibilityLabel = self.presentationData.strings.Common_Back
             self.navigationItem.backBarButtonItem = backBarButtonItem
             
-            if !self.presentationData.reduceMotion {
-                self.tabBarItem.animationName = "TabChats"
-            } else {
-                self.tabBarItem.animationName = nil
-            }
+//            if !self.presentationData.reduceMotion {
+//                self.tabBarItem.animationName = "TabChats"
+//            } else {
+//                self.tabBarItem.animationName = nil
+//            }
         } else {
             let backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
             backBarButtonItem.accessibilityLabel = self.presentationData.strings.Common_Back

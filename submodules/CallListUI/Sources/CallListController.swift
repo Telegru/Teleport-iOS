@@ -170,11 +170,11 @@ public final class CallListController: TelegramBaseController {
         self.segmentedTitleView.index = index
             
         self.tabBarItem.title = self.presentationData.strings.Calls_TabTitle
-        if !self.presentationData.reduceMotion {
-            self.tabBarItem.animationName = "TabCalls"
-        } else {
-            self.tabBarItem.animationName = nil
-        }
+//        if !self.presentationData.reduceMotion {
+//            self.tabBarItem.animationName = "TabCalls"
+//        } else {
+//            self.tabBarItem.animationName = nil
+//        }
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
         switch self.mode {
             case .tab:

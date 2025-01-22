@@ -87,9 +87,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     public var newsFeedController: ViewController?
     public var accountSettingsController: PeerInfoScreen?
     
-    public var dahlSettingsController: ViewController?
-    public var walletController: ViewController?
-    public var channelsController: ViewController?
+    private var dahlSettingsController: ViewController?
+    private var walletController: ViewController?
+    private var channelsController: ViewController?
     
     private var permissionsDisposable: Disposable?
     private var presentationDataDisposable: Disposable?
@@ -99,6 +99,11 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     
     private var applicationInFocusDisposable: Disposable?
     private var storyUploadEventsDisposable: Disposable?
+    
+    private var walletBot: AttachMenuBot?
+    private var walletDisposable: Disposable?
+    
+    private var tabs: [DAppTab]?
     
     override public var minimizedContainer: MinimizedContainer? {
         didSet {
@@ -146,6 +151,50 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 moveStorySource(engine: self.context.engine, peerId: self.context.account.peerId, from: Int64(stableId), to: Int64(id))
             })
         }
+        
+        let botsKey = ValueBoxKey(length: 8)
+        botsKey.setInt64(0, value: 0)
+        walletDisposable = (context.engine.data.subscribe(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: Namespaces.CachedItemCollection.attachMenuBots, id: botsKey))
+        |> mapToSignal { entry -> Signal<AttachMenuBot?, NoError> in
+            let bots: [AttachMenuBots.Bot] = entry?.get(AttachMenuBots.self)?.bots ?? []
+            return context.engine.data.get(
+                EngineDataMap(bots.map(\.peerId).map(TelegramEngine.EngineData.Item.Peer.Peer.init))
+            )
+            |> mapToSignal { peersMap -> Signal<AttachMenuBot?, NoError> in
+                let result = bots
+                    .filter {
+                        guard let peer = peersMap[$0.peerId] else {
+                            return false
+                        }
+                        guard case let .user(user) = peer else {
+                            return false
+                        }
+                        return user.username == "wallet"
+                    }
+                    .map {
+                        ($0, peersMap[$0.peerId]!)
+                    }
+                    .first
+                
+                guard let bot = result?.0,
+                      let peer = result?.1 else {
+                    return .single(nil)
+                }
+                
+                return .single(AttachMenuBot(peer: peer, shortName: bot.name, icons: bot.icons, peerTypes: bot.peerTypes, flags: bot.flags))
+            }
+        }
+        |> filter { $0 != nil }
+        |> take(1)
+        |> deliverOnMainQueue)
+        .start(next: { [weak self] walletBot in
+            guard let self else { return }
+            self.walletBot = walletBot
+            self.walletController = self.walletControllerIfPossible()
+            if let tabs, tabs.contains(where: { $0 == .wallet }) {
+                updateRootControllers(tabs: tabs)
+            }
+        })
     }
     
     required public init(coder aDecoder: NSCoder) {
@@ -157,6 +206,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.presentationDataDisposable?.dispose()
         self.applicationInFocusDisposable?.dispose()
         self.storyUploadEventsDisposable?.dispose()
+        self.walletDisposable?.dispose()
     }
     
     public func getContactsController() -> ViewController? {
@@ -198,9 +248,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     }
     
     public func addRootControllers(
-        tabs: [DAppTab],
-        walletBot: AttachMenuBot?
+        tabs: [DAppTab]
     ) {
+        self.tabs = tabs
         let tabBarController = TabBarControllerImpl(navigationBarPresentationData: NavigationBarPresentationData(presentationData: self.presentationData), theme: TabBarControllerTheme(rootControllerTheme: self.presentationData.theme))
         tabBarController.navigationPresentation = .master
         let chatListController = self.context.sharedContext.makeChatListController(context: self.context, location: .chatList(groupId: .root), controlsHistoryPreload: true, hideNetworkActivityStatus: false, previewing: false, enableDebugActions: !GlobalExperimentalSettings.isAppStoreBuild)
@@ -249,75 +299,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         }
         accountSettingsController.parentController = self
         
-
-        if let walletBot {
-            walletController = {
-                var openUrlImpl: ((String, Bool, Bool, @escaping () -> Void) -> Void)?
-                
-                let params = WebAppParameters(source: .menu, peerId: self.context.account.peerId, botId: walletBot.peer.id, botName: walletBot.peer.compactDisplayTitle, botVerified: walletBot.peer.isVerified, botAddress: walletBot.peer.addressName ?? "", appName: "", url: nil, queryId: nil, payload: nil, buttonText: nil, keepAliveSignal: nil, forceHasSettings: walletBot.flags.contains(.hasSettings), fullSize: true, isFullscreen: true, appSettings: nil
-                )
-                let updatedPresentationData = (initial: self.presentationData, signal: self.context.sharedContext.presentationData)
-                let controller = StackedWebAppController(context: context, updatedPresentationData: updatedPresentationData, params: params, replyToMessageId: nil, threadId: nil)
-                controller.openUrl = { url, concealed, forceUpdate, commit in
-                    openUrlImpl?(url, concealed, forceUpdate, commit)
-                }
-                
-                openUrlImpl = { [weak self, weak controller] url, concealed, forceUpdate, commit in
-                    guard let self else { return }
-                    let _ = openUserGeneratedUrl(
-                        context: context,
-                        peerId: context.account.peerId,
-                        url: url,
-                        concealed: concealed,
-                        present: { [weak self] c in
-                            self?.rootTabController?.present(c, in: .window(.root))
-                        },
-                        openResolved: { [weak self] result in
-                            guard let self else { return }
-                            var navigationController: NavigationController?
-                            if let current = self.navigationController as? NavigationController {
-                                navigationController = current
-                            } else if let current = controller?.navigationController as? NavigationController {
-                                navigationController = current
-                            }
-                            
-                            context.sharedContext.openResolvedUrl(
-                                result,
-                                context: context,
-                                urlContext: .generic,
-                                navigationController: navigationController,
-                                forceExternal: false,
-                                forceUpdate: forceUpdate,
-                                openPeer: { [weak self] peer, navigation in
-                                    if let self, let navigationController {
-                                        PeerInfoScreenImpl.openPeer(context: context, peerId: peer.id, navigation: navigation, navigationController: navigationController)
-                                    }
-                                    commit()
-                                },
-                                sendFile: nil,
-                                sendSticker: nil,
-                                sendEmoji: nil,
-                                requestMessageActionUrlAuth: nil,
-                                joinVoiceChat: nil,
-                                present: { [weak self] c, a in
-                                    self?.rootTabController?.present(c, in: .window(.root), with: a)
-                                },
-                                dismissInput: { [weak self] in
-                                    self?.context.sharedContext.mainWindow?.viewController?.view.endEditing(false)
-                                },
-                                contentContext: nil,
-                                progress: nil,
-                                completion: nil
-                            )
-                        })
-                }
-                let icon = UIImage(bundleImageName: "Chat List/Tabs/IconWallet")
-                controller.tabBarItem.image = icon
-                controller.tabBarItem.selectedImage = icon
-                controller.tabBarItem.title = "Wallet.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
-                return controller
-            }()
-        }
+        walletController = walletControllerIfPossible()
         
         tabs.forEach {
             switch $0 {
@@ -327,8 +309,6 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 controllers.append(chatListController)
             case .contacts:
                 controllers.append(contactsController)
-//            case .channels:
-//                break
             case .dahlSettings:
                 controllers.append(dahlSettingsController)
             case .settings:
@@ -357,6 +337,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         guard let rootTabController = self.rootTabController as? TabBarControllerImpl else {
             return
         }
+        self.tabs = tabs
         var controllers: [ViewController] = []
         
         tabs.forEach {
@@ -367,20 +348,19 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 controllers.append(chatListController!)
             case .contacts:
                 controllers.append(contactsController!)
-//            case .channels:
-//                break
             case .dahlSettings:
                 controllers.append(dahlSettingsController!)
             case .settings:
                 controllers.append(accountSettingsController!)
             case .wallet:
-                controllers.append(walletController!)
+                if let walletController {
+                    controllers.append(walletController)
+                }
             }
         }
-                
-        let index = tabs.firstIndex(where: { $0 == .settings }) ?? 0
         
-        rootTabController.setControllers(controllers, selectedIndex: index)
+        let selectedIndex = controllers.firstIndex { $0 === rootTabController.currentController } ?? tabs.firstIndex(where: { $0 == .settings })
+        rootTabController.setControllers(controllers, selectedIndex: selectedIndex)
     }
     
     public func openChatsController(activateSearch: Bool, filter: ChatListSearchFilter = .chats, query: String? = nil) {
@@ -883,6 +863,75 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     
     public func openPhotoSetup() {
         self.accountSettingsController?.openAvatarSetup()
+    }
+    
+    private func walletControllerIfPossible() -> ViewController? {
+        guard let walletBot else { return nil }
+        
+        var openUrlImpl: ((String, Bool, Bool, @escaping () -> Void) -> Void)?
+        
+        let params = WebAppParameters(source: .menu, peerId: self.context.account.peerId, botId: walletBot.peer.id, botName: walletBot.peer.compactDisplayTitle, botVerified: walletBot.peer.isVerified, botAddress: walletBot.peer.addressName ?? "", appName: "", url: nil, queryId: nil, payload: nil, buttonText: nil, keepAliveSignal: nil, forceHasSettings: walletBot.flags.contains(.hasSettings), fullSize: true, isFullscreen: true, appSettings: nil
+        )
+        let updatedPresentationData = (initial: self.presentationData, signal: self.context.sharedContext.presentationData)
+        let controller = StackedWebAppController(context: context, updatedPresentationData: updatedPresentationData, params: params, replyToMessageId: nil, threadId: nil)
+        controller.openUrl = { url, concealed, forceUpdate, commit in
+            openUrlImpl?(url, concealed, forceUpdate, commit)
+        }
+        
+        openUrlImpl = { [weak self, weak controller] url, concealed, forceUpdate, commit in
+            guard let self else { return }
+            let _ = openUserGeneratedUrl(
+                context: context,
+                peerId: context.account.peerId,
+                url: url,
+                concealed: concealed,
+                present: { [weak self] c in
+                    self?.rootTabController?.present(c, in: .window(.root))
+                },
+                openResolved: { [weak self] result in
+                    guard let self else { return }
+                    var navigationController: NavigationController?
+                    if let current = self.navigationController as? NavigationController {
+                        navigationController = current
+                    } else if let current = controller?.navigationController as? NavigationController {
+                        navigationController = current
+                    }
+                    
+                    context.sharedContext.openResolvedUrl(
+                        result,
+                        context: context,
+                        urlContext: .generic,
+                        navigationController: navigationController,
+                        forceExternal: false,
+                        forceUpdate: forceUpdate,
+                        openPeer: { [weak self] peer, navigation in
+                            if let self, let navigationController {
+                                PeerInfoScreenImpl.openPeer(context: context, peerId: peer.id, navigation: navigation, navigationController: navigationController)
+                            }
+                            commit()
+                        },
+                        sendFile: nil,
+                        sendSticker: nil,
+                        sendEmoji: nil,
+                        requestMessageActionUrlAuth: nil,
+                        joinVoiceChat: nil,
+                        present: { [weak self] c, a in
+                            self?.rootTabController?.present(c, in: .window(.root), with: a)
+                        },
+                        dismissInput: { [weak self] in
+                            self?.context.sharedContext.mainWindow?.viewController?.view.endEditing(false)
+                        },
+                        contentContext: nil,
+                        progress: nil,
+                        completion: nil
+                    )
+                })
+        }
+        let icon = UIImage(bundleImageName: "Chat List/Tabs/IconWallet")
+        controller.tabBarItem.image = icon
+        controller.tabBarItem.selectedImage = icon
+        controller.tabBarItem.title = "Wallet.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
+        return controller
     }
 }
 

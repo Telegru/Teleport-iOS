@@ -1110,55 +1110,10 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                     }
                 }
             }
-            |> mapToSignal { (accountAndSettings: (AccountContext, CallListSettings, DalSettings)?) -> Signal<(AccountContext, CallListSettings, DalSettings, AttachMenuBot?)?, NoError> in
-                guard let context = accountAndSettings?.0 else {
-                    return .single(nil)
-                }
-                let botsKey = ValueBoxKey(length: 8)
-                botsKey.setInt64(0, value: 0)
-                
-                return context.engine.data.get(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: Namespaces.CachedItemCollection.attachMenuBots, id: botsKey))
-                |> mapToSignal { entry -> Signal<AttachMenuBot?, NoError> in
-                    let bots: [AttachMenuBots.Bot] = entry?.get(AttachMenuBots.self)?.bots ?? []
-                    return context.engine.data.get(
-                        EngineDataMap(bots.map(\.peerId).map(TelegramEngine.EngineData.Item.Peer.Peer.init))
-                    )
-                    |> mapToSignal { peersMap -> Signal<AttachMenuBot?, NoError> in
-                        let result = bots
-                            .filter {
-                                guard let peer = peersMap[$0.peerId] else {
-                                    return false
-                                }
-                                guard case let .user(user) = peer else {
-                                    return false
-                                }
-                                return user.username == "wallet"
-                            }
-                            .map {
-                                ($0, peersMap[$0.peerId]!)
-                            }
-                            .first
-                        
-                        guard let bot = result?.0,
-                              let peer = result?.1 else {
-                            return .single(nil)
-                        }
-                        
-                        return .single(AttachMenuBot(peer: peer, shortName: bot.name, icons: bot.icons, peerTypes: bot.peerTypes, flags: bot.flags))
-                    }
-                }
-                |> map { walletBot -> (AccountContext, CallListSettings, DalSettings, AttachMenuBot?)? in
-                    if let context = accountAndSettings?.0, let callListSettings = accountAndSettings?.1, let dahlSettings = accountAndSettings?.2 {
-                        return (context, callListSettings, dahlSettings, walletBot)
-                    } else {
-                        return nil
-                    }
-                }
-            }
             |> deliverOnMainQueue
             |> map { accountAndSettings -> AuthorizedApplicationContext? in
-                return accountAndSettings.flatMap { context, callListSettings, dahlSettings, walletBot in
-                    return AuthorizedApplicationContext(sharedApplicationContext: sharedApplicationContext, mainWindow: self.mainWindow, watchManagerArguments: .single(nil), context: context as! AccountContextImpl, accountManager: sharedApplicationContext.sharedContext.accountManager, showCallsTab: callListSettings.showTab, appTabs: dahlSettings.tabBarSettings.activeTabs, walletBot: walletBot, reinitializedNotificationSettings: {
+                return accountAndSettings.flatMap { context, callListSettings, dahlSettings in
+                    return AuthorizedApplicationContext(sharedApplicationContext: sharedApplicationContext, mainWindow: self.mainWindow, watchManagerArguments: .single(nil), context: context as! AccountContextImpl, accountManager: sharedApplicationContext.sharedContext.accountManager, showCallsTab: callListSettings.showTab, appTabs: dahlSettings.tabBarSettings.activeTabs, reinitializedNotificationSettings: {
                         let _ = (self.context.get()
                         |> take(1)
                         |> deliverOnMainQueue).start(next: { context in

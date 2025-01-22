@@ -126,7 +126,7 @@ func getLocalization(_ transaction: AccountManagerModifier<TelegramAccountManage
     if let localizationSettings = localizationSettings {
         return (primary: (localizationSettings.primaryComponent.languageCode, localizationSettings.primaryComponent.localization.version, localizationSettings.primaryComponent.localization.entries), secondary: localizationSettings.secondaryComponent.flatMap({ ($0.languageCode, $0.localization.version, $0.localization.entries) }))
     } else {
-        return (primary: ("en", 0, []), secondary: nil)
+        return (primary: ("ru", 0, []), secondary: nil)
     }
 }
 
@@ -170,7 +170,7 @@ private func synchronizeLocalizationUpdates(accountManager: AccountManager<Teleg
             return accountManager.transaction { transaction -> Signal<Void, SynchronizeLocalizationUpdatesError> in
                 let (primary, secondary) = getLocalization(transaction)
                 
-                var currentSettings = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) ?? LocalizationSettings(primaryComponent: LocalizationComponent(languageCode: "en", localizedName: "English", localization: Localization(version: 0, entries: []), customPluralizationCode: nil), secondaryComponent: nil)
+                var currentSettings = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) ?? LocalizationSettings(primaryComponent: LocalizationComponent(languageCode: "ru", localizedName: "Русский", localization: Localization(version: 0, entries: []), customPluralizationCode: nil), secondaryComponent: nil)
                 
                 for difference in parsedDifferences {
                     let current: (isPrimary: Bool, entries: [LocalizationEntry])
@@ -281,7 +281,7 @@ func tryApplyingLanguageDifference(transaction: AccountManagerModifier<TelegramA
             }
             mergedEntries.append(contentsOf: updatedEntries)
             
-            let currentSettings = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) ?? LocalizationSettings(primaryComponent: LocalizationComponent(languageCode: "en", localizedName: "English", localization: Localization(version: 0, entries: []), customPluralizationCode: nil), secondaryComponent: nil)
+            let currentSettings = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) ?? LocalizationSettings(primaryComponent: LocalizationComponent(languageCode: "ru", localizedName: "Русский", localization: Localization(version: 0, entries: []), customPluralizationCode: nil), secondaryComponent: nil)
             
             var updatedSettings: LocalizationSettings
             if isPrimary {
