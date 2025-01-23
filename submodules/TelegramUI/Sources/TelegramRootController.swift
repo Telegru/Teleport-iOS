@@ -106,6 +106,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     private var walletDisposable: Disposable?
     
     private var appsBot: TelegramUser?
+    private var appBotWebViewResult: RequestWebViewResult?
     private var appsBotSettings: BotAppSettings?
     private var appsBotDisposable: Disposable?
     
@@ -216,17 +217,41 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                     return .single((user, $0))
                 }
             }
+            |> mapToSignal { userAndSettings -> Signal<(TelegramUser, BotAppSettings?, RequestWebViewResult)?, NoError> in
+                guard let (user, settings) = userAndSettings else {
+                    return .single(nil)
+                }
+                
+                return Signal<RequestWebViewResult?, NoError> { subscriber in
+                    let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                    return context.engine.messages.requestWebView(peerId: user.id, botId: user.id, url: "https://tappscenter.org/twa", payload: nil, themeParams: generateWebAppThemeParams(presentationData.theme), fromMenu: false, replyToMessageId: nil, threadId: nil)
+                    .start(next: {
+                        subscriber.putNext($0)
+                    }, error: { _ in
+                        subscriber.putNext(nil)
+                    }, completed: {
+                        subscriber.putCompletion()
+                    })
+                }
+                |> mapToSignal {
+                    if let requestResult = $0 {
+                        return .single((user, settings, requestResult))
+                    }
+                    return .single(nil)
+                }
+            }
             |> filter { $0 != nil }
             |> take(1)
             |> deliverOnMainQueue)
         .start(next: { [weak self] in
             guard let self, let result = $0 else { return }
-            let (user, appSettings) = result
+            let (user, appSettings, requestResult) = result
             guard let botInfo = user.botInfo, botInfo.flags.contains(.hasWebApp) else {
                 return
             }
             self.appsBot = user
             self.appsBotSettings = appSettings
+            self.appBotWebViewResult = requestResult
             appsController = appsControllerIfPossible()
             if let tabs, tabs.contains(where: { $0 == .apps }) {
                 updateRootControllers(tabs: tabs)
@@ -919,7 +944,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         
         var openUrlImpl: ((String, Bool, Bool, @escaping () -> Void) -> Void)?
         
-        let params = WebAppParameters(source: .menu, peerId: self.context.account.peerId, botId: walletBot.peer.id, botName: walletBot.peer.compactDisplayTitle, botVerified: walletBot.peer.isVerified, botAddress: walletBot.peer.addressName ?? "", appName: "", url: nil, queryId: nil, payload: nil, buttonText: nil, keepAliveSignal: nil, forceHasSettings: walletBot.flags.contains(.hasSettings), fullSize: true, isFullscreen: true, appSettings: nil
+        let params = WebAppParameters(source: .generic, peerId: self.context.account.peerId, botId: walletBot.peer.id, botName: walletBot.peer.compactDisplayTitle, botVerified: walletBot.peer.isVerified, botAddress: walletBot.peer.addressName ?? "", appName: "", url: nil, queryId: nil, payload: nil, buttonText: nil, keepAliveSignal: nil, forceHasSettings: walletBot.flags.contains(.hasSettings), fullSize: true, isFullscreen: true, appSettings: nil
         )
         let updatedPresentationData = (initial: self.presentationData, signal: self.context.sharedContext.presentationData)
         let controller = StackedWebAppController(context: context, updatedPresentationData: updatedPresentationData, params: params, replyToMessageId: nil, threadId: nil)
@@ -987,11 +1012,11 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     }
     
     private func appsControllerIfPossible() -> ViewController? {
-        guard let peer = appsBot else { return nil }
+        guard let peer = appsBot, let appBotWebViewResult else { return nil }
         var openUrlImpl: ((String, Bool, Bool, @escaping () -> Void) -> Void)?
         let updatedPresentationData = (initial: self.presentationData, signal: self.context.sharedContext.presentationData)
         let params = WebAppParameters(
-            source: .menu, peerId: peer.id, botId: peer.id, botName: EnginePeer.user(peer).displayTitle(strings: presentationData.strings, displayOrder: presentationData.nameDisplayOrder), botVerified: peer.isVerified, botAddress: peer.addressName ?? "", appName: "", url: "", queryId: nil, payload: nil, buttonText: nil, keepAliveSignal: nil, forceHasSettings: false, fullSize: true, isFullscreen: true, appSettings: appsBotSettings)
+            source: .generic, peerId: peer.id, botId: peer.id, botName: EnginePeer.user(peer).compactDisplayTitle, botVerified: peer.isVerified, botAddress: peer.addressName ?? "", appName: "", url: appBotWebViewResult.url, queryId: appBotWebViewResult.queryId, payload: nil, buttonText: nil, keepAliveSignal: appBotWebViewResult.keepAliveSignal, forceHasSettings: false, fullSize: true, isFullscreen: true, appSettings: appsBotSettings)
         let controller = StackedWebAppController(context: context, updatedPresentationData: updatedPresentationData, params: params, replyToMessageId: nil, threadId: nil)
         
         controller.openUrl = { url, concealed, forceUpdate, commit in
