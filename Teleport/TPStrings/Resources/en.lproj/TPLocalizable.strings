@@ -58,6 +58,9 @@
 // Wallet
 "Wallet.TabTitle" = "Wallet";
 
+// Apps
+"Apps.TabTitle" = "Apps";
+
 // Chat
 "Chat.FrontCamera" = "Front camera";
 "Chat.BackCamera" = "Back camera";
