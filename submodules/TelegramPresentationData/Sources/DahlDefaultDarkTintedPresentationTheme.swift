@@ -737,7 +737,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         incoming: PresentationThemePartedColors(
             bubble: PresentationThemeBubbleColor(
                 withWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: [incomingFillColor.withAlphaComponent(incomingBubbleAlpha)],
+                    fill: [UIColor(rgb: 0x38384D, alpha: 1.0)],
                     highlightedFill: highlightedIncomingBubbleColor,
                     stroke: mainBackgroundColor,
                     shadow: nil,
@@ -753,7 +753,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0x000000, alpha: 0.1)
                 ),
                 withoutWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: [incomingFillColor.withAlphaComponent(incomingBubbleAlpha)],
+                    fill: [UIColor(rgb: 0x38384D, alpha: 1.0)],
                     highlightedFill: highlightedIncomingBubbleColor,
                     stroke: mainBackgroundColor,
                     shadow: nil,
@@ -773,7 +773,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         outgoing: PresentationThemePartedColors(
             bubble: PresentationThemeBubbleColor(
                 withWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: outgoingBubbleFillColors,
+                    fill: [UIColor(rgb: 0x7B86C3, alpha: 1.0)],
                     highlightedFill: highlightedOutgoingBubbleColor,
                     stroke: outgoingBubbleFillColors[0],
                     shadow: nil,
@@ -789,7 +789,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0x000000, alpha: 0.1)
                 ),
                 withoutWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: outgoingBubbleFillColors,
+                    fill: [UIColor(rgb: 0x7B86C3, alpha: 1.0)],
                     highlightedFill: highlightedOutgoingBubbleColor,
                     stroke: outgoingBubbleFillColors[0],
                     shadow: nil,
