@@ -58,6 +58,9 @@
 // Wallet
 "Wallet.TabTitle" = "Кошелек";
 
+// Apps
+"Apps.TabTitle" = "Приложения";
+
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";
 "Chat.BackCamera" = "Задняя камера";
