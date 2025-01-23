@@ -217,14 +217,14 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                     return .single((user, $0))
                 }
             }
-            |> mapToSignal { userAndSettings -> Signal<(TelegramUser, BotAppSettings?, RequestWebViewResult)?, NoError> in
+            |> mapToSignal { userAndSettings -> Signal<(TelegramUser, BotAppSettings?, RequestWebViewResult?)?, NoError> in
                 guard let (user, settings) = userAndSettings else {
                     return .single(nil)
                 }
                 
                 return Signal<RequestWebViewResult?, NoError> { subscriber in
                     let presentationData = context.sharedContext.currentPresentationData.with { $0 }
-                    return context.engine.messages.requestWebView(peerId: user.id, botId: user.id, url: "https://tappscenter.org/twa", payload: nil, themeParams: generateWebAppThemeParams(presentationData.theme), fromMenu: false, replyToMessageId: nil, threadId: nil)
+                    return context.engine.messages.requestMainWebView(peerId: user.id, botId: user.id, source: .generic, themeParams: generateWebAppThemeParams(presentationData.theme))
                     .start(next: {
                         subscriber.putNext($0)
                     }, error: { _ in
@@ -252,7 +252,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             self.appsBot = user
             self.appsBotSettings = appSettings
             self.appBotWebViewResult = requestResult
-            appsController = appsControllerIfPossible()
+            self.appsController = appsControllerIfPossible()
             if let tabs, tabs.contains(where: { $0 == .apps }) {
                 updateRootControllers(tabs: tabs)
             }
