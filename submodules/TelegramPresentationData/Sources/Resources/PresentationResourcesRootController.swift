@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import Display
 import AppBundle
+import TPUI
 
 private func generateShareButtonImage(theme: PresentationTheme) -> UIImage? {
     return generateTintedImage(image: UIImage(bundleImageName: "Chat List/NavigationShare"), color: theme.rootController.navigationBar.accentTextColor)
@@ -119,7 +120,7 @@ public struct PresentationResourcesRootController {
 
     public static func navigationQrCodeIcon(_ theme: PresentationTheme) -> UIImage? {
         return theme.image(PresentationResourceKey.navigationQrCodeIcon.rawValue, { theme in
-            generateTintedImage(image: UIImage(bundleImageName: "Settings/QrIcon"), color: .white)
+            generateTintedImage(image: TPIconManager.shared.icon(.qrIcon), color: .white)
         })
     }
     

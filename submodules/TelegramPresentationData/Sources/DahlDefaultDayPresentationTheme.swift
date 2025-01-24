@@ -960,10 +960,8 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
         badgeTextColor: UIColor(rgb: 0xffffff)
     )
 
-    let defaultPatternWallpaper: TelegramWallpaper = defaultBuiltinWallpaper(data: .default, colors: defaultBuiltinWallpaperGradientColors.map(\.rgb))
-
     let chat = PresentationThemeChat(
-        defaultWallpaper: day ? .color(0xffffff) : defaultPatternWallpaper,
+        defaultWallpaper: .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: day ? messageDay : message,
         serviceMessage: day ? serviceMessageDay : serviceMessage,

@@ -402,7 +402,7 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
         
         var effectiveChatWallpaper: TelegramWallpaper = (themeSettings.themeSpecificChatWallpapers[coloredThemeIndex(reference: effectiveTheme, accentColor: effectiveColors)] ?? themeSettings.themeSpecificChatWallpapers[effectiveTheme.index]) ?? theme.chat.defaultWallpaper
         if case .builtin = effectiveChatWallpaper {
-            effectiveChatWallpaper = defaultBuiltinWallpaper(data: .legacy, colors: legacyBuiltinWallpaperGradientColors.map(\.rgb))
+            effectiveChatWallpaper = .builtin(WallpaperSettings())
         }
         
         let dateTimeFormat = currentDateTimeFormat()
@@ -788,7 +788,7 @@ public func updatedPresentationData(accountManager: AccountManager<TelegramAccou
                         }
                         
                         if case .builtin = effectiveChatWallpaper {
-                            effectiveChatWallpaper = defaultBuiltinWallpaper(data: .legacy, colors: legacyBuiltinWallpaperGradientColors.map(\.rgb))
+                            effectiveChatWallpaper = .builtin(WallpaperSettings())
                         }
                         
                         if let colors = effectiveColors, colors.baseColor == .theme {
