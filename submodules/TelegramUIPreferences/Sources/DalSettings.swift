@@ -25,6 +25,11 @@ public struct DalSettings: Codable, Equatable {
     public var sendAudioConfirmation: Bool
     public var callConfirmation: Bool
     public var videoMessageCamera: CameraType
+    
+    // Папки с чатами
+    public var chatsFoldersAtBottom: Bool
+    public var hideAllChatsFolder: Bool
+    public var infiniteScrolling: Bool
 
     public static var defaultSettings: DalSettings {
         return DalSettings(
@@ -36,7 +41,10 @@ public struct DalSettings: Codable, Equatable {
             offlineMode: false,
             sendAudioConfirmation: false,
             callConfirmation: false,
-            videoMessageCamera: CameraType.front
+            videoMessageCamera: CameraType.front,
+            chatsFoldersAtBottom: false,
+            hideAllChatsFolder: false,
+            infiniteScrolling: false
         )
     }
     
@@ -49,7 +57,10 @@ public struct DalSettings: Codable, Equatable {
         offlineMode: Bool,
         sendAudioConfirmation: Bool,
         callConfirmation: Bool,
-        videoMessageCamera: CameraType
+        videoMessageCamera: CameraType,
+        chatsFoldersAtBottom: Bool,
+        hideAllChatsFolder: Bool,
+        infiniteScrolling: Bool
     ) {
         self.hidePublishStoriesButton = hidePublishStoriesButton
         self.hideStories = hideStories
@@ -60,6 +71,9 @@ public struct DalSettings: Codable, Equatable {
         self.videoMessageCamera = videoMessageCamera
         self.callConfirmation = callConfirmation
         self.sendAudioConfirmation = sendAudioConfirmation
+        self.chatsFoldersAtBottom = chatsFoldersAtBottom
+        self.hideAllChatsFolder = hideAllChatsFolder
+        self.infiniteScrolling = infiniteScrolling
     }
     
     public init(from decoder: Decoder) throws {
@@ -80,6 +94,9 @@ public struct DalSettings: Codable, Equatable {
         }
         self.sendAudioConfirmation = (try container.decodeIfPresent(Int32.self, forKey: "sendAudioConfirmation") ?? 0) != 0
         self.callConfirmation = (try container.decodeIfPresent(Int32.self, forKey: "callConfirmation") ?? 0) != 0
+        self.chatsFoldersAtBottom = (try container.decodeIfPresent(Int32.self, forKey: "chatsFoldersAtBottom") ?? 0) != 0
+        self.hideAllChatsFolder = (try container.decodeIfPresent(Int32.self, forKey: "hideAllChatsFolder") ?? 0) != 0
+        self.infiniteScrolling = (try container.decodeIfPresent(Int32.self, forKey: "infiniteScrolling") ?? 0) != 0
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -95,6 +112,9 @@ public struct DalSettings: Codable, Equatable {
         try container.encode(self.videoMessageCamera.rawValue, forKey: "videoMessageCamera")
         try container.encode((self.sendAudioConfirmation ? 1 : 0) as Int32, forKey: "sendAudioConfirmation")
         try container.encode((self.callConfirmation ? 1 : 0) as Int32, forKey: "callConfirmation")
+        try container.encode((self.chatsFoldersAtBottom ? 1 : 0) as Int32, forKey: "chatsFoldersAtBottom")
+        try container.encode((self.hideAllChatsFolder ? 1 : 0) as Int32, forKey: "hideAllChatsFolder")
+        try container.encode((self.infiniteScrolling ? 1 : 0) as Int32, forKey: "infiniteScrolling")
     }
 }
 

@@ -32,6 +32,9 @@ private final class DalSettingsArguments {
     let openCameraSettings: (String) -> Void
     let updateCallConfirmation: (Bool) -> Void
     let updateSendAudioConfirmation: (Bool) -> Void
+    let updateChatsFoldersAtBottom: (Bool) -> Void
+    let updateHideAllChatsFolder: (Bool) -> Void
+    let updateInfiniteScrolling: (Bool) -> Void
 
     init(
         context: AccountContext,
@@ -45,7 +48,10 @@ private final class DalSettingsArguments {
         updateOfflineMode: @escaping (Bool) -> Void,
         openCameraSettings: @escaping (String) -> Void,
         updateCallConfirmation: @escaping (Bool) -> Void,
-        updateSendAudioConfirmation: @escaping (Bool) -> Void
+        updateSendAudioConfirmation: @escaping (Bool) -> Void,
+        updateChatsFoldersAtBottom: @escaping (Bool) -> Void,
+        updateHideAllChatsFolder: @escaping (Bool) -> Void,
+        updateInfiniteScrolling: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.presentController = presentController
@@ -59,6 +65,9 @@ private final class DalSettingsArguments {
         self.openCameraSettings = openCameraSettings
         self.updateCallConfirmation = updateCallConfirmation
         self.updateSendAudioConfirmation = updateSendAudioConfirmation
+        self.updateChatsFoldersAtBottom = updateChatsFoldersAtBottom
+        self.updateHideAllChatsFolder = updateHideAllChatsFolder
+        self.updateInfiniteScrolling = updateInfiniteScrolling
     }
 }
 
@@ -66,6 +75,7 @@ private enum DalSettingsSection: Int32 {
     case stories
     case confidentiality
     case confirmation
+    case chatsFolders
 }
 
 public enum DalSettingsEntryTag: ItemListItemTag {
@@ -78,6 +88,9 @@ public enum DalSettingsEntryTag: ItemListItemTag {
     case cameraChoice
     case callConfirmation
     case sendAudioConfirmation
+    case chatsFoldersAtBottom
+    case hideAllChatsFolder
+    case infiniteScrolling
 
     public func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? DalSettingsEntryTag, self == other {
@@ -92,6 +105,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case storiesHeader(PresentationTheme, String)
     case privacyHeader(PresentationTheme, String)
     case confirmationHeader(PresentationTheme, String)
+    case chatsFoldersHeader(PresentationTheme, String)
 
     // Раздел Stories
     case hidePublishStoriesButton(PresentationTheme, String, Bool)
@@ -107,6 +121,11 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case callConfirmation(PresentationTheme, String, Bool)
     case sendAudioConfirmation(PresentationTheme, String, Bool)
     case cameraChoice(PresentationTheme, String, String)
+    
+    // Папки с чатами
+    case chatsFoldersAtBottom(PresentationTheme, String, Bool)
+    case hideAllChatsFolder(PresentationTheme, String, Bool)
+    case infiniteScrolling(PresentationTheme, String, Bool)
 
     var section: ItemListSectionId {
         switch self {
@@ -117,6 +136,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsSection.confidentiality.rawValue
         case .confirmationHeader, .callConfirmation, .sendAudioConfirmation, .cameraChoice:
             return DalSettingsSection.confirmation.rawValue
+        case .chatsFoldersHeader, .chatsFoldersAtBottom, .hideAllChatsFolder, .infiniteScrolling:
+            return DalSettingsSection.chatsFolders.rawValue
         }
     }
     
@@ -146,6 +167,14 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return 10
         case .cameraChoice:
             return 11
+        case .chatsFoldersHeader:
+            return 12
+        case .chatsFoldersAtBottom:
+            return 13
+        case .hideAllChatsFolder:
+            return 14
+        case .infiniteScrolling:
+            return 15
         }
     }
 
@@ -169,7 +198,13 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.callConfirmation
         case .sendAudioConfirmation:
             return DalSettingsEntryTag.sendAudioConfirmation
-        case .storiesHeader, .privacyHeader, .confirmationHeader:
+        case .chatsFoldersAtBottom:
+            return DalSettingsEntryTag.chatsFoldersAtBottom
+        case .hideAllChatsFolder:
+            return DalSettingsEntryTag.hideAllChatsFolder
+        case .infiniteScrolling:
+            return DalSettingsEntryTag.infiniteScrolling
+        case .storiesHeader, .privacyHeader, .confirmationHeader, .chatsFoldersHeader:
             return nil
         }
     }
@@ -257,7 +292,34 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_):
+        case let .chatsFoldersAtBottom(lhsTheme, lhsText, lhsValue):
+            if case let .chatsFoldersAtBottom(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case let .hideAllChatsFolder(lhsTheme, lhsText, lhsValue):
+            if case let .hideAllChatsFolder(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case let .infiniteScrolling(lhsTheme, lhsText, lhsValue):
+            if case let .infiniteScrolling(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsFoldersHeader(_, _):
             if lhs.stableId != rhs.stableId {
                 return false
             }
@@ -382,6 +444,42 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 },
                 tag: self.tag
             )
+        case let .chatsFoldersAtBottom(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateChatsFoldersAtBottom(updatedValue)
+                },
+                tag: self.tag
+            )
+        case let .hideAllChatsFolder(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateHideAllChatsFolder(updatedValue)
+                },
+                tag: self.tag
+            )
+        case let .infiniteScrolling(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateInfiniteScrolling(updatedValue)
+                },
+                tag: self.tag
+            )
         case let .storiesHeader(_, text):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
@@ -395,6 +493,12 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section
             )
         case let .confirmationHeader(_, text):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: text,
+                sectionId: self.section
+            )
+        case let .chatsFoldersHeader(_, text):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
                 text: text,
@@ -414,6 +518,9 @@ private func dalSettingsEntries(
     callConfirmation: Bool,
     sendAudioConfirmation: Bool,
     videoMessageCamera: CameraType,
+    chatsFoldersAtBottom: Bool,
+    hideAllChatsFolder: Bool,
+    infiniteScrolling: Bool,
     presentationData: PresentationData
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
@@ -469,7 +576,22 @@ private func dalSettingsEntries(
         "DahlSettings.VideoMessage".tp_loc(lang: lang),
         videoMessageCamera.rawValue
     ))
-    
+    entries.append(.chatsFoldersHeader(presentationData.theme, "DahlSettings.ChatsFoldersHeader".tp_loc(lang: lang).uppercased()))
+    entries.append(.chatsFoldersAtBottom(
+        presentationData.theme,
+        "DahlSettings.ChatsFoldersAtBottom".tp_loc(lang: lang),
+        chatsFoldersAtBottom
+    ))
+    entries.append(.hideAllChatsFolder(
+        presentationData.theme,
+        "DahlSettings.HideAllChatsFolder".tp_loc(lang: lang),
+        hideAllChatsFolder
+    ))
+    entries.append(.infiniteScrolling(
+        presentationData.theme,
+        "DahlSettings.InfiniteScrolling".tp_loc(lang: lang),
+        infiniteScrolling
+    ))
     return entries
 }
 
@@ -577,6 +699,33 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
                     return settings
                 }
             ).start()
+        }, updateChatsFoldersAtBottom: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.chatsFoldersAtBottom = value
+                    return settings
+                }
+            ).start()
+        }, updateHideAllChatsFolder: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.hideAllChatsFolder = value
+                    return settings
+                }
+            ).start()
+        }, updateInfiniteScrolling: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.infiniteScrolling = value
+                    return settings
+                }
+            ).start()
         }
     )
     
@@ -605,6 +754,9 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
             callConfirmation: dalSettings.callConfirmation,
             sendAudioConfirmation: dalSettings.sendAudioConfirmation,
             videoMessageCamera: dalSettings.videoMessageCamera,
+            chatsFoldersAtBottom: dalSettings.chatsFoldersAtBottom,
+            hideAllChatsFolder: dalSettings.hideAllChatsFolder,
+            infiniteScrolling: dalSettings.infiniteScrolling,
             presentationData: presentationData
         )
         
@@ -614,7 +766,7 @@ public func dalsettingsController(context: AccountContext) -> ViewController {
         
         var allEntries: [DalSettingsEntry] = []
         
-        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue, DalSettingsSection.confirmation.rawValue] {
+        for section in [DalSettingsSection.stories.rawValue, DalSettingsSection.confidentiality.rawValue, DalSettingsSection.confirmation.rawValue, DalSettingsSection.chatsFolders.rawValue] {
             if let entries = groupedEntries[section] {
                 allEntries.append(contentsOf: entries.sorted())
             }

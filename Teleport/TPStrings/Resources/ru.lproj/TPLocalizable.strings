@@ -46,6 +46,11 @@
 "DahlSettings.ConfirmAudioMessageToggle" = "Подтверждать аудиосообщение";
 "DahlSettings.VideoMessageCameraLink" = "Камера для видеосообщений";
 
+"DahlSettings.ChatsFoldersHeader" = "Папки с чатами";
+"DahlSettings.ChatsFoldersAtBottom" = "Папки снизу";
+"DahlSettings.HideAllChatsFolder" = "Скрыть папку \"Все чаты\"";
+"DahlSettings.InfiniteScrolling" = "Листать папки по кругу";
+
 
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";

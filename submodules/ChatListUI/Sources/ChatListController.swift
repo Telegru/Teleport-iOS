@@ -172,6 +172,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     private var storiesPostingHiddenDisposable: Disposable?
     private let storyPostingHiddenValue = ValuePromise<Bool>(false)
     
+    private(set) var foldersAtBottom: Bool = false
+    private(set) var allChatsHidden: Bool = false
+    private(set) var infiniteScrolling: Bool = false
+
     private var didSetupTabs = false
     
     private weak var emojiStatusSelectionController: ViewController?
@@ -745,7 +749,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 if force {
                     strongSelf.tabContainerNode.cancelAnimations()
                 }
-                strongSelf.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: tabContainerData.0, selectedFilter: filter, isReordering: strongSelf.chatListDisplayNode.isReorderingFilters || (strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing && !strongSelf.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing, canReorderAllChats: strongSelf.isPremium, filtersLimit: tabContainerData.2, transitionFraction: fraction, presentationData: strongSelf.presentationData, transition: transition)
+                strongSelf.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: tabContainerData.0, selectedFilter: filter, isReordering: strongSelf.chatListDisplayNode.isReorderingFilters || (strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing && !strongSelf.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing, canReorderAllChats: strongSelf.isPremium, hideAllChats: strongSelf.allChatsHidden, isInfiniteScroll: strongSelf.infiniteScrolling, filtersLimit: tabContainerData.2, transitionFraction: fraction, presentationData: strongSelf.presentationData, transition: transition)
             }
             self.reloadFilters()
         }
@@ -769,20 +773,37 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         })
         
         self.storiesPostingHiddenDisposable = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-        |> map { sharedData -> Bool in
+        |> map { sharedData -> (Bool, Bool, Bool, Bool) in
             var storyPostingHidden = false
+            var foldersAtBottom = false
+            var allChatsHidden = false
+            var infiniteScrolling = false
             if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
                 storyPostingHidden = current.hidePublishStoriesButton
+                foldersAtBottom = current.chatsFoldersAtBottom
+                allChatsHidden = current.hideAllChatsFolder
+                infiniteScrolling = current.infiniteScrolling
             } else {
                 storyPostingHidden = DalSettings.defaultSettings.hidePublishStoriesButton
+                foldersAtBottom = DalSettings.defaultSettings.chatsFoldersAtBottom
+                allChatsHidden = DalSettings.defaultSettings.hideAllChatsFolder
+                infiniteScrolling = DalSettings.defaultSettings.infiniteScrolling
             }
-            return storyPostingHidden
+            return (storyPostingHidden, foldersAtBottom, allChatsHidden, infiniteScrolling)
         }
         |> deliverOnMainQueue
-        ).startStrict(next: { [weak self] storyPostingHidden in
+        ).startStrict(next: { [weak self] (storyPostingHidden, foldersAtBottom, allChatsHidden, infiniteScrolling) in
             if let self {
                 self.storyPostingHidden = storyPostingHidden
                 self.storyPostingHiddenValue.set(storyPostingHidden)
+                self.foldersAtBottom = foldersAtBottom
+                let oldAllChatsHidden = self.allChatsHidden
+                self.allChatsHidden = allChatsHidden
+                self.infiniteScrolling = infiniteScrolling
+                if oldAllChatsHidden != self.allChatsHidden {
+                    self.initializedFilters = false
+                    self.reloadFilters()
+                }
             }
         })
         
@@ -952,7 +973,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))
         
         if let layout = self.validLayout {
-            self.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: self.tabContainerData?.0 ?? [], selectedFilter: self.chatListDisplayNode.effectiveContainerNode.currentItemFilter, isReordering: self.chatListDisplayNode.isReorderingFilters || (self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing && !self.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing, canReorderAllChats: self.isPremium, filtersLimit: self.tabContainerData?.2, transitionFraction: self.chatListDisplayNode.effectiveContainerNode.transitionFraction, presentationData: self.presentationData, transition: .immediate)
+            self.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: self.tabContainerData?.0 ?? [], selectedFilter: self.chatListDisplayNode.effectiveContainerNode.currentItemFilter, isReordering: self.chatListDisplayNode.isReorderingFilters || (self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing && !self.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing, canReorderAllChats: self.isPremium, hideAllChats: self.allChatsHidden, isInfiniteScroll: self.infiniteScrolling, filtersLimit: self.tabContainerData?.2, transitionFraction: self.chatListDisplayNode.effectiveContainerNode.transitionFraction, presentationData: self.presentationData, transition: .immediate)
         }
         
         if self.isNodeLoaded {
@@ -3377,7 +3398,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         transition.updateFrame(node: self.tabContainerNode, frame: CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: CGSize(width: layout.size.width, height: 46.0)))
         
         if !skipTabContainerUpdate {
-            self.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: self.tabContainerData?.0 ?? [], selectedFilter: self.chatListDisplayNode.mainContainerNode.currentItemFilter, isReordering: self.chatListDisplayNode.isReorderingFilters || (self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing && !self.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing, canReorderAllChats: self.isPremium, filtersLimit: self.tabContainerData?.2, transitionFraction: self.chatListDisplayNode.effectiveContainerNode.transitionFraction, presentationData: self.presentationData, transition: .animated(duration: 0.4, curve: .spring))
+            self.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: self.tabContainerData?.0 ?? [], selectedFilter: self.chatListDisplayNode.mainContainerNode.currentItemFilter, isReordering: self.chatListDisplayNode.isReorderingFilters || (self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing && !self.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: self.chatListDisplayNode.effectiveContainerNode.currentItemNode.currentState.editing, canReorderAllChats: self.isPremium, hideAllChats: self.allChatsHidden, isInfiniteScroll: self.infiniteScrolling,  filtersLimit: self.tabContainerData?.2, transitionFraction: self.chatListDisplayNode.effectiveContainerNode.transitionFraction, presentationData: self.presentationData, transition: .animated(duration: 0.4, curve: .spring))
         }
         
         self.chatListDisplayNode.containerLayoutUpdated(layout, navigationBarHeight: navigationBarHeight, visualNavigationHeight: navigationBarHeight, cleanNavigationBarHeight: navigationBarHeight, storiesInset: 0.0, transition: transition)
@@ -3805,14 +3826,14 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             
             for (filter, unreadCount, hasUnmutedUnread) in items {
                 switch filter {
-                    case .allChats:
-                        if let isPremium = isPremium, !isPremium && filterItems.count > 0 {
-                            filterItems.insert(.all(unreadCount: 0), at: 0)
-                        } else {
-                            filterItems.append(.all(unreadCount: 0))
-                        }
-                    case let .filter(id, title, _, _):
-                        filterItems.append(.filter(id: id, text: title, unread: ChatListFilterTabEntryUnreadCount(value: unreadCount, hasUnmuted: hasUnmutedUnread)))
+                case .allChats:
+                    if let isPremium = isPremium, !isPremium && filterItems.count > 0 {
+                        filterItems.insert(.all(unreadCount: 0), at: 0)
+                    } else {
+                        filterItems.append(.all(unreadCount: 0))
+                    }
+                case let .filter(id, title, _, _):
+                    filterItems.append(.filter(id: id, text: title, unread: ChatListFilterTabEntryUnreadCount(value: unreadCount, hasUnmuted: hasUnmutedUnread)))
                 }
             }
             
@@ -3829,14 +3850,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 wasEmpty = true
             }
             
-            let firstItem = countAndFilterItems.1.first?.0 ?? .allChats
-            let firstItemEntryId: ChatListFilterTabEntryId
-            switch firstItem {
-                case .allChats:
-                    firstItemEntryId = .all
-                case let .filter(id, _, _, _):
-                    firstItemEntryId = .filter(id)
-            }
+            let filtered = (strongSelf.allChatsHidden) ? (resolvedItems.filter{ $0.id != .all }) : resolvedItems
+          
+            let firstItemEntryId: ChatListFilterTabEntryId = filtered.first?.id ?? .all
             
             var selectedEntryId = !strongSelf.initializedFilters ? firstItemEntryId : strongSelf.chatListDisplayNode.mainContainerNode.currentItemFilter
             var resetCurrentEntry = false
@@ -3844,7 +3860,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 resetCurrentEntry = true
                 if let tabContainerData = strongSelf.tabContainerData {
                     var found = false
-                    if let index = tabContainerData.0.firstIndex(where: { $0.id == selectedEntryId }) {
+                    if let index = tabContainerData.0.firstIndex(where: { $0.id == selectedEntryId }), index > 0 {
                         for i in (0 ..< index - 1).reversed() {
                             if resolvedItems.contains(where: { $0.id == tabContainerData.0[i].id }) {
                                 selectedEntryId = tabContainerData.0[i].id
@@ -3866,15 +3882,15 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             var hasAllChats = false
             for item in items {
                 switch item.0 {
-                    case .allChats:
-                        hasAllChats = true
-                        if let isPremium = isPremium, !isPremium && availableFilters.count > 0 {
-                            availableFilters.insert(.all, at: 0)
-                        } else {
-                            availableFilters.append(.all)
-                        }
-                    case .filter:
-                        availableFilters.append(.filter(item.0))
+                case .allChats:
+                    hasAllChats = true
+                    if let isPremium = isPremium, !isPremium && availableFilters.count > 0 {
+                        availableFilters.insert(.all, at: 0)
+                    } else {
+                        availableFilters.append(.all)
+                    }
+                case .filter:
+                    availableFilters.append(.filter(item.0))
                 }
             }
             if !hasAllChats {
@@ -3909,7 +3925,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     strongSelf.containerLayoutUpdated(layout, transition: transition)
                     (strongSelf.parent as? TabBarController)?.updateLayout(transition: transition)
                 } else {
-                    strongSelf.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: resolvedItems, selectedFilter: selectedEntryId, isReordering: strongSelf.chatListDisplayNode.isReorderingFilters || (strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing && !strongSelf.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing, canReorderAllChats: strongSelf.isPremium, filtersLimit: filtersLimit, transitionFraction: strongSelf.chatListDisplayNode.mainContainerNode.transitionFraction, presentationData: strongSelf.presentationData, transition: .animated(duration: 0.4, curve: .spring))
+                    strongSelf.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: resolvedItems, selectedFilter: selectedEntryId, isReordering: strongSelf.chatListDisplayNode.isReorderingFilters || (strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing && !strongSelf.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing, canReorderAllChats: strongSelf.isPremium, hideAllChats: strongSelf.allChatsHidden, isInfiniteScroll: strongSelf.infiniteScrolling, filtersLimit: filtersLimit, transitionFraction: strongSelf.chatListDisplayNode.mainContainerNode.transitionFraction, presentationData: strongSelf.presentationData, transition: .animated(duration: 0.4, curve: .spring))
                 }
             }
             
