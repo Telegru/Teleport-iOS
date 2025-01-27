@@ -1065,6 +1065,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
     private var tapRecognizer: UITapGestureRecognizer?
     var navigationBar: NavigationBar?
     let navigationBarView = ComponentView<Empty>()
+    let foldersBarView = ComponentView<Empty>()
     weak var controller: ChatListControllerImpl?
     
     var toolbar: Toolbar?
@@ -1339,7 +1340,9 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         if let value = self.controller?.searchTabsNode {
             tabsNode = value
             tabsNodeIsSearch = true
-        } else if let value = self.controller?.tabsNode, self.controller?.hasTabs == true {
+        } else if let value = self.controller?.tabsNode,
+                  self.controller?.hasTabs == true,
+                  self.controller?.foldersAtBottom != true {
             tabsNode = value
         }
         
@@ -1423,6 +1426,31 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         } else {
             return (0.0, 0.0)
         }
+    }
+    
+    private func updateBottomBar(layout: ContainerViewLayout, transition: ComponentTransition) -> CGFloat  {
+     
+        let showTabs =  controller?.searchTabsNode == nil && controller?.foldersAtBottom == true && self.controller?.hasTabs == true
+       
+        let tabsNode = showTabs ? controller?.tabsNode : nil
+        
+        let size = self.foldersBarView.update(
+            transition: transition,
+            component: AnyComponent(FoldersBar(tabsNode: tabsNode, theme: self.presentationData.theme)),
+            environment: {},
+            containerSize: layout.size
+        )
+        
+        if let view = self.foldersBarView.view as? FoldersBar.View {
+            if view.superview == nil {
+                self.view.addSubview(view)
+            }
+            transition.setFrame(view: view, frame: CGRect(origin: CGPoint(x: 0, y: layout.size.height - layout.intrinsicInsets.bottom - size.height), size: size))
+            
+            return size.height
+        }
+        
+        return 0.0
     }
     
     private func updateNavigationScrolling(navigationHeight: CGFloat, transition: ContainedViewLayoutTransition) {
@@ -1520,6 +1548,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         var storiesInset = storiesInset
         
         let navigationBarLayout = self.updateNavigationBar(layout: layout, deferScrollApplication: true, transition: ComponentTransition(transition))
+        _ = self.updateBottomBar(layout: layout, transition: ComponentTransition(transition))
         self.mainContainerNode.initialScrollingOffset = ChatListNavigationBar.searchScrollHeight + navigationBarLayout.storiesInset
         
         navigationBarHeight = navigationBarLayout.navigationHeight
