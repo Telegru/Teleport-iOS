@@ -21,18 +21,18 @@ public final class AppReviewLogin {
     }
     
     public var phone: String? {
-        if buildConfig.tpAppReviewerPhone == "" {
+        if buildConfig.dAppReviewerPhone == "" {
             return nil
         }
-        return buildConfig.tpAppReviewerPhone
+        return buildConfig.dAppReviewerPhone
     }
 
     public var isReviewOnProd: Bool {
-        return buildConfig.tpIsAppReviewerProdEnv
+        return buildConfig.dIsAppReviewerProdEnv
     }
     
     public var entryCode: String? {
-        buildConfig.tpAppReviewerCode
+        buildConfig.dAppReviewerCode
     }
     
     public var isAuthorized: Bool {

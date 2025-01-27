@@ -43,6 +43,7 @@
 "DahlSettings.AskBeforeRecording" = "Ask before";
 "DahlSettings.Camera" = "Camera";
 "DahlSettings.TabBarSettings" = "Tab bar";
+"DahlSettings.Proxy" = "Dahl proxy";
 
 "DahlSettings.ActionConfirmationHeader" = "Action Confirmation";
 "DahlSettings.ConfirmCallToggle" = "Confirm before calling";

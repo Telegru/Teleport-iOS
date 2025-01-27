@@ -22,7 +22,7 @@ import Markdown
 import AlertUI
 import ObjectiveC
 
-import TPAuth
+import DAuth
 
 private var ObjCKey_Delegate: Int?
 

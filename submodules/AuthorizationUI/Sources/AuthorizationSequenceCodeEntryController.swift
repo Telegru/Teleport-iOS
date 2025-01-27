@@ -6,7 +6,7 @@ import SwiftSignalKit
 import TelegramCore
 import TelegramPresentationData
 import ProgressNavigationButtonNode
-import TPAuth
+import DAuth
 
 public final class AuthorizationSequenceCodeEntryController: ViewController {
     private var controllerNode: AuthorizationSequenceCodeEntryControllerNode {

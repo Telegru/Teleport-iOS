@@ -10,7 +10,7 @@ import TelegramUIPreferences
 import AppBundle
 import Sunrise
 import PresentationStrings
-import TPAuth
+import DAuth
 
 public struct PresentationDateTimeFormat: Equatable {
     public let timeFormat: PresentationTimeFormat

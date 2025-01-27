@@ -13,7 +13,7 @@ import PhoneNumberFormat
 import DebugSettingsUI
 import MessageUI
 
-import TPAuth
+import DAuth
 
 public final class AuthorizationSequencePhoneEntryController: ViewController, MFMailComposeViewControllerDelegate {
     private var controllerNode: AuthorizationSequencePhoneEntryControllerNode {

@@ -9,9 +9,12 @@ load(
     "telegram_app_specific_url_scheme",
     "telegram_enable_icloud",
     "telegram_enable_siri",
-    "teleport_app_reviewer_phone",
-    "teleport_app_reviewer_code",
-    "teleport_app_reviewer_env",
+    "dahl_app_reviewer_phone",
+    "dahl_app_reviewer_code",
+    "dahl_app_reviewer_env",
+    "dahl_proxy_server",
+    "dahl_proxy_port",
+    "dahl_proxy_secret",
 )
 
 objc_library(
@@ -32,9 +35,12 @@ objc_library(
         "-DAPP_SPECIFIC_URL_SCHEME=\\\"{}\\\"".format(telegram_app_specific_url_scheme),
         "-DAPP_CONFIG_IS_ICLOUD_ENABLED={}".format("true" if telegram_enable_icloud else "false"),
         "-DAPP_CONFIG_IS_SIRI_ENABLED={}".format("true" if telegram_enable_siri else "false"),
-        "-DTP_CONFIG_APP_REVIEWER_PHONE=\\\"{}\\\"".format(teleport_app_reviewer_phone),
-        "-DTP_CONFIG_APP_REVIEWER_CODE=\\\"{}\\\"".format(teleport_app_reviewer_code),
-        "-DTP_CONFIG_APP_REVIEWER_ENV=\\\"{}\\\"".format(teleport_app_reviewer_env),
+        "-DD_CONFIG_APP_REVIEWER_PHONE=\\\"{}\\\"".format(dahl_app_reviewer_phone),
+        "-DD_CONFIG_APP_REVIEWER_CODE=\\\"{}\\\"".format(dahl_app_reviewer_code),
+        "-DD_CONFIG_APP_REVIEWER_ENV=\\\"{}\\\"".format(dahl_app_reviewer_env),
+        "-DD_CONFIG_PROXY_SERVER=\\\"{}\\\"".format(dahl_proxy_server),
+        "-DD_CONFIG_PROXY_PORT={}".format(dahl_proxy_port),
+        "-DD_CONFIG_PROXY_SECRET=\\\"{}\\\"".format(dahl_proxy_secret),
     ],
     hdrs = glob([
         "PublicHeaders/**/*.h",

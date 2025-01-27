@@ -15,14 +15,16 @@ import TelegramNotices
 import NotificationSoundSelectionUI
 import TelegramStringFormatting
 
-
+import MtProtoKit
 import TPStrings
+import BuildConfig
 
 private final class DalSettingsArguments {
     let context: AccountContext
     let presentController: (ViewController, ViewControllerPresentationArguments?) -> Void
     let pushController: (ViewController) -> Void
 
+    let updateProxy: (Bool) -> Void
     let updateHidePublishStoriesButton: (Bool) -> Void
     let updateHideStories: (Bool) -> Void
     let updateHideViewedStories: (Bool) -> Void
@@ -40,6 +42,7 @@ private final class DalSettingsArguments {
         context: AccountContext,
         presentController: @escaping (ViewController, ViewControllerPresentationArguments?) -> Void,
         pushController: @escaping (ViewController) -> Void,
+        updateProxy: @escaping (Bool) -> Void,
         updateHidePublishStoriesButton: @escaping (Bool) -> Void,
         updateHideStories: @escaping (Bool) -> Void,
         updateHideViewedStories: @escaping (Bool) -> Void,
@@ -56,6 +59,7 @@ private final class DalSettingsArguments {
         self.context = context
         self.presentController = presentController
         self.pushController = pushController
+        self.updateProxy = updateProxy
         self.updateHidePublishStoriesButton = updateHidePublishStoriesButton
         self.updateHideStories = updateHideStories
         self.updateHideViewedStories = updateHideViewedStories
@@ -72,6 +76,7 @@ private final class DalSettingsArguments {
 }
 
 private enum DalSettingsSection: Int32, CaseIterable {
+    case proxy
     case tabBar
     case stories
     case confidentiality
@@ -89,6 +94,7 @@ public enum DalSettingsEntryTag: ItemListItemTag {
     case cameraChoice
     case callConfirmation
     case sendAudioConfirmation
+    case proxy
     case chatsFoldersAtBottom
     case hideAllChatsFolder
     case infiniteScrolling
@@ -107,6 +113,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case privacyHeader(PresentationTheme, String)
     case confirmationHeader(PresentationTheme, String)
     case chatsFoldersHeader(PresentationTheme, String)
+    
+    case proxy(PresentationTheme, String, Bool)
 
 	// Раздел нижнего меню
     case tabBar
@@ -133,6 +141,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
 
     var section: ItemListSectionId {
         switch self {
+        case .proxy:
+            return DalSettingsSection.proxy.rawValue
+        
         case .tabBar:
             return DalSettingsSection.tabBar.rawValue
             
@@ -150,6 +161,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     
     var stableId: Int32 {
         switch self {
+        case .proxy:
+            return -2
         case .tabBar:
             return -1
             
@@ -208,6 +221,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.callConfirmation
         case .sendAudioConfirmation:
             return DalSettingsEntryTag.sendAudioConfirmation
+        case .proxy:
+            return DalSettingsEntryTag.proxy
         case .chatsFoldersAtBottom:
             return DalSettingsEntryTag.chatsFoldersAtBottom
         case .hideAllChatsFolder:
@@ -302,7 +317,16 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case let .chatsFoldersAtBottom(lhsTheme, lhsText, lhsValue):
+        case let .proxy(lhsTheme, lhsText, lhsValue):
+            if case let .proxy(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+		case let .chatsFoldersAtBottom(lhsTheme, lhsText, lhsValue):
             if case let .chatsFoldersAtBottom(rhsTheme, rhsText, rhsValue) = rhs,
                lhsTheme === rhsTheme,
                lhsText == rhsText,
@@ -525,11 +549,25 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                     arguments.pushController(tabBarSettingsController)
                 }
             )
+            
+        case let .proxy(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateProxy(updatedValue)
+                },
+                tag: self.tag
+            )
         }
     }
 }
 
 private func dalSettingsEntries(
+    isProxyEnabled: Bool,
     hidePublishStoriesButton: Bool,
     hideStories: Bool,
     hideViewedStories: Bool,
@@ -547,7 +585,15 @@ private func dalSettingsEntries(
     var entries: [DalSettingsEntry] = []
     let lang = presentationData.strings.baseLanguageCode
     
-    // Tab ba
+    entries.append(
+        .proxy(
+            presentationData.theme,
+            "DahlSettings.Proxy".tp_loc(lang: lang),
+            isProxyEnabled
+        )
+    )
+    
+    // Tab bar
     entries.append(.tabBar)
     
     entries.append(.storiesHeader(presentationData.theme, "DahlSettings.StoriesHeader".tp_loc(lang: lang).uppercased()))
@@ -626,6 +672,9 @@ public func dalsettingsController(
     var presentControllerImpl: ((ViewController, ViewControllerPresentationArguments?) -> Void)?
     var pushControllerImpl: ((ViewController) -> Void)?
     
+    let baseAppBundleId = Bundle.main.bundleIdentifier!
+    let buildConfig = BuildConfig(baseAppBundleId: baseAppBundleId)
+    
     let arguments = DalSettingsArguments(
         context: context,
         presentController: { controller, arguments in
@@ -633,6 +682,27 @@ public func dalsettingsController(
         },
         pushController: { controller in
             pushControllerImpl?(controller)
+        },
+        updateProxy: { value in
+            let _ = (updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager) { proxySettings in
+                var proxySettings = proxySettings
+                if value == true {
+                    proxySettings.enabled = false
+                }
+                return proxySettings
+            } |> mapToSignal { _ in
+                updateDahlProxyInteractively(
+                    accountManager: context.sharedContext.accountManager) { settings in
+                        var settings = settings
+                        let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret)
+                        settings.server = value ? ProxyServerSettings(
+                            host: buildConfig.dProxyServer,
+                            port: buildConfig.dProxyPort,
+                            connection: .mtp(secret: parsedSecret!.serialize())
+                        ) : nil
+                        return settings
+                    }
+            }).start()
         },
         updateHidePublishStoriesButton: { value in
             let _ = updateDalSettingsInteractively(
@@ -757,13 +827,25 @@ public func dalsettingsController(
     )
     
     let sharedData = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    
+    let isProxyEnabled = Promise<Bool>()
+    isProxyEnabled.set(
+        context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.dahlProxySettings, SharedDataKeys.proxySettings])
+    |> map { sharedData -> Bool in
+        if sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self)?.effectiveActiveServer != nil {
+            return false
+        }
+        
+        return sharedData.entries[SharedDataKeys.dahlProxySettings]?.get(DahlProxySettings.self)?.server != nil
+    })
 
     let signal = combineLatest(
         sharedData,
         context.sharedContext.presentationData,
-        context.account.postbox.preferencesView(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        context.account.postbox.preferencesView(keys: [ApplicationSpecificSharedDataKeys.dalSettings]),
+        isProxyEnabled.get()
     )
-    |> map { sharedData, presentationData, preferences -> (ItemListControllerState, (ItemListNodeState, Any)) in
+    |> map { sharedData, presentationData, preferences, isProxyEnabledValue -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let dalSettings: DalSettings
         if let entry = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
             dalSettings = entry
@@ -772,6 +854,7 @@ public func dalsettingsController(
         }
         
         let entries = dalSettingsEntries(
+            isProxyEnabled: isProxyEnabledValue,
             hidePublishStoriesButton: dalSettings.hidePublishStoriesButton,
             hideStories: dalSettings.hideStories,
             hideViewedStories: dalSettings.hideViewedStories,
