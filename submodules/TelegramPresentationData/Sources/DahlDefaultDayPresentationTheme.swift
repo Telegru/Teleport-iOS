@@ -525,7 +525,7 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
         verifiedIconFillColor: defaultDayAccentColor,
         verifiedIconForegroundColor: UIColor(rgb: 0xffffff),
         secretIconColor: UIColor(rgb: 0x00b12c),
-        pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x72d5fd), bottomColor: UIColor(rgb: 0x2a9ef1)), foregroundColor: UIColor(rgb: 0xffffff)),
+        pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x3D4052), bottomColor: UIColor(rgb: 0x09090C)), foregroundColor: UIColor(rgb: 0xffffff)),
         unpinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0xdedee5), bottomColor: UIColor(rgb: 0xc5c6cc)), foregroundColor: UIColor(rgb: 0xffffff)),
         onlineDotColor: UIColor(rgb: 0x4cc91f),
         storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x4B75F2), bottomColor: UIColor(rgb: 0x282A36)), // PresentationThemeGradientColors(topColor: UIColor(rgb: 0x34C76F), bottomColor: UIColor(rgb: 0x3DA1FD)),
