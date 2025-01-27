@@ -207,7 +207,7 @@ private final class AttachButtonComponent: CombinedComponent {
                 iconRef = .iconType(iconType: .attachMenuLocation)
             case .contact:
                 name = strings.Attachment_Contact
-                iconRef = .name(name: "Chat/Attach Menu/Contact")
+                iconRef = .iconType(iconType: .attachMenuContacts)
             case .poll:
                 name = strings.Attachment_Poll
                 iconRef = .name(name: "Chat/Attach Menu/Poll")

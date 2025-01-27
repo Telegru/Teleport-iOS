@@ -24,6 +24,7 @@ public enum IconType: String {
     case attachMenuReply
     case attachMenuLocation
     case attachMenuGift
+    case attachMenuContacts
     case addMemberIcon
     case peerAddMember
     case peerButtonCall

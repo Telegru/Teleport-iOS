@@ -720,7 +720,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         verifiedIconFillColor: accentColor,
         verifiedIconForegroundColor: .white,
         secretIconColor: UIColor(rgb: 0x89df9e),
-        pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x72d5fd), bottomColor: UIColor(rgb: 0x2a9ef1)), foregroundColor: .white),
+        pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x3D4052), bottomColor: UIColor(rgb: 0x09090C)), foregroundColor: .white),
         unpinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: accentColor.withMultiplied(hue: 0.985, saturation: 0.268, brightness: 0.47), bottomColor: accentColor.withMultiplied(hue: 0.98, saturation: 0.268, brightness: 0.39)), foregroundColor: additionalBackgroundColor),
         onlineDotColor: UIColor(rgb: 0x4cc91f),
         storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x4B52F2), bottomColor: UIColor(rgb: 0x7B86C3)),
@@ -737,7 +737,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         incoming: PresentationThemePartedColors(
             bubble: PresentationThemeBubbleColor(
                 withWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: [incomingFillColor.withAlphaComponent(incomingBubbleAlpha)],
+                    fill: [UIColor(rgb: 0x38384D, alpha: 1.0)],
                     highlightedFill: highlightedIncomingBubbleColor,
                     stroke: mainBackgroundColor,
                     shadow: nil,
@@ -753,7 +753,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0x000000, alpha: 0.1)
                 ),
                 withoutWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: [incomingFillColor.withAlphaComponent(incomingBubbleAlpha)],
+                    fill: [UIColor(rgb: 0x38384D, alpha: 1.0)],
                     highlightedFill: highlightedIncomingBubbleColor,
                     stroke: mainBackgroundColor,
                     shadow: nil,
@@ -773,7 +773,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         outgoing: PresentationThemePartedColors(
             bubble: PresentationThemeBubbleColor(
                 withWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: outgoingBubbleFillColors,
+                    fill: [UIColor(rgb: 0x7B86C3, alpha: 1.0)],
                     highlightedFill: highlightedOutgoingBubbleColor,
                     stroke: outgoingBubbleFillColors[0],
                     shadow: nil,
@@ -789,7 +789,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0x000000, alpha: 0.1)
                 ),
                 withoutWallpaper: PresentationThemeBubbleColorComponents(
-                    fill: outgoingBubbleFillColors,
+                    fill: [UIColor(rgb: 0x7B86C3, alpha: 1.0)],
                     highlightedFill: highlightedOutgoingBubbleColor,
                     stroke: outgoingBubbleFillColors[0],
                     shadow: nil,
@@ -938,7 +938,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
     )
 
     let chat = PresentationThemeChat(
-        defaultWallpaper: defaultBuiltinWallpaper(data: .default, colors: [0x1b2836, 0x121a22, 0x1b2836, 0x121a22]),
+        defaultWallpaper: .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: message,
         serviceMessage: serviceMessage,

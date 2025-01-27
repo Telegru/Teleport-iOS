@@ -26,6 +26,8 @@
 
 
 // Settings
+"Dahl.TabTitle" = "Dahl";
+"DahlSettings.TabTitle" = "\"Dahl\" settings";
 "DahlSettings.Title" = "Dahl Settings";
 "DahlSettings.HidePublishStoriesButton" = "Hide Publish Stories Button";
 "DahlSettings.HideStories" = "Hide Stories";
@@ -40,6 +42,7 @@
 "DahlSettings.BackCamera" = "Back camera";
 "DahlSettings.AskBeforeRecording" = "Ask before";
 "DahlSettings.Camera" = "Camera";
+"DahlSettings.TabBarSettings" = "Tab bar";
 
 "DahlSettings.ActionConfirmationHeader" = "Action Confirmation";
 "DahlSettings.ConfirmCallToggle" = "Confirm before calling";
@@ -50,6 +53,18 @@
 "DahlSettings.ChatsFoldersAtBottom" = "Folders at the bottom";
 "DahlSettings.HideAllChatsFolder" = "Hide \"All Chats\" Folder";
 "DahlSettings.InfiniteScrolling" = "Scroll folders in a loop";
+
+"DahlSettings.TabBarSettings.Title" = "Tab bar";
+"DahlSettings.TabBarSettings.ActiveTabs.Header" = "Tab items used";
+"DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i of %i";
+"DahlSettings.TabBarSettings.ActiveTabs.Footer" = "The tab bar of the application can be customized by removing and adding items from the list of available ones.";
+"DahlSettings.TabBarSettings.AvailableTabs.Header" = "More items";
+
+// Wallet
+"Wallet.TabTitle" = "Wallet";
+
+// Apps
+"Apps.TabTitle" = "Apps";
 
 // Chat
 "Chat.FrontCamera" = "Front camera";

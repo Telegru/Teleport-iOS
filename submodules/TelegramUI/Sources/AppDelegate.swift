@@ -1089,10 +1089,31 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                     }
                 }
             }
+            |> mapToSignal { accountAndSettings -> Signal<(AccountContext, CallListSettings, DalSettings)?, NoError> in
+                return sharedApplicationContext.sharedContext.accountManager.transaction { transaction -> DalSettings? in
+                    return transaction.getSharedData(ApplicationSpecificSharedDataKeys.dalSettings)?.get(DalSettings.self)
+                }
+                |> reduceLeft(value: nil) { current, updated -> DalSettings? in
+                    var result: DalSettings?
+                    if let updated = updated {
+                        result = updated
+                    } else if let current = current {
+                        result = current
+                    }
+                    return result
+                }
+                |> map { dahlSettings -> (AccountContext, CallListSettings, DalSettings)? in
+                    if let context = accountAndSettings?.0, let callListSettings = accountAndSettings?.1 {
+                        return (context, callListSettings, dahlSettings ?? .defaultSettings)
+                    } else {
+                        return nil
+                    }
+                }
+            }
             |> deliverOnMainQueue
             |> map { accountAndSettings -> AuthorizedApplicationContext? in
-                return accountAndSettings.flatMap { context, callListSettings in
-                    return AuthorizedApplicationContext(sharedApplicationContext: sharedApplicationContext, mainWindow: self.mainWindow, watchManagerArguments: .single(nil), context: context as! AccountContextImpl, accountManager: sharedApplicationContext.sharedContext.accountManager, showCallsTab: callListSettings.showTab, reinitializedNotificationSettings: {
+                return accountAndSettings.flatMap { context, callListSettings, dahlSettings in
+                    return AuthorizedApplicationContext(sharedApplicationContext: sharedApplicationContext, mainWindow: self.mainWindow, watchManagerArguments: .single(nil), context: context as! AccountContextImpl, accountManager: sharedApplicationContext.sharedContext.accountManager, showCallsTab: callListSettings.showTab, appTabs: dahlSettings.tabBarSettings.activeTabs, reinitializedNotificationSettings: {
                         let _ = (self.context.get()
                         |> take(1)
                         |> deliverOnMainQueue).start(next: { context in

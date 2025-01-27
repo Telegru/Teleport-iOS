@@ -50,6 +50,8 @@ struct DahlIconSet: IconSet {
             return UIImage(bundleImageName: "Attach/AttachMenuLocation")!
         case .attachMenuGift:
             return UIImage(bundleImageName: "Attach/AttachMenuGift")!
+        case .attachMenuContacts:
+            return UIImage(bundleImageName: "Attach/AttachMenuContacts")!
         case .addMemberIcon:
             return UIImage(bundleImageName: "Peer/addMember")!
         case .peerButtonCall:

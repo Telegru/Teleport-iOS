@@ -250,14 +250,18 @@ final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
                 }
             }
             
+            let useSquareStyle = theme.useSquareStyle
             var isForum = false
+            
             let avatarCornerRadius: CGFloat
+            
             if let channel = peer as? TelegramChannel, channel.flags.contains(.isForum) {
                 avatarCornerRadius = floor(avatarSize * 0.25)
                 isForum = true
             } else {
-                avatarCornerRadius = avatarSize / 2.0
+                avatarCornerRadius = useSquareStyle ? avatarSize / 16.0 : avatarSize / 2.0
             }
+            
             if self.avatarNode.layer.cornerRadius != 0.0 {
                 ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut).updateCornerRadius(layer: self.avatarNode.contentNode.layer, cornerRadius: avatarCornerRadius)
             } else {
