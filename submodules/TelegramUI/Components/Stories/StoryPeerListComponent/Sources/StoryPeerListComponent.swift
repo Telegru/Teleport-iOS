@@ -360,6 +360,16 @@ public final class StoryPeerListComponent: Component {
         
         private var sharedBlurEffect: NSObject?
         
+        public var hideViewedStories: Bool = false {
+            didSet {
+                self.state?.updated(transition: .immediate)
+            }
+        }
+        
+        public var hasVisibleItems: Bool {
+            !sortedItems.isEmpty
+        }
+
         public override init(frame: CGRect) {
             self.collapsedButton = HighlightableButton()
             
@@ -1648,6 +1658,10 @@ public final class StoryPeerListComponent: Component {
                 }
             }
             
+            if self.hideViewedStories {
+                self.sortedItems = self.sortedItems.filter { $0.hasUnseen || $0.peer.id == component.context.account.peerId }
+            }
+                   
             let itemLayout = ItemLayout(
                 containerSize: availableSize,
                 containerInsets: UIEdgeInsets(top: 4.0, left: component.sideInset - 4.0, bottom: 0.0, right: component.sideInset - 4.0),

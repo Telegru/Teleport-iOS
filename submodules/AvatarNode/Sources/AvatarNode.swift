@@ -286,7 +286,7 @@ public final class AvatarNode: ASDisplayNode {
     ]
     
     static let savedMessagesColors: [UIColor] = [
-        UIColor(rgb: 0x2a9ef1), UIColor(rgb: 0x72d5fd)
+        UIColor(rgb: 0x09090C), UIColor(rgb: 0x3D4052)
     ]
     
     static let repostColors: [UIColor] = [

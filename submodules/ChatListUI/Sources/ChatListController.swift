@@ -2093,16 +2093,25 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                         }
 
                         for item in rawStorySubscriptions.items {
-                            if !items.contains(where: { $0.peer.id == item.peer.id }) && (!dalSettings.hideViewedStories || item.hasUnseen) {
+                            if !items.contains(where: { $0.peer.id == item.peer.id }) {
                                 items.append(item)
                             }
                         }
+                        
+                        if dalSettings.hideViewedStories {
+                            items = items.filter { $0.hasUnseen }
+                        }
+                        
                         self.orderedStorySubscriptions = EngineStorySubscriptions(
                             accountItem: rawStorySubscriptions.accountItem,
                             items: items,
                             hasMoreToken: rawStorySubscriptions.hasMoreToken
                         )
                         self.fixedStorySubscriptionOrder = items.map(\.peer.id)
+                        
+                        if items.isEmpty {
+                            self.chatListDisplayNode.scrollToTopIfStoriesAreExpanded()
+                        }
                     }
                     
                     let transition: ContainedViewLayoutTransition
@@ -2111,7 +2120,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     } else {
                         transition = .immediate
                     }
-                    
+                    self.chatListHeaderView()?.storyPeerListView()?.hideViewedStories = dalSettings.hideViewedStories
                     self.chatListDisplayNode.temporaryContentOffsetChangeTransition = transition
                     self.requestLayout(transition: transition)
                     self.chatListDisplayNode.temporaryContentOffsetChangeTransition = nil
