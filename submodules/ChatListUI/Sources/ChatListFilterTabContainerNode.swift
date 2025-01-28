@@ -830,7 +830,7 @@ public final class ChatListFilterTabContainerNode: ASDisplayNode, UIScrollViewDe
         
         var badgeAnimations: [ChatListFilterTabEntryId: BadgeAnimation] = [:]
         
-        let hideAllChats = hideAllChats && !isReordering && !isEditing
+        let hideAllChats = hideAllChats && !isReordering && !isEditing && filters.first(where: { $0.id != .all }) != nil
      
         var reorderedFilters: [ChatListFilterTabEntry] = filters
         
@@ -936,7 +936,7 @@ public final class ChatListFilterTabContainerNode: ASDisplayNode, UIScrollViewDe
                 transition.updateTransformScale(node: itemNode, scale: 0.1)
             }
         }
-        if hideAllChats{
+        if hideAllChats {
             reorderedFilters = reorderedFilters.filter({ $0.id != .all })
         }
         
@@ -1065,7 +1065,7 @@ public final class ChatListFilterTabContainerNode: ASDisplayNode, UIScrollViewDe
                     let currentFrame = selectionFrames[currentIndex]
                     let previousFrame = selectionFrames[currentIndex - 1]
                     selectedFrames.append(interpolateFrame(from: currentFrame, to: previousFrame, t: abs(transitionFraction)))
-                } else if !isInfiniteScroll && currentIndex != filters.count - 1 && transitionFraction < 0.0 {
+                } else if !isInfiniteScroll && currentIndex != selectionFrames.count - 1 && transitionFraction < 0.0 {
                     let currentFrame = selectionFrames[currentIndex]
                     let previousFrame = selectionFrames[currentIndex + 1]
                     selectedFrames.append(interpolateFrame(from: currentFrame, to: previousFrame, t: abs(transitionFraction)))
