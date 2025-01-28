@@ -70,9 +70,12 @@ prepare_build_variables () {
 	echo "telegram_app_specific_url_scheme = \"$APP_SPECIFIC_URL_SCHEME\"" >> "$VARIABLES_PATH"
 	echo "telegram_premium_iap_product_id = \"$PREMIUM_IAP_PRODUCT_ID\"" >> "$VARIABLES_PATH"
 	echo "telegram_aps_environment = \"$APS_ENVIRONMENT\"" >> "$VARIABLES_PATH"
-	echo "teleport_app_reviewer_phone = \"$TELEPORT_APP_REVIEWER_PHONE\"" >> "$VARIABLES_PATH"
-	echo "teleport_app_reviewer_code = \"$TELEPORT_APP_REVIEWER_CODE\"" >> "$VARIABLES_PATH"
-	echo "teleport_app_reviewer_env = \"$TELEPORT_APP_REVIEWER_ENV\"" >> "$VARIABLES_PATH"
+	echo "dahl_app_reviewer_phone = \"$DAHL_APP_REVIEWER_PHONE\"" >> "$VARIABLES_PATH"
+	echo "dahl_app_reviewer_code = \"$DAHL_APP_REVIEWER_CODE\"" >> "$VARIABLES_PATH"
+	echo "dahl_app_reviewer_env = \"$DAHL_APP_REVIEWER_ENV\"" >> "$VARIABLES_PATH"
+	echo "dahl_proxy_server = \"$DAHL_PROXY_SERVER\"" >> "$VARIABLES_PATH"
+	echo "dahl_proxy_port = \"$DAHL_PROXY_PORT\"" >> "$VARIABLES_PATH"
+	echo "dahl_proxy_secret = \"$DAHL_PROXY_SECRET\"" >> "$VARIABLES_PATH"
 
 	if [  "$TELEGRAM_DISABLE_EXTENSIONS" == "1" ]; then
 		echo "telegram_disable_extensions = True" >> "$VARIABLES_PATH"

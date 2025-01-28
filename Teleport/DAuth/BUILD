@@ -1,8 +1,8 @@
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 swift_library(
-    name = "TPAuth",
-    module_name = "TPAuth",
+    name = "DAuth",
+    module_name = "DAuth",
     srcs = glob([
         "Sources/**/*.swift",
     ]),

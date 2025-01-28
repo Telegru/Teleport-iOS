@@ -1,7 +1,7 @@
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 tp_deps = [
-    "//Teleport/TPAuth:TPAuth",
+    "//Teleport/DAuth:DAuth",
     "//Teleport/TPOnboarding:TPOnboarding"
 ]
 

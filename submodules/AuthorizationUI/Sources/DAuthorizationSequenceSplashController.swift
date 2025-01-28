@@ -16,7 +16,7 @@ import TelegramPresentationData
 import LegacyComponents
 import SolidRoundedButtonNode
 import RMIntro
-import TPAuth
+import DAuth
 import TPOnboarding
 
 public final class DAuthorizationSequenceSplashController: ViewController {

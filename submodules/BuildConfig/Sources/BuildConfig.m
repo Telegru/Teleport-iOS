@@ -198,16 +198,28 @@ API_AVAILABLE(ios(10))
     return APP_CONFIG_IS_SIRI_ENABLED;
 }
 
-- (NSString * _Nullable)tpAppReviewerPhone {
-    return @(TP_CONFIG_APP_REVIEWER_PHONE);
+- (NSString * _Nullable)dAppReviewerPhone {
+    return @(D_CONFIG_APP_REVIEWER_PHONE);
 }
 
-- (NSString * _Nullable)tpAppReviewerCode {
-    return @(TP_CONFIG_APP_REVIEWER_CODE);
+- (NSString * _Nullable)dAppReviewerCode {
+    return @(D_CONFIG_APP_REVIEWER_CODE);
 }
 
-- (BOOL)tpIsAppReviewerProdEnv {
-    return @(TP_CONFIG_APP_REVIEWER_ENV) != nil && [@(TP_CONFIG_APP_REVIEWER_ENV) isEqual:@"prod"];
+- (BOOL)dIsAppReviewerProdEnv {
+    return @(D_CONFIG_APP_REVIEWER_ENV) != nil && [@(D_CONFIG_APP_REVIEWER_ENV) isEqual:@"prod"];
+}
+
+- (NSString * _Nonnull)dProxyServer {
+    return @(D_CONFIG_PROXY_SERVER);
+}
+
+- (int32_t)dProxyPort {
+    return D_CONFIG_PROXY_PORT;
+}
+
+- (NSString * _Nonnull)dProxySecret {
+    return @(D_CONFIG_PROXY_SECRET);
 }
 
 + (NSString * _Nullable)bundleSeedId {
