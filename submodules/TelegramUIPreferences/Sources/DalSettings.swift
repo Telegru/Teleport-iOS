@@ -46,7 +46,7 @@ public struct DalSettings: Codable, Equatable {
             sendAudioConfirmation: false,
             callConfirmation: false,
             videoMessageCamera: CameraType.front,
-            chatsFoldersAtBottom: false,
+            chatsFoldersAtBottom: true,
             hideAllChatsFolder: false,
             infiniteScrolling: false
         )
@@ -101,7 +101,7 @@ public struct DalSettings: Codable, Equatable {
         }
         self.sendAudioConfirmation = (try container.decodeIfPresent(Int32.self, forKey: "sendAudioConfirmation") ?? 0) != 0
         self.callConfirmation = (try container.decodeIfPresent(Int32.self, forKey: "callConfirmation") ?? 0) != 0
-        self.chatsFoldersAtBottom = (try container.decodeIfPresent(Int32.self, forKey: "chatsFoldersAtBottom") ?? 0) != 0
+        self.chatsFoldersAtBottom = (try container.decodeIfPresent(Int32.self, forKey: "chatsFoldersAtBottom") ?? 1) != 0
         self.hideAllChatsFolder = (try container.decodeIfPresent(Int32.self, forKey: "hideAllChatsFolder") ?? 0) != 0
         self.infiniteScrolling = (try container.decodeIfPresent(Int32.self, forKey: "infiniteScrolling") ?? 0) != 0
     }
