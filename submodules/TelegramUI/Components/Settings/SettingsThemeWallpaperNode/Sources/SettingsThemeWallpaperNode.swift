@@ -231,6 +231,13 @@ public final class SettingsThemeWallpaperNode: ASDisplayNode {
         if self.wallpaper != wallpaper && !isEmpty {
             self.wallpaper = wallpaper
             switch wallpaper {
+                case let .dahl(name):
+                    self.imageNode.alpha = 1.0
+                    self.imageNode.setSignal(settingsDahlWallpaperImage(account: context.account, name: name, thumbnail: true))
+                    let apply = self.imageNode.asyncLayout()(TransformImageArguments(corners: corners, imageSize: CGSize(), boundingSize: size, intrinsicInsets: UIEdgeInsets()))
+                    apply()
+                    self.isLoadedDisposable.set(nil)
+                    self.updateIsLoaded(isLoaded: true, animated: false)
                 case .builtin:
                     self.imageNode.alpha = 1.0
                     self.imageNode.setSignal(settingsBuiltinWallpaperImage(account: context.account, thumbnail: true))
@@ -328,7 +335,7 @@ public final class SettingsThemeWallpaperNode: ASDisplayNode {
             }
         } else if let wallpaper = self.wallpaper {
             switch wallpaper {
-                case .builtin, .color, .gradient, .emoticon:
+                case .builtin, .color, .gradient, .emoticon, .dahl:
                     let apply = self.imageNode.asyncLayout()(TransformImageArguments(corners: corners, imageSize: CGSize(), boundingSize: size, intrinsicInsets: UIEdgeInsets()))
                     apply()
                 case let .image(representations, _):

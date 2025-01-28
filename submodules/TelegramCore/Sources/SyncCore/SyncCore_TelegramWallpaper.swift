@@ -132,6 +132,8 @@ public struct TelegramWallpaperNativeCodable: Codable {
             ))
         case 5:
             self.value = .emoticon(try container.decode(String.self, forKey: "e"))
+        case 10000:
+            self.value = .dahl(try container.decode(String.self, forKey: "dahl"))
         default:
             assertionFailure()
             self.value = .color(0xffffff)
@@ -173,6 +175,9 @@ public struct TelegramWallpaperNativeCodable: Codable {
         case let .emoticon(emoticon):
             try container.encode(5 as Int32, forKey: "v")
             try container.encode(emoticon, forKey: "e")
+        case let .dahl(name):
+            try container.encode(10000 as Int32, forKey: "v")
+            try container.encode(name, forKey: "dahl")
         }
     }
 }
@@ -238,7 +243,8 @@ public enum TelegramWallpaper: Equatable {
     case image([TelegramMediaImageRepresentation], WallpaperSettings)
     case file(File)
     case emoticon(String)
-    
+    case dahl(String)
+
     public var hasWallpaper: Bool {
         switch self {
             case .color:
@@ -286,6 +292,12 @@ public enum TelegramWallpaper: Equatable {
                 } else {
                     return false
                 }
+            case let .dahl(name):
+                if case .dahl((name)) = rhs {
+                    return true
+                } else {
+                    return false
+                }
         }
     }
     
@@ -327,6 +339,12 @@ public enum TelegramWallpaper: Equatable {
                 } else {
                     return false
                 }
+            case let .dahl(name):
+                if case .dahl(name) = wallpaper {
+                    return true
+                } else {
+                    return false
+                }
         }
     }
     
@@ -358,6 +376,8 @@ public enum TelegramWallpaper: Equatable {
             file.settings = settings
             return .file(file)
         case .emoticon:
+            return self
+        case .dahl:
             return self
         }
     }
