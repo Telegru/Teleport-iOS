@@ -536,7 +536,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
                 text: text,
-                sectionId: self.section 
+                sectionId: self.section
+            )
         case .tabBar:
             return ItemListDisclosureItem(
                 presentationData: presentationData,
