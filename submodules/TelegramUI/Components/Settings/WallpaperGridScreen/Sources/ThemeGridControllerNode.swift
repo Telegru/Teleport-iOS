@@ -49,6 +49,7 @@ struct ThemeGridControllerEntry: Comparable, Identifiable {
         case file(Int64, [UInt32], Int32)
         case image(String)
         case emoticon(String)
+        case dahl(String)
     }
 
     var index: Int
@@ -66,6 +67,8 @@ struct ThemeGridControllerEntry: Comparable, Identifiable {
     
     var stableId: StableId {
         switch self.wallpaper {
+        case let .dahl(name):
+            return .dahl(name)
         case .builtin:
             return .builtin
         case let .color(color):
@@ -477,6 +480,14 @@ final class ThemeGridControllerNode: ASDisplayNode {
                 } else {
                     sortedWallpapers = wallpapers.map(\.wallpaper)
                 }
+                
+                let dahlWallpapers: [TelegramWallpaper] = [
+                    .dahl("ChatWallpaperBuiltin0"),
+                    .dahl("ChatWallpaperBuiltin1"),
+                    .dahl("ChatWallpaperBuiltin2")
+                ]
+                
+                sortedWallpapers = dahlWallpapers + sortedWallpapers
                 
                 if let builtinIndex = sortedWallpapers.firstIndex(where: { wallpaper in
                     if case .builtin = wallpaper {

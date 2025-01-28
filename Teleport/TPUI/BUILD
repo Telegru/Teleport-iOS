@@ -11,6 +11,8 @@ filegroup(
     name = "TPUIRaw",
     srcs = [
         "ChatWallpaperBuiltin0.jpg",
+        "ChatWallpaperBuiltin1.jpg",
+        "ChatWallpaperBuiltin2.jpg",
     ],
     visibility = ["//visibility:public"],
 )
