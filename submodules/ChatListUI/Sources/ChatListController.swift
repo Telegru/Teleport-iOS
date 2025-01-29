@@ -3866,7 +3866,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             
             var selectedEntryId = !strongSelf.initializedFilters ? firstItemEntryId : strongSelf.chatListDisplayNode.mainContainerNode.currentItemFilter
             var resetCurrentEntry = false
-            if !resolvedItems.contains(where: { $0.id == selectedEntryId }) {
+            if !filtered.contains(where: { $0.id == selectedEntryId }) {
                 resetCurrentEntry = true
                 if let tabContainerData = strongSelf.tabContainerData {
                     var found = false
@@ -3893,6 +3893,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             for item in items {
                 switch item.0 {
                 case .allChats:
+                    if strongSelf.allChatsHidden{
+                        continue
+                    }
                     hasAllChats = true
                     if let isPremium = isPremium, !isPremium && availableFilters.count > 0 {
                         availableFilters.insert(.all, at: 0)
@@ -3903,9 +3906,13 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     availableFilters.append(.filter(item.0))
                 }
             }
-            if !hasAllChats {
+            if !strongSelf.allChatsHidden && !hasAllChats {
                 availableFilters.insert(.all, at: 0)
             }
+            if availableFilters.isEmpty {
+                availableFilters.append(.all)
+            }
+            
             strongSelf.chatListDisplayNode.mainContainerNode.updateAvailableFilters(availableFilters, limit: filtersLimit)
             
             if isPremium == nil && items.isEmpty {
