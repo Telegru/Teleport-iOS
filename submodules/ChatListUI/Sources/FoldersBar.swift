@@ -27,6 +27,9 @@ public final class FoldersBar: Component {
         if lhs.tabsNode !== rhs.tabsNode {
             return false
         }
+        if lhs.theme !== rhs.theme {
+            return false
+        }
         return true
     }
     
