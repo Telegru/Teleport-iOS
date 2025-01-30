@@ -44,6 +44,7 @@
 "DahlSettings.Camera" = "Камера";
 "DahlSettings.TabBarSettings" = "Нижнее меню";
 "DahlSettings.Proxy" = "Прокси Даль";
+"DahlSettings.MenuItems" = "Пункты меню";
 
 "DahlSettings.ActionConfirmationHeader" = "Подтверждение действий";
 "DahlSettings.ConfirmCallToggle" = "Подтверждать звонок";

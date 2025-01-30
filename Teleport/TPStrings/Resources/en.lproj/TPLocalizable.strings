@@ -44,6 +44,7 @@
 "DahlSettings.Camera" = "Camera";
 "DahlSettings.TabBarSettings" = "Tab bar";
 "DahlSettings.Proxy" = "Dahl proxy";
+"DahlSettings.MenuItems" = "Menu items";
 
 "DahlSettings.ActionConfirmationHeader" = "Action Confirmation";
 "DahlSettings.ConfirmCallToggle" = "Confirm before calling";
