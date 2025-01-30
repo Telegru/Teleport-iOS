@@ -18,6 +18,7 @@ import SearchUI
 import WallpaperResources
 import WallpaperGalleryScreen
 import BoostLevelIconComponent
+import LocalMediaResources
 
 struct ThemeGridControllerNodeState: Equatable {
     var editing: Bool
@@ -481,10 +482,45 @@ final class ThemeGridControllerNode: ASDisplayNode {
                     sortedWallpapers = wallpapers.map(\.wallpaper)
                 }
                 
+                let path = Bundle.main.path(forResource: "ChatWallpaperBuiltin1", ofType: "jpg")!
+                
+                let file =  TelegramWallpaper.file(TelegramWallpaper.File(
+                    id: 6180061235,
+                    accessHash: 6180061235133,
+                    isCreator: false,
+                    isDefault: false,
+                    isPattern: true,
+                    isDark: false,
+                    slug: "754deeea03c9",
+                    file: TelegramMediaFile(
+                        fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: 6180061235),
+                        partialReference: nil,
+                        resource: BundleResource(name: "ChatWallpaperBuiltin1.jpg", path: path),
+                        previewRepresentations: [
+                            TelegramMediaImageRepresentation(
+                                dimensions: PixelDimensions(width: 155, height: 320),
+                                resource: BundleResource(name: "ChatWallpaperBuiltin1.jpg", path: path),
+                                progressiveSizes: [],
+                                immediateThumbnailData: nil,
+                                hasVideo: false,
+                                isPersonal: false
+                            )
+                        ],
+                        videoThumbnails: [],
+                        immediateThumbnailData: nil,
+                        mimeType: "image/jpeg",
+                        size: 0,
+                        attributes: [
+                            .ImageSize(size: PixelDimensions(width: 1440, height: 2960)),
+                            .FileName(fileName: "ChatWallpaperBuiltin1.jpg")
+                        ],
+                        alternativeRepresentations: []
+                    ),
+                    settings: WallpaperSettings()
+                ))
+                
                 let dahlWallpapers: [TelegramWallpaper] = [
-                    .dahl("ChatWallpaperBuiltin0"),
-                    .dahl("ChatWallpaperBuiltin1"),
-                    .dahl("ChatWallpaperBuiltin2")
+                    file
                 ]
                 
                 sortedWallpapers = dahlWallpapers + sortedWallpapers
