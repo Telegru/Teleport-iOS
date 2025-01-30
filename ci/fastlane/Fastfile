@@ -1,0 +1,59 @@
+default_platform(:ios)
+
+APP_STORE_CONNECT_API_KEY_ID = ENV["APP_STORE_CONNECT_API_KEY_ID"]
+APP_STORE_CONNECT_API_KEY_ISSUER_ID = ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"]
+APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT = ENV["APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT"]
+BAZEL_LOCAL_CACHE = ENV["BAZEL_LOCAL_CACHE"]
+BAZEL_PATH = ENV["BAZEL_PATH"]
+BAZEL_REMOTE_CACHE = ENV["BAZEL_REMOTE_CACHE"]
+BAZEL_USER_ROOT = ENV["BAZEL_USER_ROOT"]
+BUILD_WORKING_DIR = ENV["BUILD_WORKING_DIR"]
+BUNDLE_ID = ENV["BUNDLE_ID"]
+KEYCHAIN_NAME = ENV["KEYCHAIN_NAME"]
+KEYCHAIN_PASSWORD = ENV["KEYCHAIN_PASSWORD"]
+SIGN_URL = ENV["SIGN_URL"]
+SOURCE_PATH = ENV["SOURCE_PATH"]
+TEAM_ID = ENV["TEAM_ID"]
+
+platform :ios do
+
+  lane :deploy_tf do
+    setup_ci if ENV['CI']
+    archive_app(
+      build_number: latest_testflight_build_number(
+        api_key: generate_app_store_connect_api_key(),
+        app_identifier: BUNDLE_ID
+      ) + 1,
+      build_type: 'appstore'
+    )
+  end
+
+  lane :build do |options|
+
+  end
+
+  lane :archive do |options|
+    build_number = options[:build_number]
+    build_type = options[:build_type]
+
+    # create temp keychain
+
+    # match certs
+
+    # bazel build
+
+    # return ipa path
+  end
+
+  private_lane :generate_app_store_connect_api_key do |options|
+    app_store_connect_api_key(
+      key_id: APP_STORE_CONNECT_API_KEY_ID,
+      issuer_id: APP_STORE_CONNECT_API_KEY_ISSUER_ID,
+      key_content: APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT
+    )
+  end
+
+  private_lane :setup_ci do
+
+  end
+end
