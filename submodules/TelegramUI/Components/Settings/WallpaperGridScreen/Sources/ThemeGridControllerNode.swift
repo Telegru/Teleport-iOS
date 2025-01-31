@@ -19,6 +19,7 @@ import WallpaperResources
 import WallpaperGalleryScreen
 import BoostLevelIconComponent
 import LocalMediaResources
+import DWallpaper
 
 struct ThemeGridControllerNodeState: Equatable {
     var editing: Bool
@@ -408,6 +409,12 @@ final class ThemeGridControllerNode: ASDisplayNode {
         })
         self.controllerInteraction = interaction
         
+        let cityWallpapers: [TelegramWallpaper] = [
+            DWallpaper.kazan,
+            DWallpaper.russia,
+            DWallpaper.saintPetersburg
+        ].compactMap { $0.makeWallpaper(darkMode: presentationData.theme.overallDarkAppearance) }
+        
         let transition = combineLatest(self.wallpapersPromise.get(), self.themesPromise.get(), deletedWallpaperIdsPromise.get(), context.sharedContext.presentationData)
         |> map { wallpapers, themes, deletedWallpaperIds, presentationData -> (ThemeGridEntryTransition, Bool) in
             var entries: [ThemeGridControllerEntry] = []
@@ -481,49 +488,8 @@ final class ThemeGridControllerNode: ASDisplayNode {
                 } else {
                     sortedWallpapers = wallpapers.map(\.wallpaper)
                 }
-                
-                let path = Bundle.main.path(forResource: "ChatWallpaperBuiltin1", ofType: "jpg")!
-                
-                let file =  TelegramWallpaper.file(TelegramWallpaper.File(
-                    id: 6180061235,
-                    accessHash: 6180061235133,
-                    isCreator: false,
-                    isDefault: false,
-                    isPattern: true,
-                    isDark: false,
-                    slug: "754deeea03c9",
-                    file: TelegramMediaFile(
-                        fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: 6180061235),
-                        partialReference: nil,
-                        resource: BundleResource(name: "ChatWallpaperBuiltin1.jpg", path: path),
-                        previewRepresentations: [
-                            TelegramMediaImageRepresentation(
-                                dimensions: PixelDimensions(width: 155, height: 320),
-                                resource: BundleResource(name: "ChatWallpaperBuiltin1.jpg", path: path),
-                                progressiveSizes: [],
-                                immediateThumbnailData: nil,
-                                hasVideo: false,
-                                isPersonal: false
-                            )
-                        ],
-                        videoThumbnails: [],
-                        immediateThumbnailData: nil,
-                        mimeType: "image/jpeg",
-                        size: 0,
-                        attributes: [
-                            .ImageSize(size: PixelDimensions(width: 1440, height: 2960)),
-                            .FileName(fileName: "ChatWallpaperBuiltin1.jpg")
-                        ],
-                        alternativeRepresentations: []
-                    ),
-                    settings: WallpaperSettings()
-                ))
-                
-                let dahlWallpapers: [TelegramWallpaper] = [
-                    file
-                ]
-                
-                sortedWallpapers = dahlWallpapers + sortedWallpapers
+
+                sortedWallpapers = cityWallpapers + sortedWallpapers
                 
                 if let builtinIndex = sortedWallpapers.firstIndex(where: { wallpaper in
                     if case .builtin = wallpaper {
