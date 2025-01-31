@@ -829,6 +829,8 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
         }))
     }
     
+    let menuItemsSettings = data.dalSettings?.menuItemsSettings ?? .default
+    
     if let settings = data.globalSettings {
         if settings.premiumGracePeriod {
             items[.phone]!.append(PeerInfoScreenInfoItem(id: 0, title: "Your access to Telegram Premium will expire soon!", text: .markdown("Unfortunately, your latest payment didn't come through. To keep your access to exclusive features, please renew the subscription."), isWarning: true, linkAction: nil))
@@ -898,9 +900,11 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
             }))
         }
         
-        items[.myProfile]!.append(PeerInfoScreenDisclosureItem(id: 0, text: presentationData.strings.Settings_MyProfile, icon: PresentationResourcesSettings.myProfile, action: {
-            interaction.openSettings(.profile)
-        }))
+        if menuItemsSettings.myProfile{
+            items[.myProfile]!.append(PeerInfoScreenDisclosureItem(id: 0, text: presentationData.strings.Settings_MyProfile, icon: PresentationResourcesSettings.myProfile, action: {
+                interaction.openSettings(.profile)
+            }))
+        }
         
         items[.dal]!.append(PeerInfoScreenDisclosureItem(id: 0, text: "DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode), icon: TPIconManager.shared.icon(.dahl), action: {
             interaction.openSettings(.dal)
@@ -924,54 +928,66 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
         }
     }
     
-    var appIndex = 1000
-    if let settings = data.globalSettings {
-        for bot in settings.bots {
-            let iconSignal: Signal<UIImage?, NoError>
-            if let peer = PeerReference(bot.peer._asPeer()), let icon = bot.icons[.iOSSettingsStatic] {
-                let fileReference: FileMediaReference = .attachBot(peer: peer, media: icon)
-                iconSignal = instantPageImageFile(account: context.account, userLocation: .other, fileReference: fileReference, fetched: true)
-                |> map { generator -> UIImage? in
-                    let size = CGSize(width: 29.0, height: 29.0)
-                    let context = generator(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: .zero))
-                    return context?.generateImage()
+    if menuItemsSettings.wallet{
+        var appIndex = 1000
+        if let settings = data.globalSettings {
+            for bot in settings.bots {
+                let iconSignal: Signal<UIImage?, NoError>
+                if let peer = PeerReference(bot.peer._asPeer()), let icon = bot.icons[.iOSSettingsStatic] {
+                    let fileReference: FileMediaReference = .attachBot(peer: peer, media: icon)
+                    iconSignal = instantPageImageFile(account: context.account, userLocation: .other, fileReference: fileReference, fetched: true)
+                    |> map { generator -> UIImage? in
+                        let size = CGSize(width: 29.0, height: 29.0)
+                        let context = generator(TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: .zero))
+                        return context?.generateImage()
+                    }
+                    let _ = freeMediaFileInteractiveFetched(account: context.account, userLocation: .other, fileReference: fileReference).startStandalone()
+                } else {
+                    iconSignal = .single(UIImage())
                 }
-                let _ = freeMediaFileInteractiveFetched(account: context.account, userLocation: .other, fileReference: fileReference).startStandalone()
-            } else {
-                iconSignal = .single(UIImage())
+                let label: PeerInfoScreenDisclosureItem.Label = bot.flags.contains(.notActivated) || bot.flags.contains(.showInSettingsDisclaimer) ? .titleBadge(presentationData.strings.Settings_New, presentationData.theme.list.itemAccentColor) : .none
+                items[.apps]!.append(PeerInfoScreenDisclosureItem(id: bot.peer.id.id._internalGetInt64Value(), label: label, text: bot.shortName, icon: nil, iconSignal: iconSignal, action: {
+                    interaction.openBotApp(bot)
+                }))
+                appIndex += 1
             }
-            let label: PeerInfoScreenDisclosureItem.Label = bot.flags.contains(.notActivated) || bot.flags.contains(.showInSettingsDisclaimer) ? .titleBadge(presentationData.strings.Settings_New, presentationData.theme.list.itemAccentColor) : .none
-            items[.apps]!.append(PeerInfoScreenDisclosureItem(id: bot.peer.id.id._internalGetInt64Value(), label: label, text: bot.shortName, icon: nil, iconSignal: iconSignal, action: {
-                interaction.openBotApp(bot)
-            }))
-            appIndex += 1
         }
     }
     
-    items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 1, text: presentationData.strings.Settings_SavedMessages, icon: PresentationResourcesSettings.savedMessages, action: {
-        interaction.openSettings(.savedMessages)
-    }))
-    items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 2, text: presentationData.strings.CallSettings_RecentCalls, icon: PresentationResourcesSettings.recentCalls, action: {
-        interaction.openSettings(.recentCalls)
-    }))
+    if menuItemsSettings.savedMessages {
+        items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 1, text: presentationData.strings.Settings_SavedMessages, icon: PresentationResourcesSettings.savedMessages, action: {
+            interaction.openSettings(.savedMessages)
+        }))
+    }
     
-    let devicesLabel: String
-    if let settings = data.globalSettings, let otherSessionsCount = settings.otherSessionsCount {
-        if settings.enableQRLogin {
-            devicesLabel = otherSessionsCount == 0 ? presentationData.strings.Settings_AddDevice : "\(otherSessionsCount + 1)"
+    if menuItemsSettings.recentCalls {
+        items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 2, text: presentationData.strings.CallSettings_RecentCalls, icon: PresentationResourcesSettings.recentCalls, action: {
+            interaction.openSettings(.recentCalls)
+        }))
+    }
+    
+    if menuItemsSettings.devices {
+        let devicesLabel: String
+        if let settings = data.globalSettings, let otherSessionsCount = settings.otherSessionsCount {
+            if settings.enableQRLogin {
+                devicesLabel = otherSessionsCount == 0 ? presentationData.strings.Settings_AddDevice : "\(otherSessionsCount + 1)"
+            } else {
+                devicesLabel = otherSessionsCount == 0 ? "" : "\(otherSessionsCount + 1)"
+            }
         } else {
-            devicesLabel = otherSessionsCount == 0 ? "" : "\(otherSessionsCount + 1)"
+            devicesLabel = ""
         }
-    } else {
-        devicesLabel = ""
+        
+        items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 3, label: .text(devicesLabel), text: presentationData.strings.Settings_Devices, icon: PresentationResourcesSettings.devices, action: {
+            interaction.openSettings(.devices)
+        }))
     }
     
-    items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 3, label: .text(devicesLabel), text: presentationData.strings.Settings_Devices, icon: PresentationResourcesSettings.devices, action: {
-        interaction.openSettings(.devices)
-    }))
-    items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 4, text: presentationData.strings.Settings_ChatFolders, icon: PresentationResourcesSettings.chatFolders, action: {
-        interaction.openSettings(.chatFolders)
-    }))
+    if menuItemsSettings.chatFolders {
+        items[.shortcuts]!.append(PeerInfoScreenDisclosureItem(id: 4, text: presentationData.strings.Settings_ChatFolders, icon: PresentationResourcesSettings.chatFolders, action: {
+            interaction.openSettings(.chatFolders)
+        }))
+    }
     
     let notificationsWarning: Bool
     if let settings = data.globalSettings {
@@ -1003,10 +1019,13 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
     
     let premiumConfiguration = PremiumConfiguration.with(appConfiguration: context.currentAppConfiguration.with { $0 })
     if !premiumConfiguration.isPremiumDisabled {
-        items[.payment]!.append(PeerInfoScreenDisclosureItem(id: 100, label: .text(""), text: presentationData.strings.Settings_Premium, icon: PresentationResourcesSettings.premium, action: {
-            interaction.openSettings(.premium)
-        }))
-        if let starsState = data.starsState {
+        if menuItemsSettings.premium {
+            items[.payment]!.append(PeerInfoScreenDisclosureItem(id: 100, label: .text(""), text: presentationData.strings.Settings_Premium, icon: PresentationResourcesSettings.premium, action: {
+                interaction.openSettings(.premium)
+            }))
+        }
+        
+        if let starsState = data.starsState, menuItemsSettings.myStars {
             let balanceText: String
             if starsState.balance > StarsAmount.zero {
                 balanceText = presentationStringsFormattedNumber(starsState.balance, presentationData.dateTimeFormat.groupingSeparator)
@@ -1017,12 +1036,16 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
                 interaction.openSettings(.stars)
             }))
         }
-        items[.payment]!.append(PeerInfoScreenDisclosureItem(id: 103, label: .text(""), additionalBadgeLabel: presentationData.strings.Settings_New, text: presentationData.strings.Settings_Business, icon: PresentationResourcesSettings.business, action: {
-            interaction.openSettings(.businessSetup)
-        }))
-        items[.payment]!.append(PeerInfoScreenDisclosureItem(id: 104, label: .text(""), text: presentationData.strings.Settings_SendGift, icon: PresentationResourcesSettings.premiumGift, action: {
-            interaction.openSettings(.premiumGift)
-        }))
+        if menuItemsSettings.business {
+            items[.payment]!.append(PeerInfoScreenDisclosureItem(id: 103, label: .text(""), additionalBadgeLabel: presentationData.strings.Settings_New, text: presentationData.strings.Settings_Business, icon: PresentationResourcesSettings.business, action: {
+                interaction.openSettings(.businessSetup)
+            }))
+        }
+        if menuItemsSettings.sendGift {
+            items[.payment]!.append(PeerInfoScreenDisclosureItem(id: 104, label: .text(""), text: presentationData.strings.Settings_SendGift, icon: PresentationResourcesSettings.premiumGift, action: {
+                interaction.openSettings(.premiumGift)
+            }))
+        }
     }
     
     if let settings = data.globalSettings {
@@ -1038,15 +1061,21 @@ private func settingsItems(data: PeerInfoScreenData?, context: AccountContext, p
         }
     }
     
-    items[.support]!.append(PeerInfoScreenDisclosureItem(id: 0, text: presentationData.strings.Settings_Support, icon: PresentationResourcesSettings.support, action: {
-        interaction.openSettings(.support)
-    }))
-    items[.support]!.append(PeerInfoScreenDisclosureItem(id: 1, text: presentationData.strings.Settings_FAQ, icon: PresentationResourcesSettings.faq, action: {
-        interaction.openSettings(.faq)
-    }))
-    items[.support]!.append(PeerInfoScreenDisclosureItem(id: 2, text: presentationData.strings.Settings_Tips, icon: PresentationResourcesSettings.tips, action: {
-        interaction.openSettings(.tips)
-    }))
+    if menuItemsSettings.support{
+        items[.support]!.append(PeerInfoScreenDisclosureItem(id: 0, text: presentationData.strings.Settings_Support, icon: PresentationResourcesSettings.support, action: {
+            interaction.openSettings(.support)
+        }))
+    }
+    if menuItemsSettings.faq{
+        items[.support]!.append(PeerInfoScreenDisclosureItem(id: 1, text: presentationData.strings.Settings_FAQ, icon: PresentationResourcesSettings.faq, action: {
+            interaction.openSettings(.faq)
+        }))
+    }
+    if menuItemsSettings.tips{
+        items[.support]!.append(PeerInfoScreenDisclosureItem(id: 2, text: presentationData.strings.Settings_Tips, icon: PresentationResourcesSettings.tips, action: {
+            interaction.openSettings(.tips)
+        }))
+    }
     
     var result: [(AnyHashable, [PeerInfoScreenItem])] = []
     for section in SettingsSection.allCases {
