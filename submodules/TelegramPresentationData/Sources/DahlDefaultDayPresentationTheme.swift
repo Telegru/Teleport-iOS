@@ -5,6 +5,7 @@ import TelegramCore
 import TelegramUIPreferences
 import Postbox
 import SwiftSignalKit
+import DWallpaper
 
 public let defaultDahlServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
 public let defaultDahlPresentationTheme = makeDefaultDahlDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
@@ -961,7 +962,7 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
     )
 
     let chat = PresentationThemeChat(
-        defaultWallpaper: .builtin(WallpaperSettings()),
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: false) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: day ? messageDay : message,
         serviceMessage: day ? serviceMessageDay : serviceMessage,

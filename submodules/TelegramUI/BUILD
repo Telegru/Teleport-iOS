@@ -51,6 +51,7 @@ swift_library(
     deps = [
         "//Teleport/TPNews:TPNews",
         "//Teleport/TPSettings:TPSettings",
+        "//Teleport/DWallpaper:DWallpaper",
 
         "//submodules/SSignalKit/SwiftSignalKit:SwiftSignalKit",
         "//submodules/SSignalKit/SSignalKit:SSignalKit",

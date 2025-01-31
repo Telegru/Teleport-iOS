@@ -7,16 +7,6 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "TPUIRaw",
-    srcs = [
-        "ChatWallpaperBuiltin0.jpg",
-        "ChatWallpaperBuiltin1.jpg",
-        "ChatWallpaperBuiltin2.jpg",
-    ],
-    visibility = ["//visibility:public"],
-)
-
 swift_library(
     name = "TPUI",
     module_name = "TPUI",

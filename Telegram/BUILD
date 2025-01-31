@@ -379,7 +379,7 @@ swift_library(
         "//Teleport/TPOnboarding:TPOnboardingAssets",
         "//Teleport/TPSettings:TPSettingsAssets",
         "//Teleport/TPUI:TPUIAssets",
-        "//Teleport/TPUI:TPUIRaw",
+        "//Teleport/DWallpaper:DWallpaperImages",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [
