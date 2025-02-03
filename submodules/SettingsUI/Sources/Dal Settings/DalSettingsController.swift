@@ -37,6 +37,7 @@ private final class DalSettingsArguments {
     let updateChatsFoldersAtBottom: (Bool) -> Void
     let updateHideAllChatsFolder: (Bool) -> Void
     let updateInfiniteScrolling: (Bool) -> Void
+    let updateShowRecentChats: (Bool) -> Void
 
     init(
         context: AccountContext,
@@ -54,7 +55,8 @@ private final class DalSettingsArguments {
         updateSendAudioConfirmation: @escaping (Bool) -> Void,
         updateChatsFoldersAtBottom: @escaping (Bool) -> Void,
         updateHideAllChatsFolder: @escaping (Bool) -> Void,
-        updateInfiniteScrolling: @escaping (Bool) -> Void
+        updateInfiniteScrolling: @escaping (Bool) -> Void,
+        updateShowRecentChats: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.presentController = presentController
@@ -72,6 +74,7 @@ private final class DalSettingsArguments {
         self.updateChatsFoldersAtBottom = updateChatsFoldersAtBottom
         self.updateHideAllChatsFolder = updateHideAllChatsFolder
         self.updateInfiniteScrolling = updateInfiniteScrolling
+        self.updateShowRecentChats = updateShowRecentChats
     }
 }
 
@@ -83,6 +86,7 @@ private enum DalSettingsSection: Int32, CaseIterable {
     case confidentiality
     case confirmation
     case chatsFolders
+    case recentChats
 }
 
 public enum DalSettingsEntryTag: ItemListItemTag {
@@ -99,6 +103,7 @@ public enum DalSettingsEntryTag: ItemListItemTag {
     case chatsFoldersAtBottom
     case hideAllChatsFolder
     case infiniteScrolling
+    case showRecentChats
 
     public func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? DalSettingsEntryTag, self == other {
@@ -114,6 +119,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case privacyHeader(PresentationTheme, String)
     case confirmationHeader(PresentationTheme, String)
     case chatsFoldersHeader(PresentationTheme, String)
+    case recentChatsHeader(PresentationTheme, String)
     
     case proxy(PresentationTheme, String, Bool)
 
@@ -142,6 +148,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case chatsFoldersAtBottom(PresentationTheme, String, Bool)
     case hideAllChatsFolder(PresentationTheme, String, Bool)
     case infiniteScrolling(PresentationTheme, String, Bool)
+    
+    // Недавние чаты
+    case showRecentChats(PresentationTheme, String, Bool)
 
     var section: ItemListSectionId {
         switch self {
@@ -163,6 +172,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsSection.confirmation.rawValue
         case .chatsFoldersHeader, .chatsFoldersAtBottom, .hideAllChatsFolder, .infiniteScrolling:
             return DalSettingsSection.chatsFolders.rawValue
+        case .recentChatsHeader, .showRecentChats:
+            return DalSettingsSection.recentChats.rawValue
         }
     }
     
@@ -206,6 +217,10 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return 14
         case .infiniteScrolling:
             return 15
+        case .recentChatsHeader:
+            return 16
+        case .showRecentChats:
+            return 17
         }
     }
 
@@ -237,7 +252,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.hideAllChatsFolder
         case .infiniteScrolling:
             return DalSettingsEntryTag.infiniteScrolling
-        case .storiesHeader, .privacyHeader, .confirmationHeader, .chatsFoldersHeader, .tabBar, .menuItems:
+        case .showRecentChats:
+            return DalSettingsEntryTag.showRecentChats
+        case .storiesHeader, .privacyHeader, .confirmationHeader, .chatsFoldersHeader, .tabBar, .menuItems, .recentChatsHeader:
             return nil
         }
     }
@@ -361,7 +378,16 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsFoldersHeader(_, _), .tabBar, .menuItems:
+        case let .showRecentChats(lhsTheme, lhsText, lhsValue):
+            if case let .showRecentChats(rhsTheme, rhsText, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsText == rhsText,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsFoldersHeader(_, _), .tabBar, .menuItems, .recentChatsHeader(_,_):
             if lhs.stableId != rhs.stableId {
                 return false
             }
@@ -584,6 +610,26 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                     arguments.pushController(menuItemsSettingsController)
                 }
             )
+            
+        case let .recentChatsHeader(_, text):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: text,
+                sectionId: self.section
+            )
+            
+        case let .showRecentChats(_, text, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: text,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateShowRecentChats(updatedValue)
+                },
+                tag: self.tag
+            )
         }
     }
 }
@@ -602,6 +648,7 @@ private func dalSettingsEntries(
     chatsFoldersAtBottom: Bool,
     hideAllChatsFolder: Bool,
     infiniteScrolling: Bool,
+    showRecentChats: Bool,
     presentationData: PresentationData
 ) -> [DalSettingsEntry] {
     var entries: [DalSettingsEntry] = []
@@ -685,6 +732,12 @@ private func dalSettingsEntries(
         presentationData.theme,
         "DahlSettings.InfiniteScrolling".tp_loc(lang: lang),
         infiniteScrolling
+    ))
+    entries.append(.recentChatsHeader(presentationData.theme, "DahlSettings.RecentChatsHeader".tp_loc(lang: lang).uppercased()))
+    entries.append(.showRecentChats(
+        presentationData.theme,
+        "DahlSettings.EnablePanel".tp_loc(lang: lang),
+        showRecentChats
     ))
     return entries
 }
@@ -847,6 +900,15 @@ public func dalsettingsController(
                     return settings
                 }
             ).start()
+        }, updateShowRecentChats: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.showRecentChats = value
+                    return settings
+                }
+            ).start()
         }
     )
     
@@ -891,6 +953,7 @@ public func dalsettingsController(
             chatsFoldersAtBottom: dalSettings.chatsFoldersAtBottom,
             hideAllChatsFolder: dalSettings.hideAllChatsFolder,
             infiniteScrolling: dalSettings.infiniteScrolling,
+            showRecentChats: dalSettings.showRecentChats,
             presentationData: presentationData
         )
         

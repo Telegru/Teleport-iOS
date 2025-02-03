@@ -159,6 +159,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     
     var searchTabsNode: SparseNode?
     
+    let recentChatsNode: SparseNode
+    private let recentChatsContainerNode: ChatListRecentChatsPaneNode
+    
     private var hasDownloads: Bool = false
     private var activeDownloadsDisposable: Disposable?
     private var clearUnseenDownloadsTimer: SwiftSignalKit.Timer?
@@ -168,13 +171,14 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     private var storiesPostingAvailabilityDisposable: Disposable?
     private let storyPostingAvailabilityValue = ValuePromise<StoriesConfiguration.PostingAvailability>(.disabled)
     
+    private var dalSettingsDisposable: Disposable?
     private(set) var storyPostingHidden: Bool = false
-    private var storiesPostingHiddenDisposable: Disposable?
     private let storyPostingHiddenValue = ValuePromise<Bool>(false)
     
     private(set) var foldersAtBottom: Bool = false
     private(set) var allChatsHidden: Bool = false
     private(set) var infiniteScrolling: Bool = false
+    private(set) var showRecentChats: Bool = false
 
     private var didSetupTabs = false
     
@@ -257,6 +261,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.tabsNode = SparseNode()
         self.tabContainerNode = ChatListFilterTabContainerNode(context: context)
         self.tabsNode.addSubnode(self.tabContainerNode)
+        
+        self.recentChatsNode = SparseNode()
+        self.recentChatsContainerNode = ChatListRecentChatsPaneNode(context: context, presentationData: presentationData)
+        self.recentChatsNode.addSubnode(self.recentChatsContainerNode)
                 
         super.init(context: context, navigationBarPresentationData: nil, mediaAccessoryPanelVisibility: .always, locationBroadcastPanelSource: .summary, groupCallPanelSource: groupCallPanelSource)
         
@@ -753,6 +761,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 strongSelf.tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: tabContainerData.0, selectedFilter: filter, isReordering: strongSelf.chatListDisplayNode.isReorderingFilters || (strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing && !strongSelf.chatListDisplayNode.didBeginSelectingChatsWhileEditing), isEditing: strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.currentState.editing, canReorderAllChats: strongSelf.isPremium, hideAllChats: strongSelf.allChatsHidden, isInfiniteScroll: strongSelf.infiniteScrolling, filtersLimit: tabContainerData.2, transitionFraction: fraction, presentationData: strongSelf.presentationData, transition: transition)
             }
             self.reloadFilters()
+            
+            if let layout = self.validLayout {
+                self.recentChatsContainerNode.updtateLayout(size: layout.size, transition: .immediate)
+            }
         }
         
         self.storiesPostingAvailabilityDisposable = (self.context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
@@ -773,34 +785,20 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             }
         })
         
-        self.storiesPostingHiddenDisposable = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-        |> map { sharedData -> (Bool, Bool, Bool, Bool) in
-            var storyPostingHidden = false
-            var foldersAtBottom = false
-            var allChatsHidden = false
-            var infiniteScrolling = false
-            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
-                storyPostingHidden = current.hidePublishStoriesButton
-                foldersAtBottom = current.chatsFoldersAtBottom
-                allChatsHidden = current.hideAllChatsFolder
-                infiniteScrolling = current.infiniteScrolling
-            } else {
-                storyPostingHidden = DalSettings.defaultSettings.hidePublishStoriesButton
-                foldersAtBottom = DalSettings.defaultSettings.chatsFoldersAtBottom
-                allChatsHidden = DalSettings.defaultSettings.hideAllChatsFolder
-                infiniteScrolling = DalSettings.defaultSettings.infiniteScrolling
-            }
-            return (storyPostingHidden, foldersAtBottom, allChatsHidden, infiniteScrolling)
+        self.dalSettingsDisposable = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+            return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
         }
         |> deliverOnMainQueue
-        ).startStrict(next: { [weak self] (storyPostingHidden, foldersAtBottom, allChatsHidden, infiniteScrolling) in
+        ).startStrict(next: { [weak self] dalSettings in
             if let self {
-                self.storyPostingHidden = storyPostingHidden
-                self.storyPostingHiddenValue.set(storyPostingHidden)
-                self.foldersAtBottom = foldersAtBottom
+                self.storyPostingHidden = dalSettings.hidePublishStoriesButton
+                self.storyPostingHiddenValue.set(dalSettings.hidePublishStoriesButton)
+                self.foldersAtBottom = dalSettings.chatsFoldersAtBottom
                 let oldAllChatsHidden = self.allChatsHidden
-                self.allChatsHidden = allChatsHidden
-                self.infiniteScrolling = infiniteScrolling
+                self.allChatsHidden = dalSettings.hideAllChatsFolder
+                self.infiniteScrolling = dalSettings.infiniteScrolling
+                self.showRecentChats = dalSettings.showRecentChats
                 if oldAllChatsHidden != self.allChatsHidden {
                     self.initializedFilters = false
                     self.reloadFilters()
@@ -839,6 +837,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.storyProgressDisposable?.dispose()
         self.storiesPostingAvailabilityDisposable?.dispose()
         self.sharedOpenStoryProgressDisposable.dispose()
+        self.dalSettingsDisposable?.dispose()
         for (_, disposable) in self.preloadStoryResourceDisposables {
             disposable.dispose()
         }
@@ -3412,6 +3411,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         }
         
         self.chatListDisplayNode.containerLayoutUpdated(layout, navigationBarHeight: navigationBarHeight, visualNavigationHeight: navigationBarHeight, cleanNavigationBarHeight: navigationBarHeight, storiesInset: 0.0, transition: transition)
+        
+        transition.updateFrame(node: self.recentChatsContainerNode, frame: CGRect(origin: .zero, size: CGSize(width: layout.size.width, height: 56.0)))
+        self.recentChatsContainerNode.updtateLayout(size: layout.size, transition: transition)
     }
     
     override public func navigationStackConfigurationUpdated(next: [ViewController]) {
