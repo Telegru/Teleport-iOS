@@ -97,12 +97,12 @@ def build_configuration_from_json(path):
             'premium_iap_product_id',
             'enable_siri',
             'enable_icloud',
-            'd_app_reviewer_phone',
-            'd_app_reviewer_code',
-            'd_app_reviewer_env',
-            'd_proxy_server',
-            'd_proxy_port',
-            'd_proxy_secret',
+            'dahl_app_reviewer_phone',
+            'dahl_app_reviewer_code',
+            'dahl_app_reviewer_env',
+            'dahl_proxy_server',
+            'dahl_proxy_port',
+            'dahl_proxy_secret',
         ]
         for key in required_keys:
             if key not in configuration_dict:
