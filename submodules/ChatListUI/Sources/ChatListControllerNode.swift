@@ -79,7 +79,7 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
     }
     
     private var filtersLimit: Int32? = nil
-    private var selectedId: ChatListFilterTabEntryId
+    private(set) var selectedId: ChatListFilterTabEntryId
     
     var hintUpdatedStoryExpansion: Bool = false
     var ignoreStoryUnlockedScrolling: Bool = false
@@ -775,9 +775,14 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
                 }
             }
             if !availableFilters.contains(where: { $0.id == self.selectedId }) {
-                self.switchToFilter(id: .all, completion: {
+                let set = Set(self.availableFilters.map { $0.id })
+                if let id = availableFilters.first(where: { set.contains($0.id) })?.id {
+                    self.switchToFilter(id: id, completion: {
+                        apply()
+                    })
+                }else{
                     apply()
-                })
+                }
             } else {
                 apply()
             }
@@ -1548,7 +1553,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         var storiesInset = storiesInset
         
         let navigationBarLayout = self.updateNavigationBar(layout: layout, deferScrollApplication: true, transition: ComponentTransition(transition))
-        _ = self.updateBottomBar(layout: layout, transition: ComponentTransition(transition))
+        let bottomFoldersHeight = self.updateBottomBar(layout: layout, transition: ComponentTransition(transition))
         self.mainContainerNode.initialScrollingOffset = ChatListNavigationBar.searchScrollHeight + navigationBarLayout.storiesInset
         
         navigationBarHeight = navigationBarLayout.navigationHeight
@@ -1562,6 +1567,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         insets.top += navigationBarHeight
         insets.left += layout.safeInsets.left
         insets.right += layout.safeInsets.right
+        insets.bottom += bottomFoldersHeight
         
         if let toolbar = self.toolbar {
             var tabBarHeight: CGFloat
