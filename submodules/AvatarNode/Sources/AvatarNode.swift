@@ -28,7 +28,7 @@ private let myNotesIcon = generateTintedImage(image: UIImage(bundleImageName: "A
 private let cameraIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/CameraIcon"), color: .white)
 
 public func avatarPlaceholderFont(size: CGFloat) -> UIFont {
-    return Font.with(size: size * 1.4, design: .novgorod, weight: .bold)
+    return Font.with(size: size * 1.484, design: .novgorod, weight: .bold)
 }
 
 public enum AvatarNodeClipStyle {

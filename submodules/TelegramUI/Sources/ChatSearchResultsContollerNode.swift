@@ -120,7 +120,8 @@ private enum ChatListSearchEntry: Comparable, Identifiable {
                     header: nil,
                     enableContextActions: false,
                     hiddenOffset: false,
-                    interaction: interaction
+                    interaction: interaction,
+                    chatListItemTextLineCount: 2
                 )
         }
     }

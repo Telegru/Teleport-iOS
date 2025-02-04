@@ -10,11 +10,18 @@ public enum CameraType: String, Codable, Equatable {
     case undefined = "undefined"
 }
 
+public enum ListViewType: Int32, Codable, Equatable {
+    case singleLine = 0
+    case doubleLine = 1
+    case tripleLine = 2
+}
+
 public struct DalSettings: Codable, Equatable {
     
     public var tabBarSettings: TabBarSettings
     public var menuItemsSettings: MenuItemsSettings
-    
+    public var chatsListViewType: ListViewType
+
     // Раздел Stories
     public var hidePublishStoriesButton: Bool
     public var hideStories: Bool
@@ -54,7 +61,8 @@ public struct DalSettings: Codable, Equatable {
             chatsFoldersAtBottom: true,
             hideAllChatsFolder: false,
             infiniteScrolling: false,
-            showRecentChats: nil
+            showRecentChats: nil,
+            chatsListViewType: .doubleLine
         )
     }
     
@@ -73,7 +81,8 @@ public struct DalSettings: Codable, Equatable {
         chatsFoldersAtBottom: Bool,
         hideAllChatsFolder: Bool,
         infiniteScrolling: Bool,
-        showRecentChats: Bool?
+        showRecentChats: Bool?,
+        chatsListViewType: ListViewType
     ) {
         self.tabBarSettings = tabBarSettings
         self.menuItemsSettings = menuItemsSettings
@@ -90,6 +99,7 @@ public struct DalSettings: Codable, Equatable {
         self.hideAllChatsFolder = hideAllChatsFolder
         self.infiniteScrolling = infiniteScrolling
         self.showRecentChats = showRecentChats
+        self.chatsListViewType = chatsListViewType
     }
     
     public init(from decoder: Decoder) throws {
@@ -118,6 +128,13 @@ public struct DalSettings: Codable, Equatable {
         if let showRecentChats = (try container.decodeIfPresent(Int32.self, forKey: "showRecentChats")) {
             self.showRecentChats = showRecentChats != 0
         }
+        
+        if let listViewString = try container.decodeIfPresent(Int32.self, forKey: "chatsListViewType"),
+           let listView = ListViewType(rawValue: listViewString) {
+            self.chatsListViewType = listView
+        } else {
+            self.chatsListViewType = .singleLine
+        }
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -141,6 +158,7 @@ public struct DalSettings: Codable, Equatable {
         if let showRecentChats = self.showRecentChats {
             try container.encode((showRecentChats ? 1 : 0) as Int32, forKey: "showRecentChats")
         }
+        try container.encode(self.chatsListViewType.rawValue, forKey: "chatsListViewType")
     }
 }
 
