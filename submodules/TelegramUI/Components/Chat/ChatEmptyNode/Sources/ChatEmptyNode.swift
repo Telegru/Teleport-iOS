@@ -782,6 +782,8 @@ private final class ChatEmptyNodeCloudChatContent: ASDisplayNode, ChatEmptyNodeC
                 titleSpacing = 5.0
             case .hashTagSearch:
                 break
+            case .wall:
+                break
             }
         }
         
@@ -842,6 +844,9 @@ private final class ChatEmptyNodeCloudChatContent: ASDisplayNode, ChatEmptyNodeC
                     
                     self.businessLink = link
                 case .hashTagSearch:
+                    titleString = ""
+                    strings = []
+                case .wall:
                     titleString = ""
                     strings = []
                 }

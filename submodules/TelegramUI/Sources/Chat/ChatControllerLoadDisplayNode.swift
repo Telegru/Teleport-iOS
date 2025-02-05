@@ -1361,6 +1361,8 @@ extension ChatControllerImpl {
                 switch customChatContents.kind {
                 case .hashTagSearch:
                     break
+                case .wall:
+                    break
                 case .quickReplyMessageInput:
                     customChatContents.enqueueMessages(messages: messages)
                     strongSelf.chatDisplayNode.historyNode.scrollToEndOfHistory()

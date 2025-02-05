@@ -2031,6 +2031,8 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         
         if let message = messages.first, case let .customChatContents(customChatContents) = chatPresentationInterfaceState.subject {
             switch customChatContents.kind {
+            case .wall:
+                break
             case .hashTagSearch:
                 break
             case .quickReplyMessageInput:

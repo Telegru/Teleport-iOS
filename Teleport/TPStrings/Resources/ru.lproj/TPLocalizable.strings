@@ -68,6 +68,9 @@
 // Apps
 "Apps.TabTitle" = "Приложения";
 
+// Wall
+"Wall.TabTitle" = "Стена";
+
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";
 "Chat.BackCamera" = "Задняя камера";
