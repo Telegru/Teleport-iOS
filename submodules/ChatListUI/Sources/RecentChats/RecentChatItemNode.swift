@@ -25,6 +25,7 @@ fileprivate final class RecentChatAvatarNode: ASDisplayNode {
     private let contextContainer: ContextControllerSourceNode
     private let avatarNodeContainer: ASDisplayNode
     private let avatarNode: AvatarNode
+    private let action: (EnginePeer) -> Void
 
     public var contextAction: ((ASDisplayNode, ContextGesture?, CGPoint?) -> Void)? {
         didSet {
@@ -36,7 +37,9 @@ fileprivate final class RecentChatAvatarNode: ASDisplayNode {
     
     private var peer: EngineRenderedPeer?
     
-    override public init() {
+    public init(
+        action: @escaping (EnginePeer) -> Void
+    ) {
         self.contextContainer = ContextControllerSourceNode()
         self.contextContainer.isGestureEnabled = false
         
@@ -44,6 +47,8 @@ fileprivate final class RecentChatAvatarNode: ASDisplayNode {
         
         self.avatarNode = AvatarNode(font: avatarFont)
         self.avatarNode.frame = CGRect(origin: CGPoint(), size: CGSize(width: 32.0, height: 32.0))
+        
+        self.action = action
         
         super.init()
         
@@ -84,7 +89,7 @@ fileprivate final class RecentChatAvatarNode: ASDisplayNode {
             peer: mainPeer,
             overrideImage: overrideImage,
             emptyColor: .white,
-            clipStyle:  .roundedRect,
+            clipStyle:  .rect,
             synchronousLoad: synchronousLoad)
         
         self.setNeedsLayout()
@@ -117,7 +122,7 @@ fileprivate final class RecentChatAvatarNode: ASDisplayNode {
     
     @objc private func tapGesture(_ recognizer: UITapGestureRecognizer) {
         if case .ended = recognizer.state {
-//            self.toggleSelection?(self.requiresPremiumForMessaging)
+            self.action(self.peer!.peer!)
         }
     }
     
@@ -172,7 +177,7 @@ public final class RecentChatItem: ListViewItem {
     
     public func nodeConfiguredForParams(async: @escaping (@escaping () -> Void) -> Void, params: ListViewItemLayoutParams, synchronousLoads: Bool, previousItem: ListViewItem?, nextItem: ListViewItem?, completion: @escaping (ListViewItemNode, @escaping () -> (Signal<Void, NoError>?, (ListViewItemApply) -> Void)) -> Void) {
         async {
-            let node = RecentChatItemNode()
+            let node = RecentChatItemNode(action: self.action)
             let (nodeLayout, apply) = node.asyncLayout()(self, params)
             node.insets = nodeLayout.insets
             node.contentSize = nodeLayout.contentSize
@@ -207,12 +212,24 @@ public final class RecentChatItem: ListViewItem {
 
 public final class RecentChatItemNode: ListViewItemNode {
     fileprivate var peerNode: RecentChatAvatarNode
+    let badgeBackBackgroundNode: ASImageNode
     let badgeBackgroundNode: ASImageNode
     let badgeTextNode: TextNode
+    
+    private let action: (EnginePeer) -> Void
+    
     public private(set) var item: RecentChatItem?
     
-    public init() {
-        self.peerNode = RecentChatAvatarNode()
+    public init(action: @escaping (EnginePeer) -> Void) {
+        self.action = action
+        
+        self.peerNode = RecentChatAvatarNode(action: action)
+        
+        self.badgeBackBackgroundNode = ASImageNode()
+        self.badgeBackBackgroundNode.isLayerBacked = true
+        self.badgeBackBackgroundNode.displaysAsynchronously = false
+        self.badgeBackBackgroundNode.displayWithoutProcessing = true
+        
         self.badgeBackgroundNode = ASImageNode()
         self.badgeBackgroundNode.isLayerBacked = true
         self.badgeBackgroundNode.displaysAsynchronously = false
@@ -225,13 +242,9 @@ public final class RecentChatItemNode: ListViewItemNode {
         super.init(layerBacked: false, dynamicBounce: false)
         
         self.addSubnode(self.peerNode)
+        self.addSubnode(self.badgeBackBackgroundNode)
         self.addSubnode(self.badgeBackgroundNode)
         self.addSubnode(self.badgeTextNode)
-//        self.peerNode.toggleSelection = { [weak self] _ in
-//            if let item = self?.item {
-//                item.action(item.peer)
-//            }
-//        }
     }
     
     deinit {
@@ -246,21 +259,34 @@ public final class RecentChatItemNode: ListViewItemNode {
     
     public func asyncLayout() -> (RecentChatItem, ListViewItemLayoutParams) -> (ListViewItemNodeLayout, (Bool, Bool) -> Void) {
         let badgeTextLayout = TextNode.asyncLayout(self.badgeTextNode)
+        
+        func generateBadgeBackgroud(diameter: CGFloat, color: UIColor) -> UIImage?{
+            return generateImage(CGSize(width: diameter, height: diameter), contextGenerator: { size, context in
+                context.clear(CGRect(origin: CGPoint(), size: size))
+                context.setFillColor(color.cgColor)
+                let rect = CGRect(origin: .zero, size: size)
+                let cornerRadius: CGFloat = diameter * 0.2
+                let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+                context.addPath(path.cgPath)
+                context.fillPath()
+            })?.stretchableImage(withLeftCapWidth: Int(diameter / 2.0), topCapHeight: Int(diameter / 2.0))
+        }
 
         return { [weak self] item, params in
             let itemLayout = ListViewItemNodeLayout(contentSize: CGSize(width: 56.0, height: 56.0), insets: UIEdgeInsets())
             
-           
+            let background = generateBadgeBackgroud(diameter: 18.0, color: item.theme.rootController.navigationBar.opaqueBackgroundColor.withAlphaComponent(1.0))
+            
             let currentBadgeBackgroundImage: UIImage?
             let badgeAttributedString: NSAttributedString
             if let unreadBadge = item.unreadBadge {
                 let badgeTextColor: UIColor
                 let (unreadCount, isMuted) = unreadBadge
                 if isMuted {
-                    currentBadgeBackgroundImage = PresentationResourcesChatList.badgeBackgroundInactive(item.theme, diameter: 20.0)
+                    currentBadgeBackgroundImage = PresentationResourcesChatList.badgeBackgroundInactive(item.theme, diameter: 18.0)
                     badgeTextColor = item.theme.chatList.unreadBadgeInactiveTextColor
                 } else {
-                    currentBadgeBackgroundImage = PresentationResourcesChatList.badgeBackgroundActive(item.theme, diameter: 20.0)
+                    currentBadgeBackgroundImage = PresentationResourcesChatList.badgeBackgroundActive(item.theme, diameter: 18.0)
                     badgeTextColor = item.theme.chatList.unreadBadgeActiveTextColor
                 }
                 badgeAttributedString = NSAttributedString(string: unreadCount > 0 ? "\(unreadCount)" : " ", font: badgeFont, textColor: badgeTextColor)
@@ -299,7 +325,9 @@ public final class RecentChatItemNode: ListViewItemNode {
                     let badgeBackgroundWidth: CGFloat
                     if let currentBadgeBackgroundImage = currentBadgeBackgroundImage {
                         strongSelf.badgeBackgroundNode.image = currentBadgeBackgroundImage
+                        strongSelf.badgeBackBackgroundNode.image = background
                         strongSelf.badgeBackgroundNode.isHidden = false
+                        strongSelf.badgeBackBackgroundNode.isHidden = false
                         
                         badgeBackgroundWidth = max(badgeLayout.size.width + 10.0, currentBadgeBackgroundImage.size.width)
                       
@@ -314,10 +342,12 @@ public final class RecentChatItemNode: ListViewItemNode {
                         
                         strongSelf.badgeTextNode.frame = badgeTextFrame
                         strongSelf.badgeBackgroundNode.frame = badgeBackgroundFrame
+                        strongSelf.badgeBackBackgroundNode.frame = badgeBackgroundFrame
                     } else {
                         badgeBackgroundWidth = 0.0
                         strongSelf.badgeBackgroundNode.image = nil
                         strongSelf.badgeBackgroundNode.isHidden = true
+                        strongSelf.badgeBackBackgroundNode.isHidden = true
                     }
                     
                     let _ = badgeApply()

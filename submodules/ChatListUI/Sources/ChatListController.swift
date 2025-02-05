@@ -179,6 +179,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     private(set) var allChatsHidden: Bool = false
     private(set) var infiniteScrolling: Bool = false
     private(set) var showRecentChats: Bool = false
+    private let showRecentChatsValue = ValuePromise<Bool>(false)
 
     private var didSetupTabs = false
     
@@ -263,7 +264,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.tabsNode.addSubnode(self.tabContainerNode)
         
         self.recentChatsNode = SparseNode()
-        self.recentChatsContainerNode = ChatListRecentChatsPaneNode(context: context, presentationData: presentationData)
+        self.recentChatsContainerNode = ChatListRecentChatsPaneNode(
+            context: context,
+            presentationData: presentationData
+        )
         self.recentChatsNode.addSubnode(self.recentChatsContainerNode)
                 
         super.init(context: context, navigationBarPresentationData: nil, mediaAccessoryPanelVisibility: .always, locationBroadcastPanelSource: .summary, groupCallPanelSource: groupCallPanelSource)
@@ -306,7 +310,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     return false
                 }
             },
-            storyPostingHidden: self.storyPostingHiddenValue.get()
+            storyPostingHidden: self.storyPostingHiddenValue.get(),
+            showRecentChats: self.showRecentChatsValue.get()
         )
         self.primaryContext = primaryContext
         self.primaryInfoReady.set(primaryContext.ready.get())
@@ -798,7 +803,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 let oldAllChatsHidden = self.allChatsHidden
                 self.allChatsHidden = dalSettings.hideAllChatsFolder
                 self.infiniteScrolling = dalSettings.infiniteScrolling
-                self.showRecentChats = dalSettings.showRecentChats
+                self.showRecentChats = dalSettings.showRecentChats ?? false
+                self.showRecentChatsValue.set(dalSettings.showRecentChats ?? false)
                 if oldAllChatsHidden != self.allChatsHidden {
                     self.initializedFilters = false
                     self.reloadFilters()
@@ -978,6 +984,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         
         if self.isNodeLoaded {
             self.chatListDisplayNode.updatePresentationData(self.presentationData)
+            self.recentChatsContainerNode.updatePresentationData(self.presentationData)
         }
         
         self.requestLayout(transition: .immediate)
@@ -2217,6 +2224,49 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                         self.hasPendingStoriesPromise.set(rawStoryArchiveSubscriptions.accountItem?.hasPending ?? false)
                     })
                 }
+            }
+        }
+        
+        self.recentChatsContainerNode.peerAction = { [weak self] peer in 
+            guard let self else { return }
+            let _ = (self.context.engine.data.get(
+                TelegramEngine.EngineData.Item.Peer.Peer(id: peer.id)
+            )
+            |> deliverOnMainQueue).startStandalone(next: { [weak self] peer in
+                guard let self, let peer else {
+                    return
+                }
+                guard let navigationController = self.navigationController as? NavigationController else {
+                    return
+                }
+                
+                self.context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: self.context, chatLocation: .peer(peer)))
+            })
+        }
+        
+        self.recentChatsContainerNode.peerContextAction = { [weak self] peer, node, gesture, point in
+            guard let strongSelf = self else {
+                gesture?.cancel()
+                return
+            }
+            
+            if case let .channel(channel) = peer, channel.flags.contains(.isForum) {
+                let chatListController = ChatListControllerImpl(context: strongSelf.context, location: .forum(peerId: channel.id), controlsHistoryPreload: false, hideNetworkActivityStatus: true, previewing: true, enableDebugActions: false)
+                chatListController.navigationPresentation = .master
+                let contextController = ContextController(presentationData: strongSelf.presentationData, source: .controller(ContextControllerContentSourceImpl(controller: chatListController, sourceNode: node, navigationController: strongSelf.navigationController as? NavigationController)), items: chatContextMenuItems(context: strongSelf.context, peerId: peer.id, promoInfo: nil, source: .recentChat, chatListController: strongSelf, joined: false) |> map { ContextController.Items(content: .list($0)) }, gesture: gesture)
+                strongSelf.presentInGlobalOverlay(contextController)
+            } else {
+                let contextContentSource: ContextContentSource
+                if peer.id.namespace == Namespaces.Peer.SecretChat, let node = node.subnodes?.first as? ContextExtractedContentContainingNode {
+                    contextContentSource = .extracted(ChatListHeaderBarContextExtractedContentSource(controller: strongSelf, sourceNode: node, keepInPlace: false))
+                } else {
+                    let chatController = strongSelf.context.sharedContext.makeChatController(context: strongSelf.context, chatLocation: .peer(id: peer.id), subject: nil, botStart: nil, mode: .standard(.previewing), params: nil)
+                    chatController.canReadHistory.set(false)
+                    contextContentSource = .controller(ContextControllerContentSourceImpl(controller: chatController, sourceNode: node, navigationController: strongSelf.navigationController as? NavigationController))
+                }
+                
+                let contextController = ContextController(context: strongSelf.context, presentationData: strongSelf.presentationData, source: contextContentSource, items: chatContextMenuItems(context: strongSelf.context, peerId: peer.id, promoInfo: nil, source: .recentChat, chatListController: strongSelf, joined: false) |> map { ContextController.Items(content: .list($0)) }, gesture: gesture)
+                strongSelf.presentInGlobalOverlay(contextController)
             }
         }
     }
@@ -3561,7 +3611,8 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 containerNode: inlineNode,
                 isReorderingTabs: .single(false),
                 storyPostingAvailable: .single(false),
-                storyPostingHidden: .single(false)
+                storyPostingHidden: .single(false),
+                showRecentChats: .single(false)
             )
             
             self.pendingSecondaryContext = pendingSecondaryContext
@@ -6330,7 +6381,8 @@ private final class ChatListLocationContext {
         containerNode: ChatListContainerNode,
         isReorderingTabs: Signal<Bool, NoError>,
         storyPostingAvailable: Signal<Bool, NoError>,
-        storyPostingHidden: Signal<Bool, NoError>
+        storyPostingHidden: Signal<Bool, NoError>,
+        showRecentChats: Signal<Bool, NoError>
     ) {
         self.context = context
         self.location = location
@@ -6424,8 +6476,9 @@ private final class ChatListLocationContext {
                     peerStatus,
                     parentController.updatedPresentationData.1,
                     storyPostingAvailable,
-                    storyPostingHidden
-                ).startStrict(next: { [weak self] networkState, proxy, passcode, stateAndFilterId, isReorderingTabs, peerStatus, presentationData, storyPostingAvailable, storyPostingHidden in
+                    storyPostingHidden,
+                    showRecentChats
+                ).startStrict(next: { [weak self] networkState, proxy, passcode, stateAndFilterId, isReorderingTabs, peerStatus, presentationData, storyPostingAvailable, storyPostingHidden, showRecentChats in
                     guard let self else {
                         return
                     }
@@ -6439,7 +6492,8 @@ private final class ChatListLocationContext {
                         peerStatus: peerStatus,
                         presentationData: presentationData,
                         storyPostingAvailable: storyPostingAvailable,
-                        storyPostingHidden: storyPostingHidden
+                        storyPostingHidden: storyPostingHidden,
+                        showRecentChats: showRecentChats
                     )
                 })
             } else {
@@ -6660,7 +6714,8 @@ private final class ChatListLocationContext {
         peerStatus: NetworkStatusTitle.Status?,
         presentationData: PresentationData,
         storyPostingAvailable: Bool,
-        storyPostingHidden: Bool
+        storyPostingHidden: Bool,
+        showRecentChats: Bool
     ) {
         let defaultTitle: String
         switch location {

@@ -62,8 +62,9 @@
 "DahlSettings.TabBarSettings.ActiveTabs.Footer" = "The tab bar of the application can be customized by removing and adding items from the list of available ones.";
 "DahlSettings.TabBarSettings.AvailableTabs.Header" = "More items";
 
-"DahlSettings.RecentChats" = "Recent chats";
+"DahlSettings.RecentChatsHeader" = "Recent chats";
 "DahlSettings.EnablePanel" = "Enable panel";
+"DahlSettings.DisablePanel" = "Disable panel";
 
 // Wallet
 "Wallet.TabTitle" = "Wallet";
@@ -81,3 +82,4 @@
 "Chat.ConfirmVideoCall" = "Are you sure you want to start a video call?";
 "Chat.ConfirmCall" = "Are you sure you want to start an audio call?";
 "Chat.EmptyRecent" = "Here will be recent chats";
+"Chat.ClearHistory" = "Clear History";

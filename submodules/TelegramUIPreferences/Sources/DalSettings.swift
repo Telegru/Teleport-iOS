@@ -36,7 +36,7 @@ public struct DalSettings: Codable, Equatable {
     public var infiniteScrolling: Bool
     
     //Недавние чаты
-    public var showRecentChats: Bool
+    public var showRecentChats: Bool?
 
     public static var defaultSettings: DalSettings {
         return DalSettings(
@@ -54,7 +54,7 @@ public struct DalSettings: Codable, Equatable {
             chatsFoldersAtBottom: true,
             hideAllChatsFolder: false,
             infiniteScrolling: false,
-            showRecentChats: false
+            showRecentChats: nil
         )
     }
     
@@ -73,7 +73,7 @@ public struct DalSettings: Codable, Equatable {
         chatsFoldersAtBottom: Bool,
         hideAllChatsFolder: Bool,
         infiniteScrolling: Bool,
-        showRecentChats: Bool
+        showRecentChats: Bool?
     ) {
         self.tabBarSettings = tabBarSettings
         self.menuItemsSettings = menuItemsSettings
@@ -115,7 +115,9 @@ public struct DalSettings: Codable, Equatable {
         self.chatsFoldersAtBottom = (try container.decodeIfPresent(Int32.self, forKey: "chatsFoldersAtBottom") ?? 1) != 0
         self.hideAllChatsFolder = (try container.decodeIfPresent(Int32.self, forKey: "hideAllChatsFolder") ?? 0) != 0
         self.infiniteScrolling = (try container.decodeIfPresent(Int32.self, forKey: "infiniteScrolling") ?? 0) != 0
-        self.showRecentChats = (try container.decodeIfPresent(Int32.self, forKey: "showRecentChats") ?? 0) != 0
+        if let showRecentChats = (try container.decodeIfPresent(Int32.self, forKey: "showRecentChats")) {
+            self.showRecentChats = showRecentChats != 0
+        }
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -136,7 +138,9 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.chatsFoldersAtBottom ? 1 : 0) as Int32, forKey: "chatsFoldersAtBottom")
         try container.encode((self.hideAllChatsFolder ? 1 : 0) as Int32, forKey: "hideAllChatsFolder")
         try container.encode((self.infiniteScrolling ? 1 : 0) as Int32, forKey: "infiniteScrolling")
-        try container.encode((self.showRecentChats ? 1 : 0) as Int32, forKey: "showRecentChats")
+        if let showRecentChats = self.showRecentChats {
+            try container.encode((showRecentChats ? 1 : 0) as Int32, forKey: "showRecentChats")
+        }
     }
 }
 

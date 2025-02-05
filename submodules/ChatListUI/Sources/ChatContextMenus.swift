@@ -16,6 +16,7 @@ import TelegramPresentationData
 import TelegramStringFormatting
 import ChatTimerScreen
 import NotificationPeerExceptionController
+import TPStrings
 
 func archiveContextMenuItems(context: AccountContext, groupId: PeerGroupId, chatListController: ChatListControllerImpl?) -> Signal<[ContextMenuItem], NoError> {
     let presentationData = context.sharedContext.currentPresentationData.with({ $0 })
@@ -52,6 +53,7 @@ func archiveContextMenuItems(context: AccountContext, groupId: PeerGroupId, chat
 enum ChatContextMenuSource {
     case chatList(filter: ChatListFilter?)
     case search(ChatListSearchContextActionSource)
+    case recentChat
 }
 
 func chatContextMenuItems(context: AccountContext, peerId: PeerId, promoInfo: ChatListNodeEntryPromoInfo?, source: ChatContextMenuSource, chatListController: ChatListControllerImpl?, joined: Bool) -> Signal<[ContextMenuItem], NoError> {
@@ -112,6 +114,33 @@ func chatContextMenuItems(context: AccountContext, peerId: PeerId, promoInfo: Ch
                     }
 
                     var items: [ContextMenuItem] = []
+                    
+                    if case .recentChat = source {
+                       
+                        items.append(.action(ContextMenuActionItem(text: strings.ChatList_Context_RemoveFromRecents, textColor: .destructive, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Clear"), color: theme.contextMenu.destructiveColor) }, action: { _, f in
+                            context.engine.peers.removeRecentChat(peerId: peerId)
+                            f(.default)
+                        })))
+                       
+                        items.append(.action(ContextMenuActionItem(text: "Chat.ClearHistory".tp_loc(lang: presentationData.strings.baseLanguageCode), textColor: .destructive, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Delete"), color: theme.contextMenu.destructiveColor) }, action: { _, f in
+                            context.engine.peers.clearRecentChats()
+                            f(.default)
+                        })))
+                       
+                        items.append(.action(ContextMenuActionItem(text: "DahlSettings.DisablePanel".tp_loc(lang: presentationData.strings.baseLanguageCode), textColor: .primary, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Eye"), color: theme.contextMenu.primaryColor) }, action: { _, f in
+                            let _ = updateDalSettingsInteractively(
+                                accountManager: context.sharedContext.accountManager,
+                                { settings in
+                                    var settings = settings
+                                    settings.showRecentChats = false
+                                    return settings
+                                }
+                            ).start()
+                            
+                            f(.default)
+                        })))
+                        return items
+                    }
 
                     if case let .search(search) = source {
                         switch search {

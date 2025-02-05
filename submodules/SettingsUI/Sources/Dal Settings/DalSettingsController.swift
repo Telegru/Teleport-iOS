@@ -953,7 +953,7 @@ public func dalsettingsController(
             chatsFoldersAtBottom: dalSettings.chatsFoldersAtBottom,
             hideAllChatsFolder: dalSettings.hideAllChatsFolder,
             infiniteScrolling: dalSettings.infiniteScrolling,
-            showRecentChats: dalSettings.showRecentChats,
+            showRecentChats: dalSettings.showRecentChats ?? false,
             presentationData: presentationData
         )
         

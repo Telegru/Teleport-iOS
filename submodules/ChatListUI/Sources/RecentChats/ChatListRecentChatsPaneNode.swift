@@ -41,68 +41,56 @@ final class ChatListRecentChatsPaneNode: ASDisplayNode {
     private let animationRenderer: MultiAnimationRenderer
     private var presentationData: PresentationData
     
-    private let emptyRecentTextNode: ImmediateTextNode
     private let separatorNode: ASDisplayNode
-    private let chatsNode: ChatListRecentChatsNode
-    
+    private var chatsNode: ChatListRecentChatsNode?
    
-//    let peerSelected: (EnginePeer) -> Void
-//    let peerContextAction: (EnginePeer, ASDisplayNode, ContextGesture?, CGPoint?) -> Void
-// 
+    var peerAction: ((EnginePeer) -> Void)?
+    var peerContextAction: ((EnginePeer, ASDisplayNode, ContextGesture?, CGPoint?) -> Void)?
+
     init(context: AccountContext, presentationData: PresentationData) {
         self.context = context
         self.animationCache = context.animationCache
         self.animationRenderer = context.animationRenderer
         self.presentationData = presentationData
-        
-        let emptyRecentTextNode = ImmediateTextNode()
-        emptyRecentTextNode.displaysAsynchronously = false
-        emptyRecentTextNode.maximumNumberOfLines = 0
-        emptyRecentTextNode.textAlignment = .center
-        emptyRecentTextNode.verticalAlignment = .middle
-        emptyRecentTextNode.isHidden = false
-        emptyRecentTextNode.attributedText = NSAttributedString(string: "Chat.EmptyRecent".tp_loc(lang: presentationData.strings.baseLanguageCode), font: Font.semibold(13.0), textColor: presentationData.theme.list.itemSecondaryTextColor)
-        
-        self.emptyRecentTextNode = emptyRecentTextNode
 
         self.separatorNode = ASDisplayNode()
         self.separatorNode.isLayerBacked = true
         self.separatorNode.displaysAsynchronously = false
         self.separatorNode.backgroundColor = presentationData.theme.list.itemPlainSeparatorColor
         
-        self.chatsNode = ChatListRecentChatsNode(
-            context: context,
-            theme: presentationData.theme,
-            strings: presentationData.strings,
-            peerSelected: { peer in
-                
-            },
-            peerContextAction: { peer, node, gesture, location in
-                
-            })
-        
         super.init()
         
-        self.addSubnode(emptyRecentTextNode)
-        self.addSubnode(self.chatsNode)
-        self.addSubnode(separatorNode)
-       
+        self.addSubnode(self.separatorNode)
     }
     
     func updatePresentationData(_ data: PresentationData){
         self.presentationData = data
-        self.emptyRecentTextNode.attributedText = NSAttributedString(string: "Chat.EmptyRecent".tp_loc(lang: data.strings.baseLanguageCode), font: Font.regular(15.0), textColor: data.theme.list.itemSecondaryTextColor)
-        
         self.separatorNode.backgroundColor = data.theme.list.itemPlainSeparatorColor
-        self.chatsNode.updateThemeAndStrings(theme: data.theme, strings: data.strings)
+        self.chatsNode?.updateThemeAndStrings(theme: data.theme, strings: data.strings)
     }
     
     func updtateLayout(size: CGSize, transition: ContainedViewLayoutTransition){
-        _ = emptyRecentTextNode.updateLayout(CGSize(width: size.width, height: 56.0))
-        transition.updateFrame(node: self.emptyRecentTextNode, frame: CGRect(origin: .zero, size: CGSize(width: size.width, height: 56.0)))
         transition.updateFrame(node: self.separatorNode, frame: CGRect(origin: .zero, size: CGSize(width: size.width, height: UIScreenPixel)))
-        transition.updateFrame(node: self.chatsNode, frame: CGRect(origin: .zero, size: CGSize(width: size.width, height: 56.0)))
-        self.chatsNode.updateLayout(size: size, leftInset: .zero, rightInset: .zero)
+        
+        let chatsNode: ChatListRecentChatsNode
+        if let node = self.chatsNode{
+            chatsNode = node
+        }else{
+            chatsNode = ChatListRecentChatsNode(
+                context: self.context,
+                presentationData: self.presentationData,
+                strings: self.presentationData.strings,
+                action: {[weak self] peer in
+                    self?.peerAction?(peer)
+                },
+                peerContextAction: {[weak self] peer, node, gesture, location in
+                    self?.peerContextAction?(peer, node, gesture, location)
+                })
+            self.chatsNode = chatsNode
+            self.addSubnode(chatsNode)
+        }
+        transition.updateFrame(node: chatsNode, frame: CGRect(origin: .zero, size: CGSize(width: size.width, height: 56.0 - UIScreenPixel)))
+        chatsNode.updateLayout(size: size, transition: transition)
     }
 }
 
