@@ -94,6 +94,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     private var dahlSettingsController: ViewController?
 //    private var walletController: ViewController?
     private var channelsController: ViewController?
+    private var wallController: DWallController?
     
     private var permissionsDisposable: Disposable?
     private var presentationDataDisposable: Disposable?
@@ -345,6 +346,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         
 //        let appsController = appsControllerIfPossible()
         
+        let wallController = DWallController(context: context)
+        
         tabs.forEach {
             switch $0 {
             case .calls:
@@ -365,6 +368,11 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                if let appsController {
 //                    controllers.append(appsController)
 //                }
+            #if DEBUG
+            case .wall:
+                controllers.append(wallController)
+            #endif
+                
             }
         }
                 
@@ -379,6 +387,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.dahlSettingsController = dahlSettingsController
 //        self.walletController = walletController
 //        self.appsController = appsController
+        self.wallController = wallController
         self.rootTabController = tabBarController
         self.pushViewController(tabBarController, animated: false)
     }
@@ -410,6 +419,10 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                if let appsController {
 //                    controllers.append(appsController)
 //                }
+            #if DEBUG
+            case .wall:
+                controllers.append(wallController!)
+            #endif
             }
         }
         

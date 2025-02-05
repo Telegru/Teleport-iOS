@@ -1,0 +1,95 @@
+import Foundation
+import UIKit
+import Display
+import TelegramCore
+import SwiftSignalKit
+import TelegramPresentationData
+import TelegramBaseController
+import AccountContext
+import ChatListUI
+import ListMessageItem
+import AnimationCache
+import MultiAnimationRenderer
+
+public final class DWallController: TelegramBaseController {
+    
+    private let queue = Queue()
+    
+    private let context: AccountContext
+    
+    private var transitionDisposable: Disposable?
+    
+    private(set) var presentationData: PresentationData
+    private var presentationDataDisposable: Disposable?
+    
+    private let animationCache: AnimationCache
+    private let animationRenderer: MultiAnimationRenderer
+    
+    private var controllerNode: DWallControllerNode {
+        return self.displayNode as! DWallControllerNode
+    }
+    
+    public init(context: AccountContext) {
+        self.context = context
+        
+        self.animationCache = context.animationCache
+        self.animationRenderer = context.animationRenderer
+        
+        self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
+        
+        super.init(context: context, navigationBarPresentationData: NavigationBarPresentationData(presentationData: self.presentationData), mediaAccessoryPanelVisibility: .specific(size: .compact), locationBroadcastPanelSource: .none, groupCallPanelSource: .none)
+        
+        self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
+        
+        navigationItem.title = "Wall"
+        tabBarItem.title = "Wall"
+        let icon = UIImage(bundleImageName: "Chat List/Tabs/IconWall")
+        tabBarItem.image = icon
+        tabBarItem.selectedImage = icon
+        
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
+        
+        self.presentationDataDisposable = (self.context.sharedContext.presentationData
+                                           |> deliverOnMainQueue).start(next: { [weak self] presentationData in
+            guard let self else { return }
+            
+            let previousTheme = self.presentationData.theme
+            let previousStrings = self.presentationData.strings
+            
+            self.presentationData = presentationData
+            
+            if previousTheme !== presentationData.theme || previousStrings !== presentationData.strings {
+                self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
+                
+                self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))
+                self.controllerNode.updatePresentationData(self.presentationData)
+            }
+        })
+        
+        self.scrollToTop = { [weak self] in
+            self?.controllerNode.scrollToTop()
+        }
+    }
+    
+    public required init(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        self.presentationDataDisposable?.dispose()
+    }
+    
+    public override func loadDisplayNode() {
+        self.displayNode = DWallControllerNode(context: self.context, controller: self, navigationBar: self.navigationBar, navigationController: self.navigationController as? NavigationController)
+        
+        controllerNode.chatController.parentController = self
+        self.displayNodeDidLoad()
+    }
+    
+    public override func containerLayoutUpdated(_ layout: ContainerViewLayout, transition: ContainedViewLayoutTransition) {
+        super.containerLayoutUpdated(layout, transition: transition)
+        
+        let _ = self.controllerNode.containerLayoutUpdated(layout, navigationBarHeight: self.cleanNavigationHeight, transition: transition)
+    }
+    
+}
