@@ -780,6 +780,8 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                 }
             case .hashTagSearch:
                 break
+            case .wall:
+                break
             }
         }
         
@@ -841,6 +843,8 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         
             if case let .customChatContents(customChatContents) = strongSelf.presentationInterfaceState.subject {
                 switch customChatContents.kind {
+                case .wall:
+                    return true
                 case .hashTagSearch:
                     return true
                 case let .quickReplyMessageInput(_, shortcutType):
@@ -6795,6 +6799,8 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                 
                 if case let .customChatContents(customChatContents) = self.subject {
                     switch customChatContents.kind {
+                    case .wall:
+                        break
                     case .hashTagSearch:
                         break
                     case let .quickReplyMessageInput(shortcut, shortcutType):

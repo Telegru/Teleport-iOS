@@ -1609,6 +1609,8 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
         var displayMediaButton = true
         if case let .customChatContents(customChatContents) = interfaceState.subject {
             switch customChatContents.kind {
+            case .wall:
+                break
             case .hashTagSearch:
                 break
             case .quickReplyMessageInput:
@@ -1994,6 +1996,8 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
                     switch customChatContents.kind {
                     case .hashTagSearch:
                         placeholder = ""
+                    case .wall:
+                        placeholder = ""
                     case let .quickReplyMessageInput(_, shortcutType):
                         switch shortcutType {
                         case .generic:
@@ -2026,6 +2030,8 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
             if let interfaceState = self.presentationInterfaceState {
                 if case let .customChatContents(customChatContents) = interfaceState.subject {
                     switch customChatContents.kind {
+                    case .wall:
+                        break
                     case .hashTagSearch:
                         break
                     case .quickReplyMessageInput:
@@ -3823,6 +3829,8 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
             
             if case let .customChatContents(customChatContents) = presentationInterfaceState.subject {
                 switch customChatContents.kind {
+                case .wall:
+                    break
                 case .hashTagSearch:
                     break
                 case .quickReplyMessageInput:
@@ -3943,6 +3951,8 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
         if let interfaceState = self.presentationInterfaceState {
             if case let .customChatContents(customChatContents) = interfaceState.subject {
                 switch customChatContents.kind {
+                case .wall:
+                    break
                 case .hashTagSearch:
                     break
                 case .quickReplyMessageInput:
@@ -4048,6 +4058,8 @@ class ChatTextInputPanelNode: ChatInputPanelNode, ASEditableTextNodeDelegate, Ch
             var sendButtonHasApplyIcon = interfaceState.interfaceState.editMessage != nil
             if case let .customChatContents(customChatContents) = interfaceState.subject {
                 switch customChatContents.kind {
+                case .wall:
+                    break
                 case .hashTagSearch:
                     break
                 case .quickReplyMessageInput:
