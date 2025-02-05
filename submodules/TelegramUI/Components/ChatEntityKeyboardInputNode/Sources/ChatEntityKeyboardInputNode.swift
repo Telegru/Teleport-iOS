@@ -1813,6 +1813,8 @@ public final class ChatEntityKeyboardInputNode: ChatInputNode {
                 break
             case .hashTagSearch:
                 break
+            case .wall:
+                break
             case .businessLinkSetup:
                 stickerContent = nil
                 gifContent = nil

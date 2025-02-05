@@ -165,6 +165,9 @@
 // Apps
 "Apps.TabTitle" = "Apps";
 
+// Wall
+"Wall.TabTitle" = "Wall";
+
 // Chat
 "Chat.FrontCamera" = "Front camera";
 "Chat.BackCamera" = "Back camera";

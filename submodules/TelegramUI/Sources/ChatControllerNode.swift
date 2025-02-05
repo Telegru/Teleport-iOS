@@ -4289,6 +4289,8 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
                 var postEmptyMessages = false
                 if case let .customChatContents(customChatContents) = self.chatPresentationInterfaceState.subject {
                     switch customChatContents.kind {
+                    case .wall:
+                        break
                     case .hashTagSearch:
                         break
                     case .quickReplyMessageInput:
