@@ -10,6 +10,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     
     let kind: ChatCustomContentsKind = .wall
     
+    var isLoadingSignal: Signal<Bool, NoError> {
+        impl.syncWith { impl in
+            impl.isLoadingPromise.get()
+        }
+    }
+    
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> {
         return self.impl.signalWith({ impl, subscriber in
             if let mergedHistoryView = impl.mergedHistoryView {
