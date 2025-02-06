@@ -1608,6 +1608,8 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
                     
                     if !isBroadcastChannel {
                         hasAvatar = incoming
+                    } else if case let .customChatContents(contents) = item.associatedData.subject, case .wall = contents.kind {
+                        hasAvatar = true
                     } else if case .customChatContents = item.chatLocation {
                         hasAvatar = false
                     } else if overrideEffectiveAuthor {
