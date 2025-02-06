@@ -91,5 +91,4 @@ public final class DWallController: TelegramBaseController {
         
         let _ = self.controllerNode.containerLayoutUpdated(layout, navigationBarHeight: self.cleanNavigationHeight, transition: transition)
     }
-    
 }
