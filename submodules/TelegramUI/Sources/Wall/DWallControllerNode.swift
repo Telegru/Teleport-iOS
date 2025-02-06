@@ -47,7 +47,7 @@ final class DWallControllerNode: ASDisplayNode {
         
         let navigationController = controller.navigationController as? NavigationController
         wallContent = DWallChatContent(context: context)
-        chatController = context.sharedContext.makeChatController(context: context, chatLocation: .customChatContents, subject: .customChatContents(contents: wallContent), botStart: nil, mode: .standard(.default), params: nil)
+        chatController = context.sharedContext.makeChatController(context: context, chatLocation: .customChatContents, subject: .customChatContents(contents: wallContent), botStart: nil, mode: .standard(.embedded(invertDirection: true)), params: nil)
         
         chatController.alwaysShowSearchResultsAsList = false
         chatController.showListEmptyResults = true
