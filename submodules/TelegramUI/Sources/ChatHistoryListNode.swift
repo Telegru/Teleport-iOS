@@ -2182,6 +2182,10 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         strongSelf.context.applyMaxReadIndex(for: strongSelf.chatLocation, contextHolder: strongSelf.chatLocationContextHolder, messageIndex: messageIndex)
                     }
                 case .customChatContents:
+                    if case let .customChatContents(customChatContents) = strongSelf.subject, case .wall = customChatContents.kind, !strongSelf.context.sharedContext.immediateExperimentalUISettings.skipReadHistory && !strongSelf.context.account.isSupportUser  {
+//                        strongSelf.context.applyMaxReadIndex(for: .peer(id: messageIndex.id.peerId), contextHolder: strongSelf.chatLocationContextHolder, messageIndex: messageIndex)
+
+                    }
                     break
                 }
             }

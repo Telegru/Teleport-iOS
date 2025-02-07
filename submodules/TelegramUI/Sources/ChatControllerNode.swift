@@ -687,7 +687,13 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
         self.inputPanelBottomBackgroundSeparatorNode.backgroundColor = self.chatPresentationInterfaceState.theme.chat.inputMediaPanel.panelSeparatorColor
         self.inputPanelBottomBackgroundSeparatorNode.isLayerBacked = true
         
-        self.navigateButtons = ChatHistoryNavigationButtons(theme: self.chatPresentationInterfaceState.theme, dateTimeFormat: self.chatPresentationInterfaceState.dateTimeFormat, backgroundNode: self.backgroundNode, isChatRotated: historyNodeRotated)
+        var isWall = false
+            
+        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject, case .wall = contents.kind {
+            isWall = true
+        }
+        
+        self.navigateButtons = ChatHistoryNavigationButtons(theme: self.chatPresentationInterfaceState.theme, dateTimeFormat: self.chatPresentationInterfaceState.dateTimeFormat, backgroundNode: self.backgroundNode, isChatRotated: historyNodeRotated || isWall)
         self.navigateButtons.accessibilityElementsHidden = true
         
         super.init()
@@ -2156,7 +2162,13 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
             apparentNavigateButtonsFrame.origin.y -= 16.0
         }
         
-        if !self.historyNode.rotated {
+        var isWall = false
+    
+        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject, case .wall = contents.kind {
+            isWall = true
+        }
+                            
+        if !self.historyNode.rotated && !isWall {
             apparentNavigateButtonsFrame = CGRect(origin: CGPoint(x: layout.size.width - layout.safeInsets.right - navigateButtonsSize.width - 6.0, y: insets.top + 6.0), size: navigateButtonsSize)
         }
         

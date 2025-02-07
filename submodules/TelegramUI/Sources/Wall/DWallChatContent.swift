@@ -8,7 +8,7 @@ import ChatListUI
 
 final class DWallChatContent: ChatCustomContentsProtocol {
     
-    let kind: ChatCustomContentsKind = .wall
+    let kind: ChatCustomContentsKind
     
     var isLoadingSignal: Signal<Bool, NoError> {
         impl.syncWith { impl in
@@ -37,8 +37,26 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     init(context: AccountContext) {
         let queue = Queue()
         self.queue = queue
+        
+        let filterData = ChatListFilterData(
+            isShared: false,
+            hasSharedLinks: false,
+            categories: .channels,
+            excludeMuted: false,
+            excludeRead: true,
+            excludeArchived: false,
+            includePeers: ChatListFilterIncludePeers(),
+            excludePeers: [],
+            color: nil
+        )
+        
+        let tailChatsCount = 100
+        let filterPredicate = chatListFilterPredicate(filter: filterData, accountPeerId: context.account.peerId)
+
+        kind = .wall(tailChatsCount: tailChatsCount, filter: filterPredicate)
+        
         self.impl = QueueLocalObject(queue: queue, generate: {
-            return Impl(queue: queue, context: context)
+            return Impl(queue: queue, context: context, filterPredicate: filterPredicate, tailChatsCount: tailChatsCount)
         })
     }
     
@@ -88,6 +106,8 @@ extension DWallChatContent {
         let context: AccountContext
         let historyViewStream = ValuePipe<(MessageHistoryView, ViewUpdateType)>()
         let isLoadingPromise = ValuePromise<Bool>(true)
+        let filterPredicate: ChatListFilterPredicate
+        let tailChatsCount: Int
         
         private(set) var mergedHistoryView: MessageHistoryView?
         private var historyViewDisposable: Disposable?
@@ -105,11 +125,14 @@ extension DWallChatContent {
         
         init(
             queue: Queue,
-            context: AccountContext
+            context: AccountContext,
+            filterPredicate: ChatListFilterPredicate,
+            tailChatsCount: Int
         ) {
             self.queue = queue
             self.context = context
-            
+            self.tailChatsCount = tailChatsCount
+            self.filterPredicate = filterPredicate
             self.updateHistoryViewRequest(reload: false)
             
             loadingDisposable = (isLoadingPromise.get()
@@ -154,26 +177,12 @@ extension DWallChatContent {
             self.isLoadingPromise.set(true)
             
             let context = self.context
-            let accountPeerId = context.account.peerId
-            
-            let filterData = ChatListFilterData(
-                isShared: false,
-                hasSharedLinks: false,
-                categories: .channels,
-                excludeMuted: false,
-                excludeRead: true,
-                excludeArchived: false,
-                includePeers: ChatListFilterIncludePeers(),
-                excludePeers: [],
-                color: nil
-            )
-            let filterPredicate = chatListFilterPredicate(filter: filterData, accountPeerId: accountPeerId)
             
             self.historyViewDisposable = (
                 context.account.viewTracker.tailChatListView(
                     groupId: .root,
                     filterPredicate: filterPredicate,
-                    count: 100
+                    count: tailChatsCount
                 )
                 |> take(1)
                 |> mapToSignal { view, _ -> Signal<[PeerId], NoError> in
