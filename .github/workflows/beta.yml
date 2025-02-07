@@ -1,0 +1,54 @@
+name: Beta Deploy (TestFlight)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: macos-15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
+          fetch-depth: "0"
+
+      - name: Set active Xcode path
+        run: |
+          XCODE_VERSION=$(cat versions.json | python3 -c 'import json,sys;obj=json.load(sys.stdin);print(obj["xcode"]);')
+          sudo xcode-select -s /Applications/Xcode_$XCODE_VERSION.app/Contents/Developer
+
+      - name: Create canonical source directory
+        run: |
+          set -x
+          sudo mkdir -p /Users/Shared
+          cp -R $GITHUB_WORKSPACE /Users/Shared/
+          mv /Users/Shared/$(basename $GITHUB_WORKSPACE) /Users/Shared/telegram-ios
+
+      - name: New testflight build
+        run: |
+          set -x
+
+          mkdir -p $BUILD_WORKING_DIR
+          cd $SOURCE_PATH/ci
+          fastlane deploy_tf
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Artifacts
+          path: ./$BUILD_WORKING_DIR/artifacts
+
+    env:
+      CI: 1
+      APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+      APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+      APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT }}
+      BAZEL_USER_ROOT: /private/var/tmp/_bazel_telegram
+      BUILD_WORKING_DIR: /Users/Shared/build-working-dir
+      KEYCHAIN_NAME: ${{ secrets.KEYCHAIN_NAME }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      MATCH_PASSWORD: ${{ secrets.SIGN_REPO_DECRYPT_PASSWORD }}
+      SIGN_URL: ${{ secrets.SIGN_REPO_URL }}
+      SOURCE_PATH: /Users/Shared/telegram-ios
+      TELEGRAM_CODESIGNING_PRIVATE_KEY: ${{ secrets.SSH_KEY }}

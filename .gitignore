@@ -70,3 +70,6 @@ submodules/OpusBinding/SharedHeaders/*
 submodules/FFMpegBinding/SharedHeaders/*
 submodules/OpenSSLEncryptionProvider/SharedHeaders/*
 
+ci/Gemfile.lock
+ci/.env.default
+ci/fastlane/report.xml

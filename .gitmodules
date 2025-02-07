@@ -39,3 +39,6 @@ url=https://github.com/TelegramMessenger/tgcalls.git
 [submodule "third-party/dav1d/dav1d"]
 	path = third-party/dav1d/dav1d
 	url = https://github.com/ali-fareed/dav1d.git
+[submodule "build-system/build-configs"]
+	path = build-system/build-configs
+	url = git@github.com:Telegru/teleport-ios-configs.git
