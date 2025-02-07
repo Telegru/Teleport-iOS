@@ -1,18 +1,12 @@
 default_platform(:ios)
 
-BAZEL_LOCAL_CACHE = ENV["BAZEL_LOCAL_CACHE"]
-BAZEL_PATH = ENV["BAZEL_PATH"]
-BAZEL_REMOTE_CACHE = ENV["BAZEL_REMOTE_CACHE"]
-BAZEL_USER_ROOT = ENV["BAZEL_USER_ROOT"]
-BUILD_WORKING_DIR = ENV["BUILD_WORKING_DIR"]
-
 lane :deploy_tf do
   setup_ci if ENV['CI']
 
   ipa_path = archive(
     build_number: latest_testflight_build_number(
       api_key: generate_app_store_connect_api_key(),
-      app_identifier: app_bundle_id()
+      app_identifier: app_bundle_id(build_type: 'appstore')
     ) + 1,
     build_type: 'appstore'
   )
@@ -26,14 +20,34 @@ end
 lane :deploy_ad do
   setup_ci if ENV['CI']
 
+  ensure_env_vars(
+    env_vars: ['FIREBASE_APP_ID']
+  )
+
+  latest_release = firebase_app_distribution_get_latest_release(
+    app: ENV['FIREBASE_APP_ID'],
+    firebase_cli_token: ENV['FIREBASE_TOKEN']
+  )
+
+  build_number = if latest_release.nil?
+    1
+  else
+    latest_release[:buildVersion].to_i + 1
+  end
+
   ipa_path = archive(
-    build_number: latest_testflight_build_number(
-      api_key: generate_app_store_connect_api_key(),
-      app_identifier: app_bundle_id()
-    ) + 1,
+    build_number: build_number,
     build_type: 'adhoc'
   )
-  # TODO: Upload app distribution
+
+  release_notes = git_branch
+
+  firebase_app_distribution(
+    app: ENV['FIREBASE_APP_ID'],
+    firebase_cli_token: ENV['FIREBASE_TOKEN'],
+    ipa_path: ipa_path,
+    release_notes: release_notes
+  )
 end
 
 lane :generate_proj do |options|
@@ -46,7 +60,7 @@ lane :generate_proj do |options|
   team_id = team_id()
   match(
     type: build_type,
-    app_identifier: app_bundle_ids(),
+    app_identifier: app_bundle_ids(build_type: build_type),
     team_id: team_id,
     git_url: ENV['CERTS_GIT_URL'],
     git_branch: team_id,
@@ -61,13 +75,13 @@ lane :generate_proj do |options|
   --cacheDir=#{cache_dir} \
   generateProject \
   --configurationPath=#{configuration_path} \
-  --buildNumber=1 \
+  --buildNumber=10000 \
   --gitCodesigningRepository=#{ENV['CERTS_GIT_URL']} \
   --gitCodesigningType=#{build_type}"
 end
 
 lane :build do |options|
-  archive(build_number:0, build_type:"appstore")
+  archive(build_number:10000, build_type:"appstore")
 end
 
 lane :archive do |options|
@@ -76,10 +90,8 @@ lane :archive do |options|
 
   configuration_path = get_telegram_config_path()
   source_path = ENV['SOURCE_PATH'] || File.expand_path('../../.')
-  cache_dir = ENV['BAZEL_LOCAL_CACHE'] || '$HOME/telegram-bazel-cache'
 
   match_certs(type: build_type)
-
   artifacts_path = "#{ENV['BUILD_WORKING_DIR']}/artifacts"
   FileUtils.rm_rf(artifacts_path)
   FileUtils.mkdir(artifacts_path)
@@ -108,7 +120,7 @@ lane :archive do |options|
   --gitCodesigningType=#{build_type} \
   --buildNumber=#{build_number} \
   --configuration=release_arm64 \
-  --outputBuildArtifactsPath=#{artifacts_path} "
+  --outputBuildArtifactsPath=#{artifacts_path}"
 
   error_callback = lambda do |result|
     raise "❌ Build script error\n#{result}"
@@ -117,7 +129,8 @@ lane :archive do |options|
   sh shell_command, error_callback: error_callback
 
   ipa_path = "#{artifacts_path}/Telegram.ipa"
-  puts("IPA saved at path: #{ipa_path}")
+  UI.success "IPA saved at path: #{ipa_path}"
+  ipa_path
 end
 
 lane :match_certs do |options|
@@ -147,7 +160,7 @@ lane :generate_new_certificates do |options|
   types.each do |type|
     match(
       type: type,
-      app_identifier: app_bundle_ids(),
+      app_identifier: app_bundle_ids(build_type: type),
       team_id: team_id,
       git_url: ENV['CERTS_GIT_URL'],
       git_branch: team_id,
@@ -177,13 +190,13 @@ end
 private_lane :get_telegram_config_path do |options|
   if ENV['TG_CUSTOM_CONFIG_PATH'].nil?
     build_type = options[:build_type]
-    build_dir = ENV['BUILD_WORKING_DIR']
+    build_dir = ENV['SOURCE_PATH']
     if build_type == 'appstore'
-      "#{build_dir}/build-system/teleport-ios-configs/appstore-configuration.json"
+      "#{build_dir}/build-system/build-configs/appstore-configuration.json"
     elsif build_type == 'adhoc'
-      "#{build_dir}/build-system/teleport-ios-configs/adhoc-configuration.json"
+      "#{build_dir}/build-system/build-configs/adhoc-configuration.json"
     else
-      "#{build_dir}/build-system/teleport-ios-configs/dev-configuration.json"
+      "#{build_dir}/build-system/build-configs/dev-configuration.json"
     end
   else
     ensure_env_vars(
