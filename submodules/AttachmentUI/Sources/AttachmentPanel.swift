@@ -23,6 +23,7 @@ import LegacyMessageInputPanel
 import LegacyMessageInputPanelInputView
 import ReactionSelectionNode
 import TopMessageReactions
+import TPUI
 
 private let buttonSize = CGSize(width: 88.0, height: 49.0)
 private let smallButtonWidth: CGFloat = 69.0
@@ -31,14 +32,14 @@ private let sideInset: CGFloat = 3.0
 
 private final class IconComponent: Component {
     public let account: Account
-    public let name: String
+    public let ref: IconRef
     public let fileReference: FileMediaReference?
     public let animationName: String?
     public let tintColor: UIColor?
     
-    public init(account: Account, name: String, fileReference: FileMediaReference?, animationName: String?, tintColor: UIColor?) {
+    public init(account: Account, ref: IconRef, fileReference: FileMediaReference?, animationName: String?, tintColor: UIColor?) {
         self.account = account
-        self.name = name
+        self.ref = ref
         self.fileReference = fileReference
         self.animationName = animationName
         self.tintColor = tintColor
@@ -48,7 +49,7 @@ private final class IconComponent: Component {
         if lhs.account !== rhs.account {
             return false
         }
-        if lhs.name != rhs.name {
+        if lhs.ref != rhs.ref {
             return false
         }
         if lhs.fileReference?.media != rhs.fileReference?.media {
@@ -80,10 +81,10 @@ private final class IconComponent: Component {
         }
         
         func update(component: IconComponent, availableSize: CGSize, transition: ComponentTransition) -> CGSize {
-            if self.component?.name != component.name || self.component?.fileReference?.media.fileId != component.fileReference?.media.fileId || self.component?.tintColor != component.tintColor {
+            if self.component?.ref != component.ref || self.component?.fileReference?.media.fileId != component.fileReference?.media.fileId || self.component?.tintColor != component.tintColor {
                 if let fileReference = component.fileReference {
-                    let previousName = self.component?.name ?? ""
-                    if !previousName.isEmpty {
+                    let previousName = self.component?.ref ?? .name(name: "")
+                    if previousName != .name(name: "") {
                         self.image = nil
                     }
                     
@@ -100,10 +101,19 @@ private final class IconComponent: Component {
                         }
                     }).strict()
                 } else {
+                    let img: UIImage?
+                    
+                    switch component.ref {
+                    case .iconType(let iconType):
+                        img = TPIconManager.shared.icon(iconType)
+                    case .name(let name):
+                        img = UIImage(bundleImageName: name)
+                    }
+                    
                     if let tintColor = component.tintColor {
-                        self.image = generateTintedImage(image: UIImage(bundleImageName: component.name), color: tintColor, backgroundColor: nil)
+                        self.image = generateTintedImage(image: img, color: tintColor, backgroundColor: nil)
                     } else {
-                        self.image = UIImage(bundleImageName: component.name)
+                        self.image = img
                     }
                 }
             }
@@ -177,7 +187,7 @@ private final class AttachButtonComponent: CombinedComponent {
 
         return { context in
             let name: String
-            let imageName: String
+            let iconRef: IconRef
             var imageFile: TelegramMediaFile?
             var animationFile: TelegramMediaFile?
             var botPeer: EnginePeer?
@@ -188,26 +198,26 @@ private final class AttachButtonComponent: CombinedComponent {
             switch component.type {
             case .gallery:
                 name = strings.Attachment_Gallery
-                imageName = "Chat/Attach Menu/Gallery"
+                iconRef = .iconType(iconType: .attachMenuGallery)
             case .file:
                 name = strings.Attachment_File
-                imageName = "Chat/Attach Menu/File"
+                iconRef = .iconType(iconType: .attachMenuFile)
             case .location:
                 name = strings.Attachment_Location
-                imageName = "Chat/Attach Menu/Location"
+                iconRef = .iconType(iconType: .attachMenuLocation)
             case .contact:
                 name = strings.Attachment_Contact
-                imageName = "Chat/Attach Menu/Contact"
+                iconRef = .iconType(iconType: .attachMenuContacts)
             case .poll:
                 name = strings.Attachment_Poll
-                imageName = "Chat/Attach Menu/Poll"
+                iconRef = .name(name: "Chat/Attach Menu/Poll")
             case .gift:
                 name = strings.Attachment_Gift
-                imageName = "Chat/Attach Menu/Gift"
+                iconRef = .iconType(iconType: .attachMenuGift)
             case let .app(bot):
                 botPeer = bot.peer
                 name = bot.shortName
-                imageName = ""
+                iconRef = .name(name: "")
                 if let file = bot.icons[.iOSAnimated] {
                     animationFile = file
                 } else if let file = bot.icons[.iOSStatic] {
@@ -217,11 +227,11 @@ private final class AttachButtonComponent: CombinedComponent {
                 }
             case .standalone:
                 name = ""
-                imageName = ""
+                iconRef = .name(name: "")
                 imageFile = nil
             case .quickReply:
                 name = strings.Attachment_Reply
-                imageName = "Chat/Attach Menu/Reply"
+                iconRef = .iconType(iconType: .attachMenuReply)
             }
 
             let tintColor = component.isSelected ? component.theme.rootController.tabBar.selectedIconColor : component.theme.rootController.tabBar.iconColor
@@ -259,7 +269,7 @@ private final class AttachButtonComponent: CombinedComponent {
                 let icon = icon.update(
                     component: IconComponent(
                         account: component.context.account,
-                        name: imageName,
+                        ref: iconRef,
                         fileReference: fileReference,
                         animationName: nil,
                         tintColor: tintColor

@@ -9,6 +9,7 @@ import TelegramPresentationData
 import LegacyComponents
 import SolidRoundedButtonNode
 import RMIntro
+import DAuth
 
 public final class AuthorizationSequenceSplashController: ViewController {
     private var controllerNode: AuthorizationSequenceSplashControllerNode {
@@ -57,7 +58,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
                     }
                 }
                 
-                if let available = localization.availableLocalizations.first, available.languageCode != "en" {
+                if let available = localization.availableLocalizations.first, available.languageCode != "ru" {
                     let value = TGSuggestedLocalization(info: TGAvailableLocalization(title: available.title, localizedTitle: available.localizedTitle, code: available.languageCode), continueWithLanguageString: continueWithLanguageString, chooseLanguageString: "Choose Language", chooseLanguageOtherString: "Choose Language", englishLanguageNameString: "English")
                     subscriber.putNext(value)
                 }
@@ -81,7 +82,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
         self.statusBar.statusBarStyle = theme.intro.statusBarStyle.style
         
         self.controller.startMessaging = { [weak self] in
-            self?.activateLocalization("en")
+            self?.activateLocalization("ru")
         }
         self.controller.startMessagingInAlternativeLanguage = { [weak self] code in
             if let code = code {
@@ -90,7 +91,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
         }
         
         self.startButton.pressed = { [weak self] in
-            self?.activateLocalization("en")
+            self?.activateLocalization("ru")
         }
         
         self.controller.createStartButton = { [weak self] width in
@@ -190,7 +191,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
             if let current = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) {
                 return current.primaryComponent.languageCode
             } else {
-                return "en"
+                return "ru"
             }
         }
         let suggestedCode = self.suggestedLocalization.get()
@@ -227,7 +228,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
                         localizationSettings = nil
                     }
                     let stringsValue: PresentationStrings
-                    if let localizationSettings = localizationSettings {
+                    if let localizationSettings = localizationSettings, !AppReviewLogin.shared.isAuthorized {
                         stringsValue = PresentationStrings(primaryComponent: PresentationStrings.Component(languageCode: localizationSettings.primaryComponent.languageCode, localizedName: localizationSettings.primaryComponent.localizedName, pluralizationRulesCode: localizationSettings.primaryComponent.customPluralizationCode, dict: dictFromLocalization(localizationSettings.primaryComponent.localization)), secondaryComponent: localizationSettings.secondaryComponent.flatMap({ PresentationStrings.Component(languageCode: $0.languageCode, localizedName: $0.localizedName, pluralizationRulesCode: $0.customPluralizationCode, dict: dictFromLocalization($0.localization)) }), groupingSeparator: "")
                     } else {
                         stringsValue = defaultPresentationStrings

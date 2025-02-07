@@ -16,6 +16,7 @@ swift_library(
     	"//submodules/SSignalKit/SwiftSignalKit:SwiftSignalKit",
         "//submodules/Markdown:Markdown",
         "//submodules/AsyncDisplayKit:AsyncDisplayKit",
+        "//Teleport/TPUI:TPUI",
     ],
     visibility = [
         "//visibility:public",

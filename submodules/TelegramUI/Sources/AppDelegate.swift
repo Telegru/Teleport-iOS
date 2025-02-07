@@ -42,6 +42,7 @@ import MediaEditor
 import TelegramUIDeclareEncodables
 import ContextMenuScreen
 import MetalEngine
+import TPOnboarding
 
 #if canImport(AppCenter)
 import AppCenter
@@ -238,7 +239,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
 
     private var accountManager: AccountManager<TelegramAccountManagerTypes>?
     private var accountManagerState: AccountManagerState?
-    
+    private var onlineLockManager: OnlineLockManager?
+
     private var contextValue: AuthorizedApplicationContext?
     private let context = Promise<AuthorizedApplicationContext?>()
     private let contextDisposable = MetaDisposable()
@@ -809,25 +811,19 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             self.window?.rootViewController?.dismiss(animated: true, completion: nil)
         }, getAvailableAlternateIcons: {
             if #available(iOS 10.3, *) {
-                var icons = [
-                    PresentationAppIcon(name: "BlueIcon", imageName: "BlueIcon", isDefault: buildConfig.isAppStoreBuild),
-                    PresentationAppIcon(name: "New2", imageName: "New2"),
-                    PresentationAppIcon(name: "New1", imageName: "New1"),
-                    PresentationAppIcon(name: "BlackIcon", imageName: "BlackIcon"),
-                    PresentationAppIcon(name: "BlueClassicIcon", imageName: "BlueClassicIcon"),
-                    PresentationAppIcon(name: "BlackClassicIcon", imageName: "BlackClassicIcon"),
-                    PresentationAppIcon(name: "BlueFilledIcon", imageName: "BlueFilledIcon"),
-                    PresentationAppIcon(name: "BlackFilledIcon", imageName: "BlackFilledIcon")
-                ]
-                if buildConfig.isInternalBuild {
-                    icons.append(PresentationAppIcon(name: "WhiteFilledIcon", imageName: "WhiteFilledIcon"))
-                }
+//                var icons = [
+                    // PresentationAppIcon(name: "BlueIcon", imageName: "BlueIcon", isDefault: buildConfig.isAppStoreBuild),
+                    // PresentationAppIcon(name: "New2", imageName: "New2"),
+                    // PresentationAppIcon(name: "New1", imageName: "New1"),
+                    // PresentationAppIcon(name: "BlackIcon", imageName: "BlackIcon"),
+                    // PresentationAppIcon(name: "BlueFilledIcon", imageName: "BlueFilledIcon"),
+                    // PresentationAppIcon(name: "BlackFilledIcon", imageName: "BlackFilledIcon")
+//                ]
+                // if buildConfig.isInternalBuild {
+                //     icons.append(PresentationAppIcon(name: "WhiteFilledIcon", imageName: "WhiteFilledIcon"))
+                // }
                 
-                icons.append(PresentationAppIcon(name: "Premium", imageName: "Premium", isPremium: true))
-                icons.append(PresentationAppIcon(name: "PremiumTurbo", imageName: "PremiumTurbo", isPremium: true))
-                icons.append(PresentationAppIcon(name: "PremiumBlack", imageName: "PremiumBlack", isPremium: true))
-                
-                return icons
+                return []
             } else {
                 return []
             }
@@ -963,6 +959,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 }
             }
             
+            
             let notificationManager = SharedNotificationManager(episodeId: self.episodeId, application: application, clearNotificationsManager: clearNotificationsManager, inForeground: applicationBindings.applicationInForeground, accounts: sharedContext.activeAccountContexts |> map { primary, accounts, _ in accounts.map({ ($0.1.account, $0.1.account.id == primary?.account.id) }) }, pollLiveLocationOnce: { accountId in
                 let _ = (self.context.get()
                 |> filter {
@@ -1042,6 +1039,11 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 return (sharedApplicationContext, transaction.getSharedData(SharedDataKeys.loggingSettings)?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings)
             }
         }
+        
+       
+        
+        self.onlineLockManager = OnlineLockManager(context: self.sharedContextPromise.get())
+        
         self.sharedContextPromise.set(sharedContextSignal
         |> mapToSignal { sharedApplicationContext, loggingSettings -> Signal<SharedApplicationContext, NoError> in
             Logger.shared.logToFile = loggingSettings.logToFile
@@ -1087,10 +1089,31 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                     }
                 }
             }
+            |> mapToSignal { accountAndSettings -> Signal<(AccountContext, CallListSettings, DalSettings)?, NoError> in
+                return sharedApplicationContext.sharedContext.accountManager.transaction { transaction -> DalSettings? in
+                    return transaction.getSharedData(ApplicationSpecificSharedDataKeys.dalSettings)?.get(DalSettings.self)
+                }
+                |> reduceLeft(value: nil) { current, updated -> DalSettings? in
+                    var result: DalSettings?
+                    if let updated = updated {
+                        result = updated
+                    } else if let current = current {
+                        result = current
+                    }
+                    return result
+                }
+                |> map { dahlSettings -> (AccountContext, CallListSettings, DalSettings)? in
+                    if let context = accountAndSettings?.0, let callListSettings = accountAndSettings?.1 {
+                        return (context, callListSettings, dahlSettings ?? .defaultSettings)
+                    } else {
+                        return nil
+                    }
+                }
+            }
             |> deliverOnMainQueue
             |> map { accountAndSettings -> AuthorizedApplicationContext? in
-                return accountAndSettings.flatMap { context, callListSettings in
-                    return AuthorizedApplicationContext(sharedApplicationContext: sharedApplicationContext, mainWindow: self.mainWindow, watchManagerArguments: .single(nil), context: context as! AccountContextImpl, accountManager: sharedApplicationContext.sharedContext.accountManager, showCallsTab: callListSettings.showTab, reinitializedNotificationSettings: {
+                return accountAndSettings.flatMap { context, callListSettings, dahlSettings in
+                    return AuthorizedApplicationContext(sharedApplicationContext: sharedApplicationContext, mainWindow: self.mainWindow, watchManagerArguments: .single(nil), context: context as! AccountContextImpl, accountManager: sharedApplicationContext.sharedContext.accountManager, showCallsTab: callListSettings.showTab, appTabs: dahlSettings.tabBarSettings.activeTabs, reinitializedNotificationSettings: {
                         let _ = (self.context.get()
                         |> take(1)
                         |> deliverOnMainQueue).start(next: { context in
@@ -1102,7 +1125,7 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 }
             }
         })
-        
+                
         self.authContext.set(self.sharedContextPromise.get()
         |> deliverOnMainQueue
         |> mapToSignal { sharedApplicationContext -> Signal<UnauthorizedApplicationContext?, NoError> in

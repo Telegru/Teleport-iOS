@@ -1,0 +1,79 @@
+"Common.OpenTelegram" = "Открыть Telegram";
+"Common.UseTelegramForPremium" = "Обратите внимание: чтобы получить доступ к Telegram Premium, вам нужно использовать официальное приложение Telegram. После активации подписки все функции Telegram Premium будут доступны в приложении Даль.";
+
+"RootTabs.News" = "Новости";
+
+// Intro
+"Intro.Page1.Title" = "Даль";
+"Intro.Page1.Description" = "Мессенджер, **созданный \nс пониманием потребностей** русскоговорящей аудитории.";
+"Intro.Page2.Title" = "Общение";
+"Intro.Page2.Description" = "Мгновенная **синхронизация данных** — можете начать разговор на одном устройстве, а продолжить на другом.";
+"Intro.Page3.Title" = "Простота \nи удобство";
+"Intro.Page3.Description" = "**Убрали всё лишнее**, чтобы вы могли сосредоточиться на важном — разговорах и идеях.";
+"Intro.Page4.Title" = "Приватность";
+"Intro.Page4.Description" = "Ваши **данные принадлежат только вам**. \"Даль\" не использует их для рекламы и не передаёт третьим лицам. ";
+"Intro.Page5.Title" = "Скорость";
+"Intro.Page5.Description" = "Высокая скорость передачи сообщений **даже при слабом подключении**.";
+"Intro.Page6.Title" = "Коллаборация";
+"Intro.Page6.Description" = "**Создавайте** группы, **организовывайте** проекты, **делитесь** важными идеями.";
+"Intro.Page7.Title" = "Творчество";
+"Intro.Page7.Description" = "**Расширяйте свои границы** самовыражения с помощью эмодзи, стикеров и GIF.";
+"Intro.Page8.Title" = "Даль";
+"Intro.Page8.Description" = "**Читайте** в Даль. **Пишите** в Даль. **Смотрите** в Даль.";
+
+"Intro.StartMessaging" = "Начать общение";
+"Intro.Continue" = "Continue in English";
+
+
+// Settings
+"Dahl.TabTitle" = "Даль";
+"DahlSettings.TabTitle" = "Настройки \"Даль\"";
+"DahlSettings.Title" = "Настройки Даль";
+"DahlSettings.HidePublishStoriesButton" = "Скрыть кнопку публикации историй";
+"DahlSettings.HideStories" = "Скрыть истории";
+"DahlSettings.HideViewedStories" = "Скрыть просмотренные истории";
+"DahlSettings.HidePhone" = "Скрыть номер телефона";
+"DahlSettings.HideActivity" = "Без отметок о прочтении";
+"DahlSettings.OfflineMode" = "Режим невидимки";
+"DahlSettings.PrivacyHeader" = "Конфиденциальность";
+"DahlSettings.StoriesHeader" = "Истории";
+"DahlSettings.VideoMessage" = "Видеосообщения";
+"DahlSettings.FrontCamera" = "Фронтальная камера";
+"DahlSettings.BackCamera" = "Задняя камера";
+"DahlSettings.AskBeforeRecording" = "Спрашивать";
+"DahlSettings.Camera" = "Камера";
+"DahlSettings.TabBarSettings" = "Нижнее меню";
+"DahlSettings.Proxy" = "Прокси Даль";
+"DahlSettings.MenuItems" = "Пункты меню";
+
+"DahlSettings.ActionConfirmationHeader" = "Подтверждение действий";
+"DahlSettings.ConfirmCallToggle" = "Подтверждать звонок";
+"DahlSettings.ConfirmAudioMessageToggle" = "Подтверждать аудиосообщение";
+"DahlSettings.VideoMessageCameraLink" = "Камера для видеосообщений";
+
+"DahlSettings.ChatsFoldersHeader" = "Папки с чатами";
+"DahlSettings.ChatsFoldersAtBottom" = "Папки снизу";
+"DahlSettings.HideAllChatsFolder" = "Скрыть папку \"Все чаты\"";
+"DahlSettings.InfiniteScrolling" = "Листать папки по кругу";
+
+"DahlSettings.TabBarSettings.Title" = "Нижнее меню";
+"DahlSettings.TabBarSettings.ActiveTabs.Header" = "Используемые пункты меню";
+"DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i из %i";
+"DahlSettings.TabBarSettings.ActiveTabs.Footer" = "Нижнее меню приложения можно настраивать под себя, удаляя и добавляя пункты из списка доступных.";
+"DahlSettings.TabBarSettings.AvailableTabs.Header" = "Еще пункты";
+
+// Wallet
+"Wallet.TabTitle" = "Кошелек";
+
+// Apps
+"Apps.TabTitle" = "Приложения";
+
+// Chat
+"Chat.FrontCamera" = "Фронтальная камера";
+"Chat.BackCamera" = "Задняя камера";
+"Chat.SelectCamera" = "Выберите камеру";
+"Chat.SendAudioMessage" = "Отправить аудиосообщение?";
+"Chat.Yes" = "Да";
+"Chat.No" = "Нет";
+"Chat.ConfirmVideoCall" = "Вы действительно хотите начать видеозвонок?";
+"Chat.ConfirmCall" = "Вы действительно хотите начать аудиозвонок?";

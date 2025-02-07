@@ -8,7 +8,8 @@ public struct Font {
         case monospace
         case round
         case camera
-        
+        case novgorod
+
         var key: String {
             switch self {
             case .regular:
@@ -21,6 +22,8 @@ public struct Font {
                 return "round"
             case .camera:
                 return "camera"
+            case .novgorod:
+                return "novgorod"
             }
         }
     }
@@ -167,9 +170,11 @@ public struct Font {
         if #available(iOS 13.0, *), design != .camera {
             let descriptor: UIFontDescriptor
             if #available(iOS 14.0, *) {
-                descriptor = UIFont.systemFont(ofSize: size).fontDescriptor
+                let _descriptor = design == .novgorod ? UIFont(name: "ST-Nizhegorodsky", size: size)?.fontDescriptor : nil
+                descriptor = _descriptor ?? UIFont.systemFont(ofSize: size).fontDescriptor
             } else {
-                descriptor = UIFont.systemFont(ofSize: size, weight: weight.weight).fontDescriptor
+                let _descriptor = design == .novgorod ? UIFont(name: "ST-Nizhegorodsky", size: size)?.fontDescriptor : nil
+                descriptor = _descriptor ?? UIFont.systemFont(ofSize: size, weight: weight.weight).fontDescriptor
             }
 
             var symbolicTraits = descriptor.symbolicTraits
@@ -272,6 +277,8 @@ public struct Font {
                     } else {
                         font = UIFont(name: encodeText(string: "TGDbnfsb.Sfhvmbs", key: -1), size: size) ?? UIFont.systemFont(ofSize: size, weight: weight.weight)
                     }
+                case .novgorod:
+                    font = UIFont(name: ".SFCompactRounded-Semibold", size: size) ?? UIFont.systemFont(ofSize: size)
             }
             
             self.cache.set(font, key: key)

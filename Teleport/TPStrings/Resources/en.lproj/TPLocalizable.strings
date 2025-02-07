@@ -1,0 +1,79 @@
+"Common.OpenTelegram" = "Open Telegram";
+"Common.UseTelegramForPremium" = "Please note: to access Telegram Premium, you need to use the official Telegram app. Once you activate your subscription, all Telegram Premium features will be available in the Dal app.";
+
+"RootTabs.News" = "News";
+
+// Intro
+"Intro.Page1.Title" = "Dahl";
+"Intro.Page1.Description" = "A messenger **designed and tailored to the needs** of the Russian-speaking audience.";
+"Intro.Page2.Title" = "Communication";
+"Intro.Page2.Description" = "Start a conversation on one device and seamlessly continue it on another with **instant data sync**.";
+"Intro.Page3.Title" = "Simplicity and Convenience";
+"Intro.Page3.Description" = "**We’ve simplified everything** so you can focus on what matters most—your conversations and ideas.";
+"Intro.Page4.Title" = "Privacy";
+"Intro.Page4.Description" = "**Your data is yours and yours alone**. Dahl doesn’t use it for advertising or share it with third parties.";
+"Intro.Page5.Title" = "Speed";
+"Intro.Page5.Description" = "Fast message delivery, **even with a weak internet connection.**";
+"Intro.Page6.Title" = "Collaboration";
+"Intro.Page6.Description" = "**Create** groups, **organize** projects, and **share** ideas.";
+"Intro.Page7.Title" = "Creativity";
+"Intro.Page7.Description" = "**Express yourself freely** with emojis, stickers, and GIFs.";
+"Intro.Page8.Title" = "Dahl";
+"Intro.Page8.Description" = "**Read** with Dahl. **Write** with Dahl. **Stay connected** with Dahl.";
+
+"Intro.StartMessaging" = "Start Messaging";
+"Intro.Continue" = "Продолжить на русском";
+
+
+// Settings
+"Dahl.TabTitle" = "Dahl";
+"DahlSettings.TabTitle" = "\"Dahl\" settings";
+"DahlSettings.Title" = "Dahl Settings";
+"DahlSettings.HidePublishStoriesButton" = "Hide Publish Stories Button";
+"DahlSettings.HideStories" = "Hide Stories";
+"DahlSettings.HideViewedStories" = "Hide Viewed Stories";
+"DahlSettings.HidePhone" = "Hide Phone Number";
+"DahlSettings.HideActivity" = "No Read Receipts";
+"DahlSettings.OfflineMode" = "Invisible mode";
+"DahlSettings.PrivacyHeader" = "Privacy";
+"DahlSettings.StoriesHeader" = "Stories";
+"DahlSettings.VideoMessage" = "Video message";
+"DahlSettings.FrontCamera" = "Front camera";
+"DahlSettings.BackCamera" = "Back camera";
+"DahlSettings.AskBeforeRecording" = "Ask before";
+"DahlSettings.Camera" = "Camera";
+"DahlSettings.TabBarSettings" = "Tab bar";
+"DahlSettings.Proxy" = "Dahl proxy";
+"DahlSettings.MenuItems" = "Menu items";
+
+"DahlSettings.ActionConfirmationHeader" = "Action Confirmation";
+"DahlSettings.ConfirmCallToggle" = "Confirm before calling";
+"DahlSettings.ConfirmAudioMessageToggle" = "Confirm before sending audio message";
+"DahlSettings.VideoMessageCameraLink" = "Camera for video messages";
+
+"DahlSettings.ChatsFoldersHeader" = "Chats folders";
+"DahlSettings.ChatsFoldersAtBottom" = "Folders at the bottom";
+"DahlSettings.HideAllChatsFolder" = "Hide \"All Chats\" Folder";
+"DahlSettings.InfiniteScrolling" = "Scroll folders in a loop";
+
+"DahlSettings.TabBarSettings.Title" = "Tab bar";
+"DahlSettings.TabBarSettings.ActiveTabs.Header" = "Tab items used";
+"DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i of %i";
+"DahlSettings.TabBarSettings.ActiveTabs.Footer" = "The tab bar of the application can be customized by removing and adding items from the list of available ones.";
+"DahlSettings.TabBarSettings.AvailableTabs.Header" = "More items";
+
+// Wallet
+"Wallet.TabTitle" = "Wallet";
+
+// Apps
+"Apps.TabTitle" = "Apps";
+
+// Chat
+"Chat.FrontCamera" = "Front camera";
+"Chat.BackCamera" = "Back camera";
+"Chat.SelectCamera" = "Select a camera";
+"Chat.SendAudioMessage" = "Send audio message?";
+"Chat.Yes" = "Yes";
+"Chat.No" = "No";
+"Chat.ConfirmVideoCall" = "Are you sure you want to start a video call?";
+"Chat.ConfirmCall" = "Are you sure you want to start an audio call?";

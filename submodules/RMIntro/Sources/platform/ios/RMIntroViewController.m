@@ -142,7 +142,7 @@ typedef enum {
         ];
         
         NSMutableDictionary *englishStrings = [[NSMutableDictionary alloc] init];
-        NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"en" ofType:@"lproj"]];
+        NSBundle *bundle = [NSBundle bundleWithPath:[[NSBundle mainBundle] pathForResource:@"ru" ofType:@"lproj"]];
         for (NSString *key in stringKeys) {
             if (bundle != nil) {
                 NSString *value = [bundle localizedStringForKey:key value:key table:nil];

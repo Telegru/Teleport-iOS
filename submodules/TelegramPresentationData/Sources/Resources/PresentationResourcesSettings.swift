@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import Display
 import AppBundle
+import TPUI
 
 private func drawBorder(context: CGContext, rect: CGRect) {
     context.setLineWidth(UIScreenPixel)
@@ -26,10 +27,18 @@ private func addRoundedRectPath(context: CGContext, rect: CGRect, radius: CGFloa
     context.restoreGState()
 }
 
-private func renderIcon(name: String, scaleFactor: CGFloat = 1.0, backgroundColors: [UIColor]? = nil) -> UIImage? {
+private func renderIcon(iconRef: IconRef, scaleFactor: CGFloat = 1.0, backgroundColors: [UIColor]? = nil) -> UIImage? {
     return generateImage(CGSize(width: 29.0, height: 29.0), contextGenerator: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
         context.clear(bounds)
+        
+        let image: UIImage?
+        switch iconRef {
+        case .iconType(let iconType):
+            image = TPIconManager.shared.icon(iconType)
+        case .name(let name):
+            image = UIImage(bundleImageName: name)
+        }
         
         if let backgroundColors {
             addRoundedRectPath(context: context, rect: CGRect(origin: CGPoint(), size: size), radius: 7.0)
@@ -44,12 +53,13 @@ private func renderIcon(name: String, scaleFactor: CGFloat = 1.0, backgroundColo
             context.drawLinearGradient(gradient, start: CGPoint(x: size.width, y: size.height), end: CGPoint(x: 0.0, y: 0.0), options: CGGradientDrawingOptions())
             
             context.resetClip()
-            if let image = generateTintedImage(image: UIImage(bundleImageName: name), color: .white), let cgImage = image.cgImage {
+         
+            if let image = generateTintedImage(image: image, color: .white), let cgImage = image.cgImage {
                 let imageSize = CGSize(width: image.size.width * scaleFactor, height: image.size.height * scaleFactor)
                 context.draw(cgImage, in: CGRect(origin: CGPoint(x: (bounds.width - imageSize.width) * 0.5, y: (bounds.height - imageSize.height) * 0.5), size: imageSize))
             }
         } else {
-            if let image = UIImage(bundleImageName: name), let cgImage = image.cgImage {
+            if let image = image, let cgImage = image.cgImage {
                 let imageSize: CGSize
                 if scaleFactor == 1.0 {
                     imageSize = size
@@ -63,28 +73,28 @@ private func renderIcon(name: String, scaleFactor: CGFloat = 1.0, backgroundColo
 }
 
 public struct PresentationResourcesSettings {
-    public static let editProfile = renderIcon(name: "Settings/Menu/EditProfile")
-    public static let proxy = renderIcon(name: "Settings/Menu/Proxy")
-    public static let savedMessages = renderIcon(name: "Settings/Menu/SavedMessages")
-    public static let recentCalls = renderIcon(name: "Settings/Menu/RecentCalls")
-    public static let devices = renderIcon(name: "Settings/Menu/Sessions")
-    public static let chatFolders = renderIcon(name: "Settings/Menu/ChatListFilters")
-    public static let stickers = renderIcon(name: "Settings/Menu/Stickers")
-    public static let notifications = renderIcon(name: "Settings/Menu/Notifications")
-    public static let security = renderIcon(name: "Settings/Menu/Security")
-    public static let dataAndStorage = renderIcon(name: "Settings/Menu/DataAndStorage")
-    public static let appearance = renderIcon(name: "Settings/Menu/Appearance")
-    public static let language = renderIcon(name: "Settings/Menu/Language")
-    public static let deleteAccount = renderIcon(name: "Chat/Info/GroupRemovedIcon")
-    public static let powerSaving = renderIcon(name: "Settings/Menu/PowerSaving")
-    public static let stories = renderIcon(name: "Premium/Perk/Stories", scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x5856D6)])
-    public static let premiumGift = renderIcon(name: "Settings/Menu/Gift")
-    public static let business = renderIcon(name: "Settings/Menu/Business", backgroundColors: [UIColor(rgb: 0xA95CE3), UIColor(rgb: 0xF16B80)])
-    public static let myProfile = renderIcon(name: "Settings/Menu/Profile")
-    public static let reactions = renderIcon(name: "Settings/Menu/Reactions")
-    public static let balance = renderIcon(name: "Settings/Menu/Balance", scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x34c759)])
-    public static let affiliateProgram = renderIcon(name: "Settings/Menu/AffiliateProgram")
-    public static let earnStars = renderIcon(name: "Settings/Menu/EarnStars")
+    public static let editProfile = renderIcon(iconRef: .name(name: "Settings/Menu/EditProfile"))
+    public static let proxy = renderIcon(iconRef: .name(name: "Settings/Menu/Proxy"))
+    public static let savedMessages = renderIcon(iconRef: .iconType(iconType: .savedMessages))
+    public static let recentCalls = renderIcon(iconRef: .iconType(iconType: .recentCalls))
+    public static let devices = renderIcon(iconRef: .iconType(iconType: .sessions))
+    public static let chatFolders = renderIcon(iconRef: .iconType(iconType: .chatListFilters))
+    public static let stickers = renderIcon(iconRef: .name(name: "Settings/Menu/Stickers"))
+    public static let notifications = renderIcon(iconRef: .iconType(iconType: .notifications))
+    public static let security = renderIcon(iconRef: .iconType(iconType: .security))
+    public static let dataAndStorage = renderIcon(iconRef: .iconType(iconType: .dataAndStorage))
+    public static let appearance = renderIcon(iconRef: .iconType(iconType: .appearance))
+    public static let language = renderIcon(iconRef: .iconType(iconType: .language))
+    public static let deleteAccount = renderIcon(iconRef: .name(name: "Chat/Info/GroupRemovedIcon"))
+    public static let powerSaving = renderIcon(iconRef: .iconType(iconType: .powerSaving))
+    public static let stories = renderIcon(iconRef: .name(name: "Premium/Perk/Stories"), scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x5856D6)])
+    public static let premiumGift = renderIcon(iconRef: .name(name: "Settings/Menu/Gift"))
+    public static let business = renderIcon(iconRef: .name(name: "Settings/Menu/Business"), backgroundColors: [UIColor(rgb: 0xA95CE3), UIColor(rgb: 0xF16B80)])
+    public static let myProfile = renderIcon(iconRef: .iconType(iconType: .profile))
+    public static let reactions = renderIcon(iconRef: .name(name: "Settings/Menu/Reactions"))
+    public static let balance = renderIcon(iconRef: .name(name: "Settings/Menu/Balance"), scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x34c759)])
+    public static let affiliateProgram = renderIcon(iconRef: .name(name: "Settings/Menu/AffiliateProgram"))
+    public static let earnStars = renderIcon(iconRef: .name(name: "Settings/Menu/EarnStars"))
     
     public static let premium = generateImage(CGSize(width: 29.0, height: 29.0), contextGenerator: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
@@ -173,23 +183,23 @@ public struct PresentationResourcesSettings {
         drawBorder(context: context, rect: bounds)
     })
 
-    public static let passport = renderIcon(name: "Settings/Menu/Passport")
-    public static let watch = renderIcon(name: "Settings/Menu/Watch")
+    public static let passport = renderIcon(iconRef: .name(name: "Settings/Menu/Passport"))
+    public static let watch = renderIcon(iconRef: .name(name: "Settings/Menu/Watch"))
     
-    public static let support = renderIcon(name: "Settings/Menu/Support")
-    public static let faq = renderIcon(name: "Settings/Menu/Faq")
-    public static let tips = renderIcon(name: "Settings/Menu/Tips")
+    public static let support = renderIcon(iconRef: .name(name: "Settings/Menu/Support"))
+    public static let faq = renderIcon(iconRef: .name(name: "Settings/Menu/Faq"))
+    public static let tips = renderIcon(iconRef: .name(name: "Settings/Menu/Tips"))
     
-    public static let addAccount = renderIcon(name: "Settings/Menu/AddAccount")
-    public static let setPasscode = renderIcon(name: "Settings/Menu/SetPasscode")
-    public static let clearCache = renderIcon(name: "Settings/Menu/ClearCache")
-    public static let changePhoneNumber = renderIcon(name: "Settings/Menu/ChangePhoneNumber")
+    public static let addAccount = renderIcon(iconRef: .name(name: "Settings/Menu/AddAccount"))
+    public static let setPasscode = renderIcon(iconRef: .name(name: "Settings/Menu/SetPasscode"))
+    public static let clearCache = renderIcon(iconRef: .name(name: "Settings/Menu/ClearCache"))
+    public static let changePhoneNumber = renderIcon(iconRef: .name(name: "Settings/Menu/ChangePhoneNumber"))
     
-    public static let deleteAddAccount = renderIcon(name: "Settings/Menu/DeleteAddAccount")
-    public static let deleteSetTwoStepAuth = renderIcon(name: "Settings/Menu/DeleteTwoStepAuth")
-    public static let deleteSetPasscode = renderIcon(name: "Settings/Menu/FaceId")
-    public static let deleteChats = renderIcon(name: "Settings/Menu/DeleteChats")
-    public static let clearSynced = renderIcon(name: "Settings/Menu/ClearSynced")
+    public static let deleteAddAccount = renderIcon(iconRef: .name(name: "Settings/Menu/DeleteAddAccount"))
+    public static let deleteSetTwoStepAuth = renderIcon(iconRef: .name(name: "Settings/Menu/DeleteTwoStepAuth"))
+    public static let deleteSetPasscode = renderIcon(iconRef: .name(name: "Settings/Menu/FaceId"))
+    public static let deleteChats = renderIcon(iconRef: .name(name: "Settings/Menu/DeleteChats"))
+    public static let clearSynced = renderIcon(iconRef: .name(name: "Settings/Menu/ClearSynced"))
     
-    public static let websites = renderIcon(name: "Settings/Menu/Websites")
+    public static let websites = renderIcon(iconRef: .name(name: "Settings/Menu/Websites"))
 }

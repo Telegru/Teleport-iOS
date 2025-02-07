@@ -124,11 +124,11 @@ genrule(
     name = "GeneratedPresentationStrings",
     srcs = [
         "//build-system:GenerateStrings/GenerateStrings.py",
-        "Telegram-iOS/en.lproj/Localizable.strings",
+        "Telegram-iOS/ru.lproj/Localizable.strings",
     ],
     cmd = '''
         python3 $(location //build-system:GenerateStrings/GenerateStrings.py) \\
-            --source=$(location Telegram-iOS/en.lproj/Localizable.strings) \\
+            --source=$(location Telegram-iOS/ru.lproj/Localizable.strings) \\
             --outImplementation=$(location GeneratedPresentationStrings/Sources/PresentationStrings.m) \\
             --outHeader=$(location GeneratedPresentationStrings/PublicHeaders/PresentationStrings/PresentationStrings.h) \\
             --outData=$(location GeneratedPresentationStrings/Resources/PresentationStrings.data) \\
@@ -146,25 +146,28 @@ minimum_watchos_version="9.0"
 notificationServiceExtensionVersion = "v1"
 
 empty_languages = [
-    "ar",
-    "be",
-    "ca",
-    "de",
-    "es",
-    "fa",
-    "fr",
-    "id",
-    "it",
-    "ko",
-    "ms",
-    "nl",
-    "pl",
-    "pt",
-    "ru",
-    "tr",
-    "uk",
-    "uz",
+    #"ar",
+    #"be",
+    #"ca",
+    #"de",
+    #"es",
+    #"fa",
+    #"fr",
+    #"id",
+    #"it",
+    #"ko",
+    #"ms",
+    #"nl",
+    #"pl",
+    #"pt",
+    #"ru",
+    "en",
+    #"tr",
+    #"uk",
+    #"uz",
 ]
+
+supported_languages = empty_languages + ["ru"]
 
 [
     genrule(
@@ -249,7 +252,8 @@ filegroup(
 filegroup(
     name = "AppStringResources",
     srcs = [
-        "Telegram-iOS/en.lproj/Localizable.strings",
+        "Telegram-iOS/ru.lproj/Localizable.strings",
+        "//Teleport/TPStrings:TPLocalizableStrings",
     ] + [
         "{}.lproj/Localizable.strings".format(language) for language in empty_languages
     ],
@@ -258,21 +262,22 @@ filegroup(
 filegroup(
     name = "WatchAppStringResources",
     srcs = glob([
-        "Telegram-iOS/*.lproj/Localizable.strings",
-    ], exclude = ["Telegram-iOS/*.lproj/**/.*"]),
+        "Telegram-iOS/{}.lproj/Localizable.strings".format(language) for language in supported_languages
+    ], 
+    exclude = ["Telegram-iOS/*.lproj/**/.*"]) + ["//Teleport/TPStrings:TPLocalizableStrings"],
 )
 
 filegroup(
     name = "AppIntentVocabularyResources",
     srcs = glob([
-        "Telegram-iOS/*.lproj/AppIntentVocabulary.plist",
+        "Telegram-iOS/{}.lproj/AppIntentVocabulary.strings".format(language) for language in supported_languages
     ], exclude = ["Telegram-iOS/*.lproj/**/.*"]),
 )
 
 filegroup(
     name = "InfoPlistStringResources",
     srcs = glob([
-        "Telegram-iOS/*.lproj/InfoPlist.strings",
+        "Telegram-iOS/{}.lproj/InfoPlist.strings".format(language) for language in supported_languages
     ], exclude = ["Telegram-iOS/*.lproj/**/.*"]),
 )
 
@@ -319,18 +324,13 @@ filegroup(
 )
 
 alternate_icon_folders = [
-    "BlackIcon",
-    "BlackClassicIcon",
-    "BlackFilledIcon",
+    # "BlackIcon",
+    # "BlackFilledIcon",
     "BlueIcon",
-    "BlueClassicIcon",
-    "BlueFilledIcon",
-    "WhiteFilledIcon",
-    "New1",
-    "New2",
-    "Premium",
-    "PremiumBlack",
-    "PremiumTurbo",
+    # "BlueFilledIcon",
+    # "WhiteFilledIcon",
+    # "New1",
+    # "New2",
 ]
 
 [
@@ -376,6 +376,10 @@ swift_library(
         "//submodules/TelegramUI:TelegramUIResources",
         "//submodules/TelegramUI:TelegramUIAssets",
         "//submodules/TelegramUI/Components/Calls/CallScreen:Assets",
+        "//Teleport/TPOnboarding:TPOnboardingAssets",
+        "//Teleport/TPSettings:TPSettingsAssets",
+        "//Teleport/TPUI:TPUIAssets",
+        "//Teleport/TPUI:TPUIRaw",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [
@@ -648,7 +652,7 @@ plist_fragment(
     template =
     """
     <key>CFBundleDisplayName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     """
 )
 
@@ -696,7 +700,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.watchkitapp.watchkitextension</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>WKExtensionDelegateClassName</key>
@@ -716,7 +720,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.watchkitapp</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
@@ -1160,7 +1164,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.Share</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1252,7 +1256,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.NotificationContent</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1359,7 +1363,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.Widget</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1472,7 +1476,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.SiriIntents</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1527,7 +1531,7 @@ swift_library(
         "-warnings-as-errors",
     ],
     data = glob([
-        "SiriIntents/*.lproj/Intents.intentdefinition"
+        "SiriIntents/{}.lproj/Intents.intentdefinition".format(language) for language in supported_languages
     ]) + [
         ":IntentsAssets"
     ],
@@ -1603,7 +1607,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.BroadcastUpload</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1697,7 +1701,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.NotificationService</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1765,11 +1769,11 @@ plist_fragment(
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
@@ -1822,17 +1826,17 @@ plist_fragment(
     <key>NSCameraUsageDescription</key>
     <string>We need this so that you can take and share photos and videos.</string>
     <key>NSContactsUsageDescription</key>
-    <string>Telegram stores your contacts heavily encrypted in the cloud to let you connect with your friends across all your devices.</string>
+    <string>Dahl stores your contacts heavily encrypted in the cloud to let you connect with your friends across all your devices.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>You can use Face ID to unlock the app.</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>When you send your location to your friends, Telegram needs access to show them a map. You also need this to send locations from an Apple Watch.</string>
+    <string>When you send your location to your friends, Dahl needs access to show them a map. You also need this to send locations from an Apple Watch.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>When you send your location to your friends, Telegram needs access to show them a map.</string>
+    <string>When you send your location to your friends, Dahl needs access to show them a map.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>We need this so that you can record and share voice messages and videos with sound.</string>
     <key>NSMotionUsageDescription</key>
-    <string>When you send your location to your friends, Telegram needs access to show them a map.</string>
+    <string>When you send your location to your friends, Dahl needs access to show them a map.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>We need this so that you can share photos and videos from your photo library.</string>
     <key>NSPhotoLibraryUsageDescription</key>
@@ -1848,9 +1852,11 @@ plist_fragment(
     </array>
     <key>UIAppFonts</key>
     <array>
+        <string>ST-Nizhegorodsky.otf</string>
         <string>SFCompactRounded-Semibold.otf</string>
         <string>AremacFS-Regular.otf</string>
         <string>AremacFS-Semibold.otf</string>
+        <string>Playfair-Bold.ttf</string>
     </array>
     <key>UIBackgroundModes</key>
     <array>

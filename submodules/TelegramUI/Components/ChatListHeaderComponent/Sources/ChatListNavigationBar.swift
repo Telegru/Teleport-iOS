@@ -435,7 +435,7 @@ public final class ChatListNavigationBar: Component {
                 }
             }
             
-            if component.tabsNode !== self.tabsNode {
+            if component.tabsNode !== self.tabsNode && self.tabsNode?.view.superview === self {
                 if let tabsNode = self.tabsNode {
                     tabsNode.layer.anchorPoint = CGPoint()
                     

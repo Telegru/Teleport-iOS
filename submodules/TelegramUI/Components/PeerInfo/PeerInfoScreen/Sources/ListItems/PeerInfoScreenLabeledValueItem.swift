@@ -14,6 +14,7 @@ import EmojiTextAttachmentView
 import ComponentFlow
 import ButtonComponent
 import ComponentDisplayAdapters
+import TPUI
 
 enum PeerInfoScreenLabeledValueTextColor {
     case primary
@@ -492,7 +493,7 @@ private final class PeerInfoScreenLabeledValueItemNode: PeerInfoScreenItemNode {
             let iconImage: UIImage?
             switch icon {
             case .qrCode:
-                iconImage = UIImage(bundleImageName: "Settings/QrIcon")
+                iconImage = TPIconManager.shared.icon(.qrIcon)
             case .premiumGift:
                 iconImage = UIImage(bundleImageName: "Premium/Gift")
             }

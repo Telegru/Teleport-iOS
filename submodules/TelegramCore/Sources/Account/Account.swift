@@ -948,6 +948,7 @@ public class Account {
     
     public let shouldBeServiceTaskMaster = Promise<AccountServiceTaskMasterMode>()
     public let shouldKeepOnlinePresence = Promise<Bool>()
+    public let blockOnlinePresence = Promise<Bool>()
     public let autolockReportDeadline = Promise<Int32?>()
     public let shouldExplicitelyKeepWorkerConnections = Promise<Bool>(false)
     public let shouldKeepBackgroundDownloadConnections = Promise<Bool>(false)
@@ -1042,7 +1043,7 @@ public class Account {
         
         self.contactSyncManager = ContactSyncManager(postbox: postbox, network: network, accountPeerId: peerId, stateManager: self.stateManager)
         self.localInputActivityManager = PeerInputActivityManager()
-        self.accountPresenceManager = AccountPresenceManager(shouldKeepOnlinePresence: self.shouldKeepOnlinePresence.get(), network: network)
+        self.accountPresenceManager = AccountPresenceManager(shouldKeepOnlinePresence: self.shouldKeepOnlinePresence.get(), blockOnlinePresence: self.blockOnlinePresence.get(), network: network)
         let _ = (postbox.transaction { transaction -> Void in
             transaction.updatePeerPresencesInternal(presences: [peerId: TelegramUserPresence(status: .present(until: Int32.max - 1), lastActivity: 0)], merge: { _, updated in return updated })
             transaction.setNeedsPeerGroupMessageStatsSynchronization(groupId: Namespaces.PeerGroup.archive, namespace: Namespaces.Message.Cloud)
@@ -1230,34 +1231,45 @@ public class Account {
                 strongSelf._importantTasksRunning.set(value)
             }
         }))
-        self.managedOperationsDisposable.add((accountManager.sharedData(keys: [SharedDataKeys.proxySettings])
+        
+        let proxySettings = Promise<ProxyServerSettings?>()
+        proxySettings.set(accountManager.sharedData(keys: [SharedDataKeys.proxySettings])
         |> map { sharedData -> ProxyServerSettings? in
-            if let settings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) {
-                return settings.effectiveActiveServer
-            } else {
-                return nil
-            }
-        }
-        |> distinctUntilChanged).start(next: { activeServer in
-            let updated = activeServer.flatMap { activeServer -> MTSocksProxySettings? in
-                return activeServer.mtProxySettings
-            }
-            network.context.updateApiEnvironment { environment in
-                let current = environment?.socksProxySettings
-                let updateNetwork: Bool
-                if let current = current, let updated = updated {
-                    updateNetwork = !current.isEqual(updated)
-                } else {
-                    updateNetwork = (current != nil) != (updated != nil)
-                }
-                if updateNetwork {
-                    network.dropConnectionStatus()
-                    return environment?.withUpdatedSocksProxySettings(updated)
-                } else {
-                    return nil
-                }
-            }
-        }))
+            let settings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? .defaultSettings
+            return settings.activeServer
+        })
+        
+        let dahlProxySettings = Promise<ProxyServerSettings?>()
+        dahlProxySettings.set(accountManager.sharedData(keys: [SharedDataKeys.dahlProxySettings])
+        |> map { sharedData -> ProxyServerSettings? in
+            let settings = sharedData.entries[SharedDataKeys.dahlProxySettings]?.get(DahlProxySettings.self) ?? .defaultSettings
+            return settings.server
+        })
+        
+        self.managedOperationsDisposable.add(
+            (combineLatest(proxySettings.get(), dahlProxySettings.get())
+             |> map { $0 ?? $1 }
+             |> distinctUntilChanged).start(next: { server in
+                 let updated = server.flatMap { activeServer -> MTSocksProxySettings? in
+                     return activeServer.mtProxySettings
+                 }
+                 network.context.updateApiEnvironment { environment in
+                     let current = environment?.socksProxySettings
+                     let updateNetwork: Bool
+                     if let current = current, let updated = updated {
+                         updateNetwork = !current.isEqual(updated)
+                     } else {
+                         updateNetwork = (current != nil) != (updated != nil)
+                     }
+                     if updateNetwork {
+                         network.dropConnectionStatus()
+                         return environment?.withUpdatedSocksProxySettings(updated)
+                     } else {
+                         return nil
+                     }
+                 }
+             })
+        )
 
         if !supplementary {
             let mediaBox = postbox.mediaBox
