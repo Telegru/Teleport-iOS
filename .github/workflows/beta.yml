@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts
-          path: ./$BUILD_WORKING_DIR/artifacts
+          path: /Users/Shared/build-working-dir/artifacts
 
     env:
       CI: 1
