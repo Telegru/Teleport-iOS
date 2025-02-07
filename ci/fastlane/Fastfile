@@ -21,7 +21,7 @@ lane :deploy_ad do
   setup_ci if ENV['CI']
 
   ensure_env_vars(
-    env_vars: ['FIREBASE_APP_ID']
+    env_vars: ['FIREBASE_APP_ID', 'FIREBASE_TOKEN']
   )
 
   latest_release = firebase_app_distribution_get_latest_release(
@@ -57,7 +57,7 @@ lane :generate_proj do |options|
     env_vars: ['CERTS_GIT_URL']
   )
 
-  team_id = team_id()
+  team_id = team_id(build_type: build_type)
   match(
     type: build_type,
     app_identifier: app_bundle_ids(build_type: build_type),
@@ -67,7 +67,7 @@ lane :generate_proj do |options|
     readonly: true
   )
 
-  configuration_path = get_telegram_config_path()
+  configuration_path = get_telegram_config_path(build_type: build_type)
   source_path = ENV['SOURCE_PATH'] || File.expand_path('../../.')
   cache_dir = ENV['BAZEL_LOCAL_CACHE'] || '$HOME/telegram-bazel-cache'
 
@@ -88,7 +88,7 @@ lane :archive do |options|
   build_number = options[:build_number]
   build_type = options[:build_type]
 
-  configuration_path = get_telegram_config_path()
+  configuration_path = get_telegram_config_path(build_type: build_type)
   source_path = ENV['SOURCE_PATH'] || File.expand_path('../../.')
 
   match_certs(type: build_type)
@@ -139,7 +139,7 @@ lane :match_certs do |options|
     env_vars: ['CERTS_GIT_URL']
   )
 
-  team_id = team_id()
+  team_id = team_id(build_type: type)
   match(
     type: type,
     app_identifier: app_bundle_ids(),
@@ -156,8 +156,8 @@ lane :generate_new_certificates do |options|
     env_vars: ['CERTS_GIT_URL']
   )
   types = ['development', 'appstore', 'adhoc']
-  team_id = team_id()
   types.each do |type|
+    team_id = team_id(build_type: type)
     match(
       type: type,
       app_identifier: app_bundle_ids(build_type: type),
