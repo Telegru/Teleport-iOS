@@ -64,7 +64,6 @@ jobs:
       APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
       APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT }}
       BAZEL_USER_ROOT: /private/var/tmp/_bazel_telegram
-      BAZEL_LOCAL_CACHE: /Users/Shared/telegram-bazel-cache
       BUILD_WORKING_DIR: /Users/Shared/build-working-dir
       MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       CERTS_GIT_URL: ${{ secrets.CERTS_GIT_URL }}
