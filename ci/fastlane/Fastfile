@@ -52,7 +52,6 @@ end
 
 lane :generate_proj do |options|
   build_type = options[:build_type] || 'development'
-  type = options[:type]
   ensure_env_vars(
     env_vars: ['CERTS_GIT_URL']
   )
