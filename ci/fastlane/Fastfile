@@ -80,6 +80,8 @@ lane :generate_proj do |options|
 end
 
 lane :build do |options|
+  setup_ci if ENV['CI']
+
   archive(build_number:10000, build_type:"appstore")
 end
 
