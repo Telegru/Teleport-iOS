@@ -3861,7 +3861,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 wasEmpty = true
             }
             
-            let filtered = (strongSelf.allChatsHidden) ? (resolvedItems.filter{ $0.id != .all }) : resolvedItems
+            let filtered = (strongSelf.allChatsHidden && resolvedItems.count > 1) ? (resolvedItems.filter{ $0.id != .all }) : resolvedItems
           
             let firstItemEntryId: ChatListFilterTabEntryId = filtered.first?.id ?? .all
             
@@ -4377,7 +4377,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             }
             
             if strongSelf.chatListDisplayNode.mainContainerNode.currentItemNode.chatListFilter?.id == id {
-                strongSelf.chatListDisplayNode.mainContainerNode.switchToFilter(id: .all, completion: {
+                let selectedId = strongSelf.chatListDisplayNode.mainContainerNode.selectedId
+                let id = strongSelf.chatListDisplayNode.mainContainerNode.availableFilters.first(where: { $0.id != selectedId })?.id ?? .all
+                strongSelf.chatListDisplayNode.mainContainerNode.switchToFilter(id: id, completion: {
                     commit()
                 })
             } else {

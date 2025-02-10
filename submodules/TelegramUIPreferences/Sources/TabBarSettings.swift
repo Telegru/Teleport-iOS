@@ -7,8 +7,9 @@ public enum DAppTab: Int, Codable, CaseIterable {
     case contacts
     case calls
     case dahlSettings
-    case wallet
-    case apps
+//    case wallet
+//    case apps
+//    case channels
     
     #if DEBUG
     case wall
@@ -49,8 +50,10 @@ extension TabBarSettings {
     
     public static var `default`: TabBarSettings {
         TabBarSettings(currentTabs: [
-            .apps,
-            .wallet,
+            .contacts,
+            .calls,
+//            .apps,
+//            .wallet,
             .chats,
             .dahlSettings,
             .settings

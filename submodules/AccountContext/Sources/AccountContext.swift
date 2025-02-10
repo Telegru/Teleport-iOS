@@ -641,7 +641,7 @@ public enum ChatListSearchFilter: Equatable {
     case chats
     case topics
     case channels
-    case apps
+//    case apps
     case media
     case downloads
     case links
@@ -660,8 +660,8 @@ public enum ChatListSearchFilter: Equatable {
             return 1
         case .channels:
             return 2
-        case .apps:
-            return 3
+//        case .apps:
+//            return 3
         case .media:
             return 4
         case .downloads:

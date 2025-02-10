@@ -88,9 +88,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     public var newsFeedController: ViewController?
     public var accountSettingsController: PeerInfoScreen?
     
-    private var appsController: ViewController?
+//    private var appsController: ViewController?
     private var dahlSettingsController: ViewController?
-    private var walletController: ViewController?
+//    private var walletController: ViewController?
     private var channelsController: ViewController?
     private var wallController: DWallController?
     
@@ -160,92 +160,92 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             })
         }
         
-        let botsKey = ValueBoxKey(length: 8)
-        botsKey.setInt64(0, value: 0)
-        walletDisposable = (context.engine.data.subscribe(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: Namespaces.CachedItemCollection.attachMenuBots, id: botsKey))
-        |> mapToSignal { entry -> Signal<AttachMenuBot?, NoError> in
-            let bots: [AttachMenuBots.Bot] = entry?.get(AttachMenuBots.self)?.bots ?? []
-            return context.engine.data.get(
-                EngineDataMap(bots.map(\.peerId).map(TelegramEngine.EngineData.Item.Peer.Peer.init))
-            )
-            |> mapToSignal { peersMap -> Signal<AttachMenuBot?, NoError> in
-                let result = bots
-                    .filter {
-                        guard let peer = peersMap[$0.peerId] else {
-                            return false
-                        }
-                        guard case let .user(user) = peer else {
-                            return false
-                        }
-                        return user.username == "wallet"
-                    }
-                    .map {
-                        ($0, peersMap[$0.peerId]!)
-                    }
-                    .first
-                
-                guard let bot = result?.0,
-                      let peer = result?.1 else {
-                    return .single(nil)
-                }
-                
-                return .single(AttachMenuBot(peer: peer, shortName: bot.name, icons: bot.icons, peerTypes: bot.peerTypes, flags: bot.flags))
-            }
-        }
-        |> filter { $0 != nil }
-        |> take(1)
-        |> deliverOnMainQueue)
-        .start(next: { [weak self] walletBot in
-            guard let self else { return }
-            self.walletBot = walletBot
-            self.walletController = self.walletControllerIfPossible()
-            if let tabs, tabs.contains(where: { $0 == .wallet }) {
-                updateRootControllers(tabs: tabs)
-            }
-        })
+//        let botsKey = ValueBoxKey(length: 8)
+//        botsKey.setInt64(0, value: 0)
+//        walletDisposable = (context.engine.data.subscribe(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: Namespaces.CachedItemCollection.attachMenuBots, id: botsKey))
+//        |> mapToSignal { entry -> Signal<AttachMenuBot?, NoError> in
+//            let bots: [AttachMenuBots.Bot] = entry?.get(AttachMenuBots.self)?.bots ?? []
+//            return context.engine.data.get(
+//                EngineDataMap(bots.map(\.peerId).map(TelegramEngine.EngineData.Item.Peer.Peer.init))
+//            )
+//            |> mapToSignal { peersMap -> Signal<AttachMenuBot?, NoError> in
+//                let result = bots
+//                    .filter {
+//                        guard let peer = peersMap[$0.peerId] else {
+//                            return false
+//                        }
+//                        guard case let .user(user) = peer else {
+//                            return false
+//                        }
+//                        return user.username == "wallet"
+//                    }
+//                    .map {
+//                        ($0, peersMap[$0.peerId]!)
+//                    }
+//                    .first
+//                
+//                guard let bot = result?.0,
+//                      let peer = result?.1 else {
+//                    return .single(nil)
+//                }
+//                
+//                return .single(AttachMenuBot(peer: peer, shortName: bot.name, icons: bot.icons, peerTypes: bot.peerTypes, flags: bot.flags))
+//            }
+//        }
+//        |> filter { $0 != nil }
+//        |> take(1)
+//        |> deliverOnMainQueue)
+//        .start(next: { [weak self] walletBot in
+//            guard let self else { return }
+//            self.walletBot = walletBot
+//            self.walletController = self.walletControllerIfPossible()
+//            if let tabs, tabs.contains(where: { $0 == .wallet }) {
+//                updateRootControllers(tabs: tabs)
+//            }
+//        })
         
-        appsBotDisposable = (
-            context.engine.peers.resolvePeerByName(name: "@tapps", referrer: nil, ageLimit: 10)
-            |> mapToSignal { result -> Signal<(TelegramUser, BotAppSettings?)?, NoError> in
-                guard case let .result(peer) = result else {
-                    return .single(nil)
-                }
-                guard case let .user(user) = peer else {
-                    return .single(nil)
-                }
-                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotAppSettings(id: user.id))
-                |> mapToSignal {
-                    return .single((user, $0))
-                }
-            }
-            |> filter { $0 != nil }
-            |> take(1)
-            |> deliverOnMainQueue)
-        .start(next: { [weak self] in
-            guard let self, let result = $0 else { return }
-            let (user, appSettings) = result
-            guard let botInfo = user.botInfo, botInfo.flags.contains(.hasWebApp) else {
-                return
-            }
-            self.appsBot = user
-            self.appsBotSettings = appSettings
-            self.appsController = appsControllerIfPossible()
-            if let tabs, tabs.contains(where: { $0 == .apps }) {
-                updateRootControllers(tabs: tabs)
-            }
-            
-            let _ = (context.engine.messages.requestMainWebView(peerId: user.id, botId: user.id, source: .generic, themeParams: generateWebAppThemeParams(presentationData.theme))
-                     |> take(1)
-                     |> deliverOnMainQueue)
-                .start(next: { [weak self] in
-                    guard let self else { return }
-                    self.appsBotWebViewResult = $0
-                    self.appsController = appsControllerIfPossible()
-                    if let tabs, tabs.contains(where: { $0 == .apps }) {
-                        updateRootControllers(tabs: tabs)
-                    }
-                })
-        })
+//        appsBotDisposable = (
+//            context.engine.peers.resolvePeerByName(name: "@tapps", referrer: nil, ageLimit: 10)
+//            |> mapToSignal { result -> Signal<(TelegramUser, BotAppSettings?)?, NoError> in
+//                guard case let .result(peer) = result else {
+//                    return .single(nil)
+//                }
+//                guard case let .user(user) = peer else {
+//                    return .single(nil)
+//                }
+//                return context.engine.data.get(TelegramEngine.EngineData.Item.Peer.BotAppSettings(id: user.id))
+//                |> mapToSignal {
+//                    return .single((user, $0))
+//                }
+//            }
+//            |> filter { $0 != nil }
+//            |> take(1)
+//            |> deliverOnMainQueue)
+//        .start(next: { [weak self] in
+//            guard let self, let result = $0 else { return }
+//            let (user, appSettings) = result
+//            guard let botInfo = user.botInfo, botInfo.flags.contains(.hasWebApp) else {
+//                return
+//            }
+//            self.appsBot = user
+//            self.appsBotSettings = appSettings
+////            self.appsController = appsControllerIfPossible()
+//            if let tabs, tabs.contains(where: { $0 == .apps }) {
+//                updateRootControllers(tabs: tabs)
+//            }
+//            
+//            let _ = (context.engine.messages.requestMainWebView(peerId: user.id, botId: user.id, source: .generic, themeParams: generateWebAppThemeParams(presentationData.theme))
+//                     |> take(1)
+//                     |> deliverOnMainQueue)
+//                .start(next: { [weak self] in
+//                    guard let self else { return }
+//                    self.appsBotWebViewResult = $0
+//                    self.appsController = appsControllerIfPossible()
+//                    if let tabs, tabs.contains(where: { $0 == .apps }) {
+//                        updateRootControllers(tabs: tabs)
+//                    }
+//                })
+//        })
     }
     
     required public init(coder aDecoder: NSCoder) {
@@ -350,9 +350,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         }
         accountSettingsController.parentController = self
         
-        let walletController = walletControllerIfPossible()
+//        let walletController = walletControllerIfPossible()
         
-        let appsController = appsControllerIfPossible()
+//        let appsController = appsControllerIfPossible()
         
         let wallController = DWallController(context: context)
         
@@ -368,14 +368,14 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 controllers.append(dahlSettingsController)
             case .settings:
                 controllers.append(accountSettingsController)
-            case .wallet:
-                if let walletController {
-                    controllers.append(walletController)
-                }
-            case .apps:
-                if let appsController {
-                    controllers.append(appsController)
-                }
+//            case .wallet:
+//                if let walletController {
+//                    controllers.append(walletController)
+//                }
+//            case .apps:
+//                if let appsController {
+//                    controllers.append(appsController)
+//                }
                 
             #if DEBUG
             case .wall:
@@ -393,8 +393,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.newsFeedController = newsFeedController
         self.accountSettingsController = accountSettingsController
         self.dahlSettingsController = dahlSettingsController
-        self.walletController = walletController
-        self.appsController = appsController
+//        self.walletController = walletController
+//        self.appsController = appsController
         self.wallController = wallController
         self.rootTabController = tabBarController
         self.pushViewController(tabBarController, animated: false)
@@ -419,14 +419,14 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 controllers.append(dahlSettingsController!)
             case .settings:
                 controllers.append(accountSettingsController!)
-            case .wallet:
-                if let walletController {
-                    controllers.append(walletController)
-                }
-            case .apps:
-                if let appsController {
-                    controllers.append(appsController)
-                }
+//            case .wallet:
+//                if let walletController {
+//                    controllers.append(walletController)
+//                }
+//            case .apps:
+//                if let appsController {
+//                    controllers.append(appsController)
+//                }
                 
             #if DEBUG
             case .wall:
