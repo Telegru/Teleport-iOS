@@ -304,9 +304,10 @@ public class ChatMessageTextBubbleContentNode: ChatMessageBubbleContentNode {
                     break
                 }
                 if case let .customChatContents(contents) = item.associatedData.subject {
-                    if case .hashTagSearch = contents.kind {
+                    switch contents.kind {
+                    case .wall, .hashTagSearch:
                         displayStatus = true
-                    } else {
+                    default:
                         displayStatus = false
                     }
                 } else if !item.presentationData.chatBubbleCorners.hasTails {

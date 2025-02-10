@@ -82,6 +82,7 @@
 
 // Wall
 "Wall.TabTitle" = "Стена";
+"Wall.Title" = "Стена";
 
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";

@@ -2675,16 +2675,21 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
                             return
                         }
                         
-                        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject, case .hashTagSearch = contents.kind {
-                            self.controller?.navigateToMessage(
-                                from: message.id,
-                                to: .index(message.index),
-                                scrollPosition: .center(.bottom),
-                                rememberInStack: false,
-                                forceInCurrentChat: false,
-                                forceNew: true,
-                                animated: true
-                            )
+                        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject {
+                            switch contents.kind {
+                            case .hashTagSearch, .wall:
+                                self.controller?.navigateToMessage(
+                                    from: message.id,
+                                    to: .index(message.index),
+                                    scrollPosition: .center(.bottom),
+                                    rememberInStack: false,
+                                    forceInCurrentChat: false,
+                                    forceNew: true,
+                                    animated: true
+                                )
+                            default:
+                                break
+                            }
                         } else if let historyFilter = self.chatPresentationInterfaceState.historyFilter, let reaction = ReactionsMessageAttribute.reactionFromMessageTag(tag: historyFilter.customTag), let peerId = self.chatLocation.peerId, historyFilter.isActive {
                             let _ = (self.context.engine.messages.searchMessages(
                                 location: .peer(peerId: peerId, fromId: nil, tags: nil, reactions: [reaction], threadId: self.chatLocation.threadId, minDate: nil, maxDate: nil),

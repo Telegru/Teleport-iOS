@@ -118,9 +118,14 @@ public class ChatMessageShareButton: ASDisplayNode {
                 if hasMore {
                     updatedBottomIconImage = PresentationResourcesChat.chatFreeMoreButtonIcon(presentationData.theme.theme, wallpaper: presentationData.theme.wallpaper)
                 }
-            } else if case let .customChatContents(contents) = subject, case .hashTagSearch = contents.kind {
-                updatedIconImage = PresentationResourcesChat.chatFreeNavigateButtonIcon(presentationData.theme.theme, wallpaper: presentationData.theme.wallpaper)
-                updatedIconOffset = CGPoint(x: UIScreenPixel, y: 1.0)
+            } else if case let .customChatContents(contents) = subject {
+                switch contents.kind {
+                case .hashTagSearch, .wall:
+                    updatedIconImage = PresentationResourcesChat.chatFreeNavigateButtonIcon(presentationData.theme.theme, wallpaper: presentationData.theme.wallpaper)
+                    updatedIconOffset = CGPoint(x: UIScreenPixel, y: 1.0)
+                default:
+                    break
+                }
             } else if case .pinnedMessages = subject {
                 updatedIconImage = PresentationResourcesChat.chatFreeNavigateButtonIcon(presentationData.theme.theme, wallpaper: presentationData.theme.wallpaper)
                 updatedIconOffset = CGPoint(x: UIScreenPixel, y: 1.0)

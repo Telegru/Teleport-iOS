@@ -17,10 +17,8 @@ final class DWallControllerNode: ASDisplayNode {
     private let context: AccountContext
     private weak var controller: DWallController?
     private var presentationData: PresentationData
-    private let navigationBar: NavigationBar?
     
     private let containerNode: ASDisplayNode
-    private let shimmerNode: ChatListSearchShimmerNode
     
     private var containerLayout: (ContainerViewLayout, CGFloat)?
     private var hasValidLayout = false
@@ -29,21 +27,14 @@ final class DWallControllerNode: ASDisplayNode {
     
     init(
         context: AccountContext,
-        controller: DWallController,
-        navigationBar: NavigationBar?,
-        navigationController: NavigationController?
+        controller: DWallController
     ) {
         self.context = context
         self.controller = controller
-        self.navigationBar = navigationBar
         self.presentationData = controller.presentationData
         
         self.containerNode = ASDisplayNode()
         self.containerNode.clipsToBounds = true
-        
-        self.shimmerNode = ChatListSearchShimmerNode(key: .chats)
-        self.shimmerNode.isUserInteractionEnabled = false
-        self.shimmerNode.allowsGroupOpacity = true
         
         let navigationController = controller.navigationController as? NavigationController
         wallContent = DWallChatContent(context: context)
@@ -70,17 +61,6 @@ final class DWallControllerNode: ASDisplayNode {
             let button: UIBarButtonItem? = isSelecting ? UIBarButtonItem(title: presentationData.strings.Common_Cancel, style: .done, target: self, action: #selector(self.cancelPressed)) : nil
             chatController.navigationItem.setRightBarButton(button, animated: true)
         }
-        
-        addSubnode(shimmerNode)
-        
-        shimmerDisposable = (
-            wallContent.isLoadingSignal
-            |> deliverOnMainQueue
-        ).start(next: { [weak self] isLoading in
-            guard let self else { return }
-            let transition: ContainedViewLayoutTransition = isLoading ? .immediate : .animated(duration: 0.2, curve: .easeInOut)
-            transition.updateAlpha(node: self.shimmerNode, alpha: isLoading ? 1.0 : 0.0)
-        })
     }
     
     deinit {
@@ -158,17 +138,6 @@ final class DWallControllerNode: ASDisplayNode {
         }
             
         transition.updateFrame(node: self.containerNode, frame: CGRect(origin: .zero, size: layout.size))
-            
-            let overflowInset: CGFloat = 0.0
-            let _topInset = navigationBarHeight
-            self.shimmerNode.frame = CGRect(origin: CGPoint(x: overflowInset, y: _topInset), size: CGSize(width: layout.size.width - overflowInset * 2.0, height: layout.size.height))
-            self.shimmerNode.update(context: self.context, size:CGSize(width: layout.size.width - overflowInset * 2.0, height: layout.size.height), presentationData: self.context.sharedContext.currentPresentationData.with { $0 }, animationCache: self.context.animationCache, animationRenderer: self.context.animationRenderer, key: .chats, hasSelection: false, transition: transition)
-            
-            if isFirstTime {
-                if self.shimmerNode.supernode != nil {
-                    self.addSubnode(self.shimmerNode)
-                }
-            }
         
         if !self.hasValidLayout {
             self.hasValidLayout = true

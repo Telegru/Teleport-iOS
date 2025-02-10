@@ -281,8 +281,13 @@ private func canViewReadStats(message: Message, participantCount: Int?, isMessag
 }
 
 func canReplyInChat(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, accountPeerId: PeerId) -> Bool {
-    if case let .customChatContents(contents) = chatPresentationInterfaceState.subject, case .hashTagSearch = contents.kind {
-        return true
+    if case let .customChatContents(contents) = chatPresentationInterfaceState.subject {
+        switch contents.kind {
+        case .hashTagSearch, .wall:
+            return true
+        default:
+            break
+        }
     }
     if case .customChatContents = chatPresentationInterfaceState.chatLocation {
         return true
