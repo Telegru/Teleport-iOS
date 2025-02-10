@@ -37,17 +37,22 @@ public final class DWallController: TelegramBaseController {
         
         self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
         
-        super.init(context: context, navigationBarPresentationData: NavigationBarPresentationData(presentationData: self.presentationData), mediaAccessoryPanelVisibility: .specific(size: .compact), locationBroadcastPanelSource: .none, groupCallPanelSource: .none)
+        super.init(context: context, navigationBarPresentationData: NavigationBarPresentationData(presentationData: self.presentationData), mediaAccessoryPanelVisibility: .none, locationBroadcastPanelSource: .none, groupCallPanelSource: .none)
         
         self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
         
-        navigationItem.title = "Wall"
-        tabBarItem.title = "Wall"
+        navigationItem.title = "Wall.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)
+        tabBarItem.title = "Wall.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
         let icon = UIImage(bundleImageName: "Chat List/Tabs/IconWall")
         tabBarItem.image = icon
         tabBarItem.selectedImage = icon
         
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(
+            title: self.presentationData.strings.Common_Back,
+            style: .plain,
+            target: nil,
+            action: nil
+        )
         
         self.presentationDataDisposable = (self.context.sharedContext.presentationData
                                            |> deliverOnMainQueue).start(next: { [weak self] presentationData in
@@ -59,12 +64,16 @@ public final class DWallController: TelegramBaseController {
             self.presentationData = presentationData
             
             if previousTheme !== presentationData.theme || previousStrings !== presentationData.strings {
-                self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
-                
-                self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))
-                self.controllerNode.updatePresentationData(self.presentationData)
+                updateThemeAndStrings()
             }
-        })
+        }).strict()
+        
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(
+            title: self.presentationData.strings.Common_Back,
+            style: .plain,
+            target: nil,
+            action: nil
+        )
         
         self.scrollToTop = { [weak self] in
             self?.controllerNode.scrollToTop()
@@ -80,15 +89,29 @@ public final class DWallController: TelegramBaseController {
     }
     
     public override func loadDisplayNode() {
-        self.displayNode = DWallControllerNode(context: self.context, controller: self, navigationBar: self.navigationBar, navigationController: self.navigationController as? NavigationController)
+        self.displayNode = DWallControllerNode(context: self.context, controller: self)
         
         controllerNode.chatController.parentController = self
         self.displayNodeDidLoad()
+    }
+    
+    public override func didMove(toParent parent: UIViewController?) {
+        super.didMove(toParent: parent)
+        controllerNode.chatController.customNavigationController = self.navigationController as? NavigationController
     }
     
     public override func containerLayoutUpdated(_ layout: ContainerViewLayout, transition: ContainedViewLayoutTransition) {
         super.containerLayoutUpdated(layout, transition: transition)
         
         let _ = self.controllerNode.containerLayoutUpdated(layout, navigationBarHeight: self.cleanNavigationHeight, transition: transition)
+    }
+    
+    private func updateThemeAndStrings() {
+        self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
+        
+        self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))
+        self.controllerNode.updatePresentationData(self.presentationData)
+        
+        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
     }
 }
