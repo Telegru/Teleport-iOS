@@ -44,7 +44,11 @@ func inputPanelForChatPresentationIntefaceState(_ chatPresentationInterfaceState
         } else {
             var alwaysShowTotalMessagesCount = false
             if case let .customChatContents(contents) = chatPresentationInterfaceState.subject, case .hashTagSearch = contents.kind {
-                alwaysShowTotalMessagesCount = true
+                switch contents.kind {
+                case .hashTagSearch, .wall:
+                    alwaysShowTotalMessagesCount = true
+                default: break
+                }
             }
             
             let panel = ChatTagSearchInputPanelNode(theme: chatPresentationInterfaceState.theme, alwaysShowTotalMessagesCount: alwaysShowTotalMessagesCount)

@@ -166,6 +166,7 @@
 
 // Wall
 "Wall.TabTitle" = "Wall";
+"Wall.Title" = "Wall";
 
 // Chat
 "Chat.FrontCamera" = "Front camera";

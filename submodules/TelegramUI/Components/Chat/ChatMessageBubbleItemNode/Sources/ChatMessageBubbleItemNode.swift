@@ -2562,11 +2562,16 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
             var hasThreadInfo = false
             if case let .peer(peerId) = item.chatLocation, (peerId == replyMessage?.id.peerId || item.message.threadId == 1 || item.associatedData.isRecentActions), let channel = item.message.peers[item.message.id.peerId] as? TelegramChannel, channel.flags.contains(.isForum), item.message.associatedThreadInfo != nil {
                 hasThreadInfo = true
-            } else if case let .customChatContents(contents) = item.associatedData.subject, case .hashTagSearch = contents.kind {
-                if let channel = item.message.peers[item.message.id.peerId] as? TelegramChannel, case .broadcast = channel.info {
-                    
-                } else {
-                    hasThreadInfo = true
+            } else if case let .customChatContents(contents) = item.associatedData.subject {
+                switch contents.kind {
+                case .hashTagSearch, .wall:
+                    if let channel = item.message.peers[item.message.id.peerId] as? TelegramChannel, case .broadcast = channel.info {
+                        
+                    } else {
+                        hasThreadInfo = true
+                    }
+                default:
+                    break
                 }
             }
                         
@@ -5756,8 +5761,13 @@ public class ChatMessageBubbleItemNode: ChatMessageItemView, ChatMessagePreviewI
         if let item = self.item {
             if item.message.adAttribute != nil {
                 item.controllerInteraction.openNoAdsDemo()
-            } else if case let .customChatContents(contents) = item.associatedData.subject, case .hashTagSearch = contents.kind {
-                item.controllerInteraction.navigateToMessage(item.content.firstMessage.id, item.content.firstMessage.id, NavigateToMessageParams(timestamp: nil, quote: nil, forceNew: true))
+            } else if case let .customChatContents(contents) = item.associatedData.subject {
+                switch contents.kind {
+                case .hashTagSearch, .wall:
+                    item.controllerInteraction.navigateToMessage(item.content.firstMessage.id, item.content.firstMessage.id, NavigateToMessageParams(timestamp: nil, quote: nil, forceNew: true))
+                default:
+                    break
+                }
             } else if case .pinnedMessages = item.associatedData.subject {
                 item.controllerInteraction.navigateToMessageStandalone(item.content.firstMessage.id)
             } else if item.content.firstMessage.id.peerId.isRepliesOrSavedMessages(accountPeerId: item.context.account.peerId) {
