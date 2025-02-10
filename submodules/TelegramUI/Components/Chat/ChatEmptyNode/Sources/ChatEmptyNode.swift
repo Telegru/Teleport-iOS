@@ -780,9 +780,7 @@ private final class ChatEmptyNodeCloudChatContent: ASDisplayNode, ChatEmptyNodeC
                 insets.top = -9.0
                 imageSpacing = 4.0
                 titleSpacing = 5.0
-            case .hashTagSearch:
-                break
-            case .wall:
+            case .hashTagSearch, .wall:
                 break
             }
         }
