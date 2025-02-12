@@ -552,8 +552,8 @@ extension ChatControllerImpl {
         })
     }
     
-    func presentClearCacheSuggestion() {
-        guard let peer = self.presentationInterfaceState.renderedPeer?.peer else {
+    func presentClearCacheSuggestion(forPeer peer: Peer? = nil) {
+        guard let peer = peer ?? self.presentationInterfaceState.renderedPeer?.peer else {
             return
         }
         self.updateChatPresentationInterfaceState(animated: true, interactive: true, { $0.updatedInterfaceState({ $0.withoutSelectionState() }) })
