@@ -23,10 +23,9 @@ public extension DAppTab {
 //            return "Apps.TabTitle".tp_loc(lang: strings.baseLanguageCode)
 //        case .channels:
 //            return strings.ChatListFolder_NameChannels
-        #if DEBUG
+            
         case .wall:
             return "Wall.TabTitle".tp_loc(lang: strings.baseLanguageCode)
-        #endif
         }
     }
 }

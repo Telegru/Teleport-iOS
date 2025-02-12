@@ -384,11 +384,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                if let appsController {
 //                    controllers.append(appsController)
 //                }
-            #if DEBUG
+                
             case .wall:
                 controllers.append(wallController)
-            #endif
-                
             }
         }
                 
@@ -435,10 +433,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                if let appsController {
 //                    controllers.append(appsController)
 //                }
-            #if DEBUG
+                
             case .wall:
                 controllers.append(wallController!)
-            #endif
             }
         }
         
