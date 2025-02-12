@@ -904,14 +904,13 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         
         var messageActions = messageActions
         if isEmbeddedMode {
-            let isWall: Bool = {
-                guard let subject = chatPresentationInterfaceState.subject else {
+            let isWall = {
+                guard let subject = chatPresentationInterfaceState.subject,
+                      case let .customChatContents(contents) = subject,
+                      case .wall = contents.kind else {
                     return false
                 }
-                if case let .customChatContents(contents) = subject, case .wall = contents.kind {
-                    return true
-                }
-                return false
+                return true
             }()
             messageActions = ChatAvailableMessageActions(
                 options: messageActions.options.intersection(isWall ? [.deleteLocally, .deleteGlobally, .forward, .report] : [.deleteLocally, .deleteGlobally, .forward]),
