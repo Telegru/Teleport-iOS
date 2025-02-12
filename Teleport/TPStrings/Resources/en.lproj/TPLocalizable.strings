@@ -83,3 +83,5 @@
 "Chat.ConfirmCall" = "Are you sure you want to start an audio call?";
 "Chat.EmptyRecent" = "Here will be recent chats";
 "Chat.ClearHistory" = "Clear History";
+"Chat.ClearHistoryConfirmation" = "Are you sure you want to clear the recent chats history? The chats data will be saved.";
+"Chat.Clear" = "Clear";

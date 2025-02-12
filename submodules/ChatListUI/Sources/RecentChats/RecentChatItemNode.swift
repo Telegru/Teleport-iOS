@@ -247,10 +247,6 @@ public final class RecentChatItemNode: ListViewItemNode {
         self.addSubnode(self.badgeTextNode)
     }
     
-    deinit {
-        assert(true)
-    }
-    
     override public func didLoad() {
         super.didLoad()
         

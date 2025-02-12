@@ -2250,10 +2250,38 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 return
             }
             
+            var items: [ContextMenuItem] = []
+            
+            items.append(.action(ContextMenuActionItem(text: strongSelf.presentationData.strings.ChatList_Context_RemoveFromRecents, textColor: .destructive, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Clear"), color: theme.contextMenu.destructiveColor) }, action: { [weak self] _, f in
+                self?.context.engine.peers.removeRecentChat(peerId: peer.id)
+                f(.default)
+            })))
+            
+            items.append(.action(ContextMenuActionItem(text: "Chat.ClearHistory".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), textColor: .destructive, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Delete"), color: theme.contextMenu.destructiveColor) }, action: { [weak self] _, f in
+                self?.askToClearRecentChatsHistory()
+                f(.default)
+            })))
+            
+            items.append(.action(ContextMenuActionItem(text: "DahlSettings.DisablePanel".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), textColor: .primary, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Eye"), color: theme.contextMenu.primaryColor) }, action: { [weak self] _, f in
+                guard let self else { return }
+                let _ = updateDalSettingsInteractively(
+                    accountManager: self.context.sharedContext.accountManager,
+                    { settings in
+                        var settings = settings
+                        settings.showRecentChats = false
+                        return settings
+                    }
+                ).start()
+                
+                f(.default)
+            })))
+            
+            let contextMenuItems: Signal<ContextController.Items, NoError> = .single(ContextController.Items(content: .list(items)))
+            
             if case let .channel(channel) = peer, channel.flags.contains(.isForum) {
                 let chatListController = ChatListControllerImpl(context: strongSelf.context, location: .forum(peerId: channel.id), controlsHistoryPreload: false, hideNetworkActivityStatus: true, previewing: true, enableDebugActions: false)
                 chatListController.navigationPresentation = .master
-                let contextController = ContextController(presentationData: strongSelf.presentationData, source: .controller(ContextControllerContentSourceImpl(controller: chatListController, sourceNode: node, navigationController: strongSelf.navigationController as? NavigationController)), items: chatContextMenuItems(context: strongSelf.context, peerId: peer.id, promoInfo: nil, source: .recentChat, chatListController: strongSelf, joined: false) |> map { ContextController.Items(content: .list($0)) }, gesture: gesture)
+                let contextController = ContextController(presentationData: strongSelf.presentationData, source: .controller(ContextControllerContentSourceImpl(controller: chatListController, sourceNode: node, navigationController: strongSelf.navigationController as? NavigationController)), items: contextMenuItems, gesture: gesture)
                 strongSelf.presentInGlobalOverlay(contextController)
             } else {
                 let contextContentSource: ContextContentSource
@@ -2265,7 +2293,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                     contextContentSource = .controller(ContextControllerContentSourceImpl(controller: chatController, sourceNode: node, navigationController: strongSelf.navigationController as? NavigationController))
                 }
                 
-                let contextController = ContextController(context: strongSelf.context, presentationData: strongSelf.presentationData, source: contextContentSource, items: chatContextMenuItems(context: strongSelf.context, peerId: peer.id, promoInfo: nil, source: .recentChat, chatListController: strongSelf, joined: false) |> map { ContextController.Items(content: .list($0)) }, gesture: gesture)
+                let contextController = ContextController(context: strongSelf.context, presentationData: strongSelf.presentationData, source: contextContentSource, items: contextMenuItems, gesture: gesture)
                 strongSelf.presentInGlobalOverlay(contextController)
             }
         }
@@ -6254,6 +6282,27 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         case .disabled:
             return false
         }
+    }
+    
+    private func askToClearRecentChatsHistory(){
+        let actionSheet = ActionSheetController(presentationData: self.presentationData)
+        
+        actionSheet.setItemGroups([
+            ActionSheetItemGroup(items: [
+                ActionSheetTextItem(title: "Chat.ClearHistoryConfirmation".tp_loc(lang: presentationData.strings.baseLanguageCode)),
+                ActionSheetButtonItem(title: "Chat.Clear".tp_loc(lang: presentationData.strings.baseLanguageCode), color: .destructive, action: { [weak actionSheet, weak self] in
+                    actionSheet?.dismissAnimated()
+                    
+                    self?.context.engine.peers.clearRecentChats()
+                })
+            ]),
+            ActionSheetItemGroup(items: [
+                ActionSheetButtonItem(title: self.presentationData.strings.Common_Cancel, color: .accent, font: .bold, action: { [weak actionSheet] in
+                    actionSheet?.dismissAnimated()
+                })
+            ])
+        ])
+        self.present(actionSheet, in: .window(.root))
     }
 }
 
