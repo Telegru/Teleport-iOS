@@ -78,7 +78,6 @@ private struct ChatListRecentChatsNodeTransition {
     let insertions: [ListViewInsertItem]
     let updates: [ListViewUpdateItem]
     let firstTime: Bool
-    let animated: Bool
 }
 
 private func preparedRecentChatsTransition(
@@ -87,8 +86,7 @@ private func preparedRecentChatsTransition(
     peerContextAction: @escaping (EnginePeer, ASDisplayNode, ContextGesture?, CGPoint?) -> Void,
     from fromEntries: [ChatListRecentChatsEntry],
     to toEntries: [ChatListRecentChatsEntry],
-    firstTime: Bool,
-    animated: Bool
+    firstTime: Bool
 ) -> ChatListRecentChatsNodeTransition {
     let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: fromEntries, rightList: toEntries)
     
@@ -106,7 +104,7 @@ private func preparedRecentChatsTransition(
         isPeerSelected: { _ in false }
     ), directionHint: nil) }
     
-    return ChatListRecentChatsNodeTransition(deletions: deletions, insertions: insertions, updates: updates, firstTime: firstTime, animated: animated)
+    return ChatListRecentChatsNodeTransition(deletions: deletions, insertions: insertions, updates: updates, firstTime: firstTime)
 }
 
 public final class ChatListRecentChatsNode: ASDisplayNode {
@@ -241,16 +239,13 @@ public final class ChatListRecentChatsNode: ASDisplayNode {
                     )
                 }
                 
-                let animated = !firstTime.swap(false)
-                
                 let transition = preparedRecentChatsTransition(
                     context: context,
                     action: action,
                     peerContextAction: peerContextAction,
                     from: previous.swap(entries),
                     to: entries,
-                    firstTime: !animated,
-                    animated: animated
+                    firstTime: firstTime.swap(false)
                 )
 
                 strongSelf.enqueueTransition(transition)
@@ -276,8 +271,6 @@ public final class ChatListRecentChatsNode: ASDisplayNode {
                 options.insert(.PreferSynchronousDrawing)
                 options.insert(.Synchronous)
                 options.insert(.LowLatency)
-            } else if transition.animated {
-                options.insert(.AnimateInsertion)
             }
             self.listView.transaction(deleteIndices: transition.deletions, insertIndicesAndItems: transition.insertions, updateIndicesAndItems: transition.updates, options: options, updateOpaqueState: nil, completion: { [weak self] _ in
                 guard let self else {
