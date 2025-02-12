@@ -120,12 +120,12 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case confirmationHeader(PresentationTheme, String)
     case chatsFoldersHeader(PresentationTheme, String)
     case recentChatsHeader(PresentationTheme, String)
-    
+
     case proxy(PresentationTheme, String, Bool)
 
 	// Раздел нижнего меню
     case tabBar
-    
+
     // Раздел Пункты меню
     case menuItems
 
@@ -148,7 +148,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case chatsFoldersAtBottom(PresentationTheme, String, Bool)
     case hideAllChatsFolder(PresentationTheme, String, Bool)
     case infiniteScrolling(PresentationTheme, String, Bool)
-    
+
     // Недавние чаты
     case showRecentChats(PresentationTheme, String, Bool)
 
@@ -162,7 +162,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             
         case .menuItems:
             return DalSettingsSection.menuItems.rawValue
-            
+
         case .storiesHeader, .hidePublishStoriesButton, .hideStories, .hideViewedStories:
             return DalSettingsSection.stories.rawValue
             
@@ -597,7 +597,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 },
                 tag: self.tag
             )
-            
+
         case .menuItems:
             return ItemListDisclosureItem(
                 presentationData: presentationData,
@@ -610,14 +610,14 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                     arguments.pushController(menuItemsSettingsController)
                 }
             )
-            
+
         case let .recentChatsHeader(_, text):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
                 text: text,
                 sectionId: self.section
             )
-            
+
         case let .showRecentChats(_, text, value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
@@ -666,7 +666,7 @@ private func dalSettingsEntries(
     entries.append(.tabBar)
     
     entries.append(.menuItems)
-    
+
     entries.append(.storiesHeader(presentationData.theme, "DahlSettings.StoriesHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePublishStoriesButton(
         presentationData.theme,
