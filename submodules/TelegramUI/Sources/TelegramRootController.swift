@@ -377,10 +377,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                    controllers.append(appsController)
 //                }
                 
-            #if DEBUG
             case .wall:
                 controllers.append(wallController)
-            #endif
             }
         }
                 
@@ -428,10 +426,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                    controllers.append(appsController)
 //                }
                 
-            #if DEBUG
             case .wall:
                 controllers.append(wallController!)
-            #endif
             }
         }
         

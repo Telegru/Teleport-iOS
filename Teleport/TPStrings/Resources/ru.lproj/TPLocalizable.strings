@@ -71,6 +71,7 @@
 // Wall
 "Wall.TabTitle" = "Стена";
 "Wall.Title" = "Стена";
+"Wall.Reload" = "Обновить";
 
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";
