@@ -68,11 +68,18 @@ public final class DWallController: TelegramBaseController {
             }
         }).strict()
         
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(
+        navigationItem.backBarButtonItem = UIBarButtonItem(
             title: self.presentationData.strings.Common_Back,
             style: .plain,
             target: nil,
             action: nil
+        )
+        
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: "Wall.Reload".tp_loc(lang: presentationData.strings.baseLanguageCode),
+            style: .plain,
+            target: self,
+            action: #selector(self.reloadPressed)
         )
         
         self.scrollToTop = { [weak self] in
@@ -112,6 +119,16 @@ public final class DWallController: TelegramBaseController {
         self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))
         self.controllerNode.updatePresentationData(self.presentationData)
         
-        self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
+        navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: "Wall.Reload".tp_loc(lang: presentationData.strings.baseLanguageCode),
+            style: .plain,
+            target: self,
+            action: #selector(self.reloadPressed)
+        )
+    }
+    
+    @objc private func reloadPressed() {
+        controllerNode.wallContent.reloadData()
     }
 }
