@@ -10,10 +10,7 @@ public enum DAppTab: Int, Codable, CaseIterable {
 //    case wallet
 //    case apps
 //    case channels
-    
-    #if DEBUG
     case wall
-    #endif
     
     public var isAlwaysShow: Bool {
         switch self {
@@ -50,6 +47,7 @@ extension TabBarSettings {
     
     public static var `default`: TabBarSettings {
         TabBarSettings(currentTabs: [
+            .wall,
             .contacts,
             .chats,
             .settings
