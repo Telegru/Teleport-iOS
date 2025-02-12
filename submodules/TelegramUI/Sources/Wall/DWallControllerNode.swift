@@ -118,7 +118,6 @@ final class DWallControllerNode: ASDisplayNode {
         
         var insets = layout.insets(options: [])
         insets.top += navigationBarHeight
-        // TODO: Tab bar height?
         
         if isFirstTime {
             self.insertSubnode(self.containerNode, at: 0)
@@ -126,7 +125,7 @@ final class DWallControllerNode: ASDisplayNode {
         
         chatController.externalSearchResultsCount = nil
         
-        let topInset: CGFloat = insets.top - 79.0
+        let topInset: CGFloat = insets.top
         transition.updateFrame(node: chatController.displayNode, frame: CGRect(origin: .zero, size: layout.size))
 
         chatController.containerLayoutUpdated(ContainerViewLayout(size: layout.size, metrics: layout.metrics, deviceMetrics: layout.deviceMetrics, intrinsicInsets: UIEdgeInsets(top: topInset, left: layout.safeInsets.left, bottom: layout.intrinsicInsets.bottom, right: layout.safeInsets.right), safeInsets: layout.safeInsets, additionalInsets: layout.additionalInsets, statusBarHeight: nil, inputHeight: layout.inputHeight, inputHeightIsInteractivellyChanging: false, inVoiceOver: false), transition: transition)
