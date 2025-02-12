@@ -61,6 +61,8 @@ final class DWallControllerNode: ASDisplayNode {
             let button: UIBarButtonItem? = isSelecting ? UIBarButtonItem(title: presentationData.strings.Common_Cancel, style: .done, target: self, action: #selector(self.cancelPressed)) : nil
             chatController.navigationItem.setRightBarButton(button, animated: true)
         }
+        
+        controller.addChild(chatController)
     }
     
     deinit {

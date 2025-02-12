@@ -495,6 +495,10 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         isEmbeddedMode = true
     }
     
+    if case let .customChatContents(customChatContents) = chatPresentationInterfaceState.subject, case .wall = customChatContents.kind {
+        isEmbeddedMode = true
+    }
+    
     var hasExpandedAudioTranscription = false
     if let messageNode = messageNode as? ChatMessageBubbleItemNode {
         hasExpandedAudioTranscription = messageNode.hasExpandedAudioTranscription()
@@ -900,8 +904,17 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         
         var messageActions = messageActions
         if isEmbeddedMode {
+            let isWall: Bool = {
+                guard let subject = chatPresentationInterfaceState.subject else {
+                    return false
+                }
+                if case let .customChatContents(contents) = subject, case .wall = contents.kind {
+                    return true
+                }
+                return false
+            }()
             messageActions = ChatAvailableMessageActions(
-                options: messageActions.options.intersection([.deleteLocally, .deleteGlobally, .forward]),
+                options: messageActions.options.intersection(isWall ? [.deleteLocally, .deleteGlobally, .forward, .report] : [.deleteLocally, .deleteGlobally, .forward]),
                 banAuthor: nil,
                 banAuthors: [],
                 disableDelete: true,
