@@ -2123,6 +2123,21 @@ extension ChatControllerImpl {
                                 let _ = strongSelf.context.engine.messages.deleteMessagesInteractively(messageIds: Array(messageIds), type: .forEveryone, deleteAllInGroup: true).startStandalone()
                                 completion(.dismissWithoutContent)
                             } else {
+                                let isWall = {
+                                    guard let subject = strongSelf.subject,
+                                          case let .customChatContents(contents) = subject,
+                                          case .wall = contents.kind else {
+                                        return false
+                                    }
+                                    return true
+                                }()
+                                
+                                if isWall {
+                                    let author = messages.first?.author
+                                    strongSelf.presentClearCacheSuggestion(forPeer: author)
+                                    return completion(.default)
+                                }
+                                
                                 if actions.options.intersection([.deleteLocally, .deleteGlobally]).isEmpty {
                                     strongSelf.presentClearCacheSuggestion()
                                     completion(.default)
