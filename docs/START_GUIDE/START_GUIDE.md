@@ -6,7 +6,7 @@
 - Ruby
 - Bundler
 
-Так же для корректной работы должен быть настроен SSH для гиитхаба. [Инстуркция по настройке](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+Так же для корректной работы должен быть настроен SSH для гитхаба. [Инструкция по настройке](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
 
 ## Установка ruby и bundler
 
@@ -27,15 +27,15 @@ rbenv init
 Шаг 3. Устанавливаем ruby
 
 ```bash
-rbenv install 3.4.1
+rbenv install 3.2.6
 ```
 
 Шаг 4. Фиксируем версию ruby для работы внутри консоли
 
 ```bash
-rbenv global 3.4.1   # установить версию Ruby по умолчанию для этой машины
+rbenv global 3.2.6   # установить версию Ruby по умолчанию для этой машины
 # или:
-rbenv local 3.4.1    # установить версию Ruby для этого каталога
+rbenv local 3.2.6    # установить версию Ruby для этого каталога
 ```
 
 Шаг 5. Устанавливаем bundler
