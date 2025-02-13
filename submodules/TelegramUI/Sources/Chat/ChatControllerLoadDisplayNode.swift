@@ -1579,7 +1579,7 @@ extension ChatControllerImpl {
             if case let .customChatContents(contents) = self.presentationInterfaceState.subject, case .hashTagSearch = contents.kind {
                 self.chatDisplayNode.historyNode.scrollToEndOfHistory()
             } else if case let .customChatContents(contents) = self.presentationInterfaceState.subject, case .wall = contents.kind {
-                self.chatDisplayNode.historyNode.scrollToStartOfHistory()
+                self.chatDisplayNode.historyNode.scrollToEndOfHistory()
             } else if let resultsState = self.presentationInterfaceState.search?.resultsState, !resultsState.messageIndices.isEmpty {
                 if let currentId = resultsState.currentId, let index = resultsState.messageIndices.firstIndex(where: { $0.id == currentId }) {
                     if index != resultsState.messageIndices.count - 1 {

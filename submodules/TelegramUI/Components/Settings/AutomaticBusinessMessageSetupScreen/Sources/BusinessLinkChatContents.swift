@@ -36,6 +36,10 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
         return .single((view, .Initial))
     }
     
+    var isLoadingSignal: Signal<Bool, NoError> {
+        return .complete()
+    }
+    
     var messageLimit: Int? {
         return 20
     }
@@ -89,7 +93,9 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
     func loadMore() {
     }
     
-    func hashtagSearchUpdate(query: String) {   
+    func loadAll() {}
+
+    func hashtagSearchUpdate(query: String) {
     }
     
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }

@@ -1165,7 +1165,8 @@ public protocol ChatCustomContentsProtocol: AnyObject {
     var kind: ChatCustomContentsKind { get }
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> { get }
     var messageLimit: Int? { get }
-    
+    var isLoadingSignal: Signal<Bool, NoError> { get }
+
     func enqueueMessages(messages: [EnqueueMessage])
     func deleteMessages(ids: [EngineMessage.Id])
     func editMessage(id: EngineMessage.Id, text: String, media: RequestEditMessageMedia, entities: TextEntitiesMessageAttribute?, webpagePreviewAttribute: WebpagePreviewMessageAttribute?, disableUrlPreview: Bool)
@@ -1174,7 +1175,8 @@ public protocol ChatCustomContentsProtocol: AnyObject {
     func businessLinkUpdate(message: String, entities: [MessageTextEntity], title: String?)
     
     func loadMore()
-    
+    func loadAll()
+
     func hashtagSearchUpdate(query: String)
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void { get set }
 }

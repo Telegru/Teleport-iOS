@@ -25,9 +25,7 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         })
     }
     
-    var messageLimit: Int? {
-        nil
-    }
+    var messageLimit: Int? { nil }
     
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }
     
@@ -52,7 +50,7 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         
         let tailChatsCount = 100
         let filterPredicate = chatListFilterPredicate(filter: filterData, accountPeerId: context.account.peerId)
-
+        
         kind = .wall(tailChatsCount: tailChatsCount, filter: filterPredicate)
         
         self.impl = QueueLocalObject(queue: queue, generate: {
@@ -72,27 +70,17 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         }
     }
     
+    func loadAll() {
+        self.impl.with { impl in
+            impl.loadAll()
+        }
+    }
+    
     func enqueueMessages(messages: [EnqueueMessage]) {}
-
     func deleteMessages(ids: [EngineMessage.Id]) {}
-    
-    func businessLinkUpdate(
-        message: String,
-        entities: [TelegramCore.MessageTextEntity],
-        title: String?
-    ) {}
-    
-    func editMessage(
-        id: EngineMessage.Id,
-        text: String,
-        media: RequestEditMessageMedia,
-        entities: TextEntitiesMessageAttribute?,
-        webpagePreviewAttribute: WebpagePreviewMessageAttribute?,
-        disableUrlPreview: Bool
-    ) {}
-    
+    func businessLinkUpdate(message: String, entities: [TelegramCore.MessageTextEntity], title: String?) {}
+    func editMessage(id: EngineMessage.Id, text: String, media: RequestEditMessageMedia, entities: TextEntitiesMessageAttribute?, webpagePreviewAttribute: WebpagePreviewMessageAttribute?, disableUrlPreview: Bool) {}
     func quickReplyUpdateShortcut(value: String) {}
-    
     func hashtagSearchUpdate(query: String) {}
 }
 
@@ -109,6 +97,7 @@ extension DWallChatContent {
         let filterPredicate: ChatListFilterPredicate
         let tailChatsCount: Int
         
+        private let initialAnchorsPromise = Promise<([PeerId: MessageIndex])>()
         private(set) var mergedHistoryView: MessageHistoryView?
         private var historyViewDisposable: Disposable?
         private var loadingDisposable: Disposable?
@@ -121,7 +110,11 @@ extension DWallChatContent {
         }
         
         private var ignoredPeerIds: Atomic<Set<PeerId>> = Atomic(value: [])
+        private var initialAnchorsDisposable: Disposable?
+
         private var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
+        private var ignoredPeerIds: Atomic<Set<PeerId>> = Atomic(value: [])
+        private var count = 44
         
         init(
             queue: Queue,
@@ -133,7 +126,6 @@ extension DWallChatContent {
             self.context = context
             self.tailChatsCount = tailChatsCount
             self.filterPredicate = filterPredicate
-            self.updateHistoryViewRequest(reload: false)
             
             loadingDisposable = (isLoadingPromise.get()
                 |> distinctUntilChanged)
@@ -152,11 +144,53 @@ extension DWallChatContent {
                         historyViewStream.putNext((historyView, .Initial))
                     }
                 })
+            
+            self.initialAnchorsDisposable = (context.account.viewTracker.tailChatListView(
+                groupId: .root,
+                filterPredicate: filterPredicate,
+                count: tailChatsCount
+            )
+            |> take(1)
+            |> map { view, _ -> [PeerId] in
+                return view.entries.compactMap { entry -> PeerId? in
+                    switch entry {
+                    case let .MessageEntry(entryData):
+                        return (entryData.renderedPeer.peer as? TelegramChannel)?.id
+                    default:
+                        return nil
+                    }
+                }
+            }
+             |> mapToSignal { peerIds -> Signal<[PeerId: MessageIndex], NoError> in
+                return context.account.postbox.oldestUnreadMessagesForPeerIds(
+                    peerIds: peerIds,
+                    clipHoles: false,
+                    namespaces: .all
+                )
+                |> map { unreadDict -> [PeerId: MessageIndex] in
+                    var anchors: [PeerId: MessageIndex] = [:]
+                    for peerId in peerIds {
+                        if let message = unreadDict[peerId] {
+                            anchors[peerId] = MessageIndex(id: message.id, timestamp:  message.timestamp)
+                        }
+                    }
+                    return anchors
+                }
+            }
+             |> take(1)
+            )
+            .startStrict(next: { [weak self] anchors in
+                self?.initialAnchorsPromise.set(.single(anchors))
+            })
+            
+            self.isLoadingPromise.set(false)
+            self.updateHistoryViewRequest(reload: false, showLoading: false)
         }
         
         deinit {
             self.historyViewDisposable?.dispose()
             self.loadingDisposable?.dispose()
+            self.initialAnchorsDisposable?.dispose()
         }
         
         func reloadData() {
@@ -164,135 +198,49 @@ extension DWallChatContent {
         }
         
         func loadMore() {
-            // TODO: Load more next
+            updateHistoryViewRequest(reload: false, showLoading: false)
         }
         
-        private func updateHistoryViewRequest(reload: Bool) {
-            guard self.historyViewDisposable == nil || reload else {
-                return
-            }
-            
+        func loadAll() {
+            count = 8800
+            updateHistoryViewRequest(reload: false, showLoading: true)
+        }
+        
+        private func updateHistoryViewRequest(reload: Bool, showLoading: Bool = false) {
             self.historyViewDisposable?.dispose()
-            
-            self.isLoadingPromise.set(true)
+            if showLoading {
+                self.isLoadingPromise.set(true)
+            }
             
             let context = self.context
             
             self.historyViewDisposable = (
-                context.account.viewTracker.tailChatListView(
-                    groupId: .root,
-                    filterPredicate: filterPredicate,
-                    count: tailChatsCount
-                )
-                |> take(1)
-                |> mapToSignal { view, _ -> Signal<[PeerId], NoError> in
-                    let peerIds = view.entries.compactMap { entry -> PeerId? in
-                        switch entry {
-                        case let .MessageEntry(entryData):
-                            return (entryData.renderedPeer.peer as? TelegramChannel)?.id
-                        default:
-                            return nil
-                        }
-                    }
-                    return .single(peerIds)
-                }
-                |> mapToSignal { peerIds -> Signal<[(PeerId, MessageHistoryView)], NoError> in
-                    return combineLatest(
-                        peerIds.map { peerId -> Signal<(PeerId, MessageHistoryView), NoError> in
-                            var additionalData: [AdditionalMessageHistoryViewData] = []
-                            additionalData.append(.cachedPeerData(peerId))
-                            additionalData.append(.cachedPeerDataMessages(peerId))
-                            additionalData.append(.peerNotificationSettings(peerId))
-                            if [Namespaces.Peer.CloudChannel, Namespaces.Peer.CloudGroup].contains(peerId.namespace) {
-                                additionalData.append(.peer(peerId))
-                            }
-                            if peerId.namespace == Namespaces.Peer.CloudUser || peerId.namespace == Namespaces.Peer.SecretChat {
-                                additionalData.append(.peerIsContact(peerId))
-                            }
-                            
-                            return context.account.postbox.aroundMessageHistoryViewForLocation(
-                                .peer(peerId: peerId, threadId: nil),
-                                anchor: .unread,
-                                ignoreMessagesInTimestampRange: nil,
-                                ignoreMessageIds: Set(),
-                                count: 11,
-                                fixedCombinedReadStates: nil,
-                                topTaggedMessageIdNamespaces: Set(),
-                                tag: nil,
-                                appendMessagesFromTheSameGroup: false,
-                                namespaces: .not(Namespaces.Message.allNonRegular),
-                                orderStatistics: [],
-                                additionalData: additionalData
-                            )
-                            |> map { update -> (PeerId, MessageHistoryView) in
-                                return (peerId, update.0)
-                            }
-                        }
+                self.initialAnchorsPromise.get()
+                |> mapToSignal { [weak self] anchors -> Signal<MessageHistoryView, NoError> in
+                    guard let strongSelf = self else { return .complete() }
+                    let peerIds = Array(anchors.keys)
+                    return context.account.postbox.aggregatedGlobalMessagesHistoryViewForPeerIds(
+                        peerIds: peerIds,
+                        from: anchors,
+                        count: strongSelf.count,
+                        clipHoles: false,
+                        namespaces: Namespaces.Message.Cloud
                     )
                 }
                 |> deliverOnMainQueue
-                |> mapToSignal { [weak self] viewsAndIds -> Signal<[MessageHistoryEntry], NoError> in
-                    guard let strongSelf = self else { return .complete() }
-                    
-                    for (peerId, view) in viewsAndIds {
-                        if view.entries.contains(where: { $0.isRead }) {
-                            _ = strongSelf.ignoredPeerIds.modify {
-                                var updated = $0
-                                updated.insert(peerId)
-                                return updated
-                            }
-                        }
-                        
-                        _ = strongSelf.sourceHistoryViews.modify {
-                            var dict = $0
-                            dict[peerId] = view
-                            return dict
-                        }
-                    }
-                    
-                    let historyViews = strongSelf.sourceHistoryViews.with { $0 }
-                    guard !historyViews.isEmpty else { return .single([]) }
-                    
-                    return context.account.postbox.transaction { transaction -> [MessageHistoryEntry] in
-                        var result = [MessageHistoryEntry]()
-                        
-                        for (peerId, historyView) in historyViews {
-                            if let combinedState = transaction.getCombinedPeerReadState(peerId) {
-                                let unreadEntries = historyView.entries.filter { entry in
-                                    return !combinedState.isIncomingMessageIndexRead(entry.message.index)
-                                }
-                                result.append(contentsOf: unreadEntries)
-                            } else {
-                                result.append(contentsOf: historyView.entries)
-                            }
-                        }
-                        
-                        result.sort(by: { $0.message.index > $1.message.index })
-                        
-                        return result
-                    }
-                }
-                |> deliverOnMainQueue
             )
-            .start(next: { [weak self] allEntries in
+            .start(next: { [weak self] view in
                 guard let self = self else { return }
+                let index = view.entries.last?.message.index
                 
-                let historyViews = self.sourceHistoryViews.with { $0 }
-                guard let templateHistoryView = historyViews.first?.value else { return }
-                
-                let mergedHistoryView = MessageHistoryView(
-                    tag: templateHistoryView.tag,
-                    namespaces: templateHistoryView.namespaces,
-                    entries: allEntries,
-                    holeEarlier: false,
-                    holeLater: templateHistoryView.holeLater,
-                    isLoading: false
-                )
-                
-                self.mergedHistoryView = mergedHistoryView
-                self.historyViewStream.putNext((mergedHistoryView, .FillHole))
-                
-                self.isLoadingPromise.set(false)
+                let updateType: ViewUpdateType = (self.mergedHistoryView == nil) ? ((index != nil) ? .InitialUnread(index!) : .Initial) : .FillHole
+
+                self.mergedHistoryView = view
+                self.historyViewStream.putNext((view, updateType))
+                if showLoading {
+                    self.isLoadingPromise.set(false)
+                }
+                self.count += 44
             })
         }
     }

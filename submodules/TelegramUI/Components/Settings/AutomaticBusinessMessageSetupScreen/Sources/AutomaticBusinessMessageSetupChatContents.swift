@@ -203,6 +203,10 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
         return 20
     }
     
+    var isLoadingSignal: Signal<Bool, NoError> {
+        return .complete()
+    }
+    
     private let queue: Queue
     private let impl: QueueLocalObject<Impl>
     
@@ -267,6 +271,8 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     
     func loadMore() {
     }
+    
+    func loadAll() {}
     
     func hashtagSearchUpdate(query: String) {
     }
