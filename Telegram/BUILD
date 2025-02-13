@@ -478,7 +478,7 @@ official_unrestricted_voip_fragment = """
 <key>com.apple.developer.pushkit.unrestricted-voip</key>
 <true/>
 """
-unrestricted_voip_fragment = official_unrestricted_voip_fragment  if telegram_bundle_id in official_bundle_ids else ""
+unrestricted_voip_fragment = official_unrestricted_voip_fragment if telegram_bundle_id in official_bundle_ids else ""
 
 official_carplay_fragment = """
 <key>com.apple.developer.carplay-messaging</key>
