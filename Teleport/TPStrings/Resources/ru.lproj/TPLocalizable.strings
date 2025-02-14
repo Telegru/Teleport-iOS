@@ -62,6 +62,10 @@
 "DahlSettings.TabBarSettings.ActiveTabs.Footer" = "Нижнее меню приложения можно настраивать под себя, удаляя и добавляя пункты из списка доступных.";
 "DahlSettings.TabBarSettings.AvailableTabs.Header" = "Еще пункты";
 
+"DahlSettings.RecentChatsHeader" = "Недавние чаты";
+"DahlSettings.EnablePanel" = "Включить панель";
+"DahlSettings.DisablePanel" = "Выключить панель";
+
 // Wallet
 "Wallet.TabTitle" = "Кошелек";
 
@@ -77,3 +81,7 @@
 "Chat.No" = "Нет";
 "Chat.ConfirmVideoCall" = "Вы действительно хотите начать видеозвонок?";
 "Chat.ConfirmCall" = "Вы действительно хотите начать аудиозвонок?";
+"Chat.EmptyRecent" = "Здесь будут недавние чаты";
+"Chat.ClearHistory" = "Очистить историю";
+"Chat.ClearHistoryConfirmation" = "Вы точно хотите очистить историю недавних чатов? Данные чатов сохранятся";
+"Chat.Clear" = "Очистить";
