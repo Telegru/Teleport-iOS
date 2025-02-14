@@ -1674,7 +1674,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         let historyView = (strongSelf.opaqueTransactionState as? ChatHistoryTransactionOpaqueState)?.historyView
                         let displayRange = strongSelf.displayedItemRange
                         var updateChatHistoryLocationValue = true
-                        if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
+                        if case let .customChatContents(customChatContents) = strongSelf.subject, case .wall = customChatContents.kind {
                             updateChatHistoryLocationValue = false
                         }
                         if updateChatHistoryLocationValue, let filteredEntries = historyView?.filteredEntries, let visibleRange = displayRange.visibleRange {

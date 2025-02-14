@@ -4639,6 +4639,7 @@ public class Postbox {
     
     public func oldestUnreadMessagesForPeerIds(
             peerIds: [PeerId],
+            clipHoles: Bool,
             namespaces: MessageIdNamespaces) -> Signal<[PeerId: Message], NoError>  {
         return Signal { subscriber in
             let disposable = MetaDisposable()
@@ -4646,6 +4647,7 @@ public class Postbox {
             self.impl.with { impl in
                 disposable.set(impl.oldestUnreadMessagesForPeerIds(
                     peerIds: peerIds,
+                    clipHoles: clipHoles,
                     namespaces: namespaces
                 ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
             }
