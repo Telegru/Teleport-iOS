@@ -9,7 +9,9 @@ filegroup(
         "WallpaperSP.png",
         "WallpaperSP.svg",
         "WallpaperRussia.png",
-        "WallpaperRussia.svg"
+        "WallpaperRussia.svg",
+        "WallpaperMoscow.png",
+        "WallpaperMoscow.svg"
     ],
     visibility = ["//visibility:public"],
 )
