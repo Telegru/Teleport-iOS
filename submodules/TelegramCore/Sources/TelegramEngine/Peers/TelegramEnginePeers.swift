@@ -902,9 +902,13 @@ public extension TelegramEngine {
             return _internal_requestStarsRevenueAdsAccountlUrl(account: self.account, peerId: peerId)
         }
         
-        public func getChatListPeers(filterPredicate: ChatListFilterPredicate) -> Signal<[EnginePeer], NoError> {
+        public func getChatListPeers(filterPredicate: ChatListFilterPredicate, includeArchived: Bool = false) -> Signal<[EnginePeer], NoError> {
             return self.account.postbox.transaction { transaction -> [EnginePeer] in
-                return transaction.getChatListPeers(groupId: .root, filterPredicate: filterPredicate, additionalFilter: nil).map(EnginePeer.init)
+                var peers: [Peer] = transaction.getChatListPeers(groupId: .root, filterPredicate: filterPredicate, additionalFilter: nil)
+                if includeArchived {
+                    peers.append(contentsOf: transaction.getChatListPeers(groupId: Namespaces.PeerGroup.archive, filterPredicate: filterPredicate, additionalFilter: nil))
+                }
+                return peers.map(EnginePeer.init)
             }
         }
 
