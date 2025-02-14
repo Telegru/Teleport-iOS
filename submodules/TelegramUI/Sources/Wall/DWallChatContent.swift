@@ -91,6 +91,7 @@ extension DWallChatContent {
         
         private(set) var mergedHistoryView: MessageHistoryView?
         private var historyViewDisposable: Disposable?
+        private var loadingDisposable: Disposable?
         
         private var nextHistoryLocationId: Int32 = 1
         private func takeNextHistoryLocationId() -> Int32 {
@@ -110,10 +111,29 @@ extension DWallChatContent {
             self.context = context
             
             self.updateHistoryViewRequest(reload: false)
+            
+            loadingDisposable = (isLoadingPromise.get()
+                |> distinctUntilChanged)
+                .startStrict(next: { [weak self] isLoading in
+                    guard let self else { return }
+                    if isLoading {
+                        let historyView = MessageHistoryView(
+                            tag: nil,
+                            namespaces: .all,
+                            entries: [],
+                            holeEarlier: false,
+                            holeLater: false,
+                            isLoading: true
+                        )
+                        mergedHistoryView = historyView
+                        historyViewStream.putNext((historyView, .Initial))
+                    }
+                })
         }
         
         deinit {
             self.historyViewDisposable?.dispose()
+            self.loadingDisposable?.dispose()
         }
         
         func reloadData() {
@@ -261,7 +281,7 @@ extension DWallChatContent {
                 )
                 
                 self.mergedHistoryView = mergedHistoryView
-                self.historyViewStream.putNext((mergedHistoryView, .Initial))
+                self.historyViewStream.putNext((mergedHistoryView, .FillHole))
                 
                 self.isLoadingPromise.set(false)
             })
