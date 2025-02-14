@@ -168,6 +168,7 @@
 "Wall.TabTitle" = "Wall";
 "Wall.Title" = "Wall";
 "Wall.Reload" = "Update";
+"Wall.EmptyWallInfo.Title" = "You don't have any unread channels";
 
 // Chat
 "Chat.FrontCamera" = "Front camera";
