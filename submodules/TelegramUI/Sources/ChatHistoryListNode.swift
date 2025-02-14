@@ -1353,6 +1353,19 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                     }
                 }
                 
+                if view.isLoading {
+                    return (
+                        ChatHistoryViewUpdate.Loading(
+                            initialData: nil,
+                            type: .Generic(type: update)
+                        ),
+                        version,
+                        location,
+                        nil,
+                        Set()
+                    )
+                }
+                
                 return (
                     ChatHistoryViewUpdate.HistoryView(
                         view: view,
