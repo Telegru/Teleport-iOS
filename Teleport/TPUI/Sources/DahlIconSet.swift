@@ -74,6 +74,12 @@ struct DahlIconSet: IconSet {
             return UIImage(bundleImageName: "Avatar/Saved")!
         case .avatarArchive:
             return UIImage(bundleImageName: "Avatar/Archive")!
+        case .contextMenuClear:
+            return UIImage(bundleImageName: "Context Menu/Clear")!
+        case .contextMenuDelete:
+            return UIImage(bundleImageName: "Context Menu/Delete")!
+        case .contextMenuEye:
+            return UIImage(bundleImageName: "Context Menu/Eye")!
         }
     }
 

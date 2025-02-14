@@ -112,6 +112,8 @@ swift_library(
         "//submodules/ChatPresentationInterfaceState",
         "//submodules/ShimmerEffect:ShimmerEffect",
         "//submodules/TelegramUI/Components/LottieComponent",
+        
+        "//Teleport/TPUI:TPUI",
     ],
     visibility = [
         "//visibility:public",

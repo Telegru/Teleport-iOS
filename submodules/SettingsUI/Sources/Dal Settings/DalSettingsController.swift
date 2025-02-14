@@ -82,11 +82,10 @@ private enum DalSettingsSection: Int32, CaseIterable {
     case proxy
     case tabBar
     case menuItems
-    case chatsFolders
+    case chats
     case stories
     case confidentiality
     case confirmation
-    case chatsFolders
     case recentChats
 }
 
@@ -174,7 +173,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
         case .confirmationHeader, .callConfirmation, .sendAudioConfirmation, .cameraChoice:
             return DalSettingsSection.confirmation.rawValue
         case .chatsHeader, .chatsList, .chatsFoldersAtBottom, .hideAllChatsFolder, .infiniteScrolling:
-            return DalSettingsSection.chatsFolders.rawValue
+            return DalSettingsSection.chats.rawValue
         case .recentChatsHeader, .showRecentChats:
             return DalSettingsSection.recentChats.rawValue
         }
@@ -189,42 +188,42 @@ private enum DalSettingsEntry: ItemListNodeEntry {
         case .menuItems:
             return -1
         case .chatsHeader:
-            return 2
+            return 0
         case .chatsList:
-            return 3
+            return 1
         case .chatsFoldersAtBottom:
-            return 4
+            return 2
         case .hideAllChatsFolder:
-            return 5
+            return 3
         case .infiniteScrolling:
-            return 6
-        case .recentChatsHeader:
-            return 7
-        case .showRecentChats:
-            return 8
+            return 4
         case .storiesHeader:
-            return 9
+            return 7
         case .hidePublishStoriesButton:
-            return 10
+            return 8
         case .hideStories:
-            return 11
+            return 9
         case .hideViewedStories:
-            return 12
+            return 10
         case .privacyHeader:
-            return 13
+            return 11
         case .hidePhone:
-            return 14
+            return 12
         case .disableReadHistory:
-            return 15
+            return 13
         case .offlineMode:
-            return 16
+            return 14
         case .confirmationHeader:
-            return 17
+            return 15
         case .callConfirmation:
-            return 18
+            return 16
         case .sendAudioConfirmation:
-            return 19
+            return 17
         case .cameraChoice:
+            return 18
+        case .recentChatsHeader:
+            return 19
+        case .showRecentChats:
             return 20
         }
     }
@@ -261,7 +260,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.showRecentChats
         case .chatsList:
             return DalSettingsEntryTag.chatsList
-        case .storiesHeader, .privacyHeader, .confirmationHeader, .tabBar, .menuItems, .recentChatsHeader:
+        case .storiesHeader, .privacyHeader, .confirmationHeader, .tabBar, .menuItems, .recentChatsHeader, .chatsHeader:
             return nil
         }
     }

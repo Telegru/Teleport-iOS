@@ -2208,7 +2208,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             } else if chatTextLineCount == 1 {
                 avatarDecreaseParam = 4
             } else {
-                avatarDecreaseParam = 8
+                avatarDecreaseParam = 14
             }
             
             // if changed, adjust setupItem accordingly
@@ -3351,7 +3351,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 titleAttributedString = NSAttributedString(string: " ", font: titleFont, textColor: theme.titleColor)
             }
                         
-            let titleRectWidth = rawContentWidth - dateLayout.size.width - 10.0 - statusWidth - titleIconsWidth
+            let titleRectWidth = rawContentWidth - dateLayout.size.width - 10.0 - statusWidth - titleIconsWidth - (chatTextLineCount == 0 ? badgeLayout.width : 0)
             var titleCutout: TextNodeCutout?
             if !titleLeftCutout.isZero {
                 titleCutout = TextNodeCutout(topLeft: CGSize(width: titleLeftCutout, height: 10.0), topRight: nil, bottomRight: nil)
@@ -3513,7 +3513,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
             
             if chatTextLineCount == 0 {
-                itemHeight += -20.0
+                itemHeight += -24.0
             } else if chatTextLineCount == 1 {
                 itemHeight += -12.0
             }
@@ -4142,7 +4142,10 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     
                     let contentDelta = CGPoint(x: contentRect.origin.x - (strongSelf.titleNode.frame.minX - titleOffset), y: contentRect.origin.y - (strongSelf.titleNode.frame.minY - UIScreenPixel))
                     
-                    let titleY = chatTextLineCount == 0 ? contentRect.origin.y + (contentRect.height - titleLayout.size.height) / 2.0 + UIScreenPixel * 2 : contentRect.origin.y + UIScreenPixel
+                    let fontDescent = CTFontGetDescent(titleFont)
+                    let firstLineOffset = floorToScreenPixels(fontDescent)
+
+                    let titleY = chatTextLineCount == 0 ? contentRect.origin.y + (contentRect.height - titleLayout.size.height) / 2.0 + firstLineOffset : contentRect.origin.y + UIScreenPixel
                     
                     let titleFrame = CGRect(
                         x: contentRect.origin.x + titleOffset,
@@ -4333,7 +4336,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         }
                     }
                     
-                    if !itemTags.isEmpty {
+                    if !itemTags.isEmpty && chatTextLineCount > 1 {
                         let sizeFactor = item.presentationData.fontSize.itemListBaseFontSize / 17.0
                         
                         let itemTagListFrame = CGRect(origin: CGPoint(x: contentRect.minX, y: contentRect.minY + measureLayout.size.height * 2.0 + floorToScreenPixels(2.0 * sizeFactor)), size: CGSize(width: contentRect.width, height: floorToScreenPixels(20.0 * sizeFactor)))
