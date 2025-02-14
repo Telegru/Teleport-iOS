@@ -184,6 +184,8 @@ public extension TelegramEngine.EngineData.Item {
             public var mapKey: EnginePeer.Id {
                 return self.id
             }
+            
+            private let isMuted: Bool
 
             var key: PostboxViewKey {
                 return .combinedReadState(peerId: self.id, handleThreads: true)
@@ -191,6 +193,12 @@ public extension TelegramEngine.EngineData.Item {
 
             public init(id: EnginePeer.Id) {
                 self.id = id
+                self.isMuted = false
+            }
+            
+            public init(id: EnginePeer.Id, isMuted: Bool) {
+                self.id = id
+                self.isMuted = isMuted
             }
 
             func extract(view: PostboxView) -> Result {
@@ -198,7 +206,7 @@ public extension TelegramEngine.EngineData.Item {
                     preconditionFailure()
                 }
 
-                return EnginePeerReadCounters(state: view.state, isMuted: false)
+                return EnginePeerReadCounters(state: view.state, isMuted: isMuted)
             }
         }
 
