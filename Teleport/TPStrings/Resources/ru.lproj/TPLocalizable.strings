@@ -169,6 +169,7 @@
 "Wall.TabTitle" = "Стена";
 "Wall.Title" = "Стена";
 "Wall.Reload" = "Обновить";
+"Wall.EmptyWallInfo.Title" = "У вас нет непрочитанных каналов";
 
 // Chat
 "Chat.FrontCamera" = "Фронтальная камера";
