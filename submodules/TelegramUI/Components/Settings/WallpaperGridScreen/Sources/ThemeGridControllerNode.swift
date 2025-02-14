@@ -411,8 +411,9 @@ final class ThemeGridControllerNode: ASDisplayNode {
         
         let cityWallpapers: [TelegramWallpaper] = [
             DWallpaper.kazan,
-            DWallpaper.russia,
-            DWallpaper.saintPetersburg
+            DWallpaper.moscow,
+            DWallpaper.saintPetersburg,
+            DWallpaper.russia
         ].compactMap { $0.makeWallpaper(darkMode: presentationData.theme.overallDarkAppearance) }
         
         let transition = combineLatest(self.wallpapersPromise.get(), self.themesPromise.get(), deletedWallpaperIdsPromise.get(), context.sharedContext.presentationData)
