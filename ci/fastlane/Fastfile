@@ -46,7 +46,8 @@ lane :deploy_ad do
     app: ENV['FIREBASE_APP_ID'],
     firebase_cli_token: ENV['FIREBASE_TOKEN'],
     ipa_path: ipa_path,
-    release_notes: release_notes
+    release_notes: release_notes,
+    groups: "qa-team"
   )
 end
 

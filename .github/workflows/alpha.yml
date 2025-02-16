@@ -42,11 +42,11 @@ jobs:
           cd $SOURCE_PATH/ci
           fastlane deploy_ad
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Artifacts
-          path: /Users/Shared/build-working-dir/artifacts
+      # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: Artifacts
+      #     path: /Users/Shared/build-working-dir/artifacts
 
     env:
       CI: 1
