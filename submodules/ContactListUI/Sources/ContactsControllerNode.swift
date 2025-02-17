@@ -363,6 +363,7 @@ final class ContactsControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 tabsNodeIsSearch: tabsNodeIsSearch,
                 accessoryPanelContainer: nil,
                 accessoryPanelContainerHeight: 0.0,
+                recentChatsPanelNode: nil,
                 activateSearch: { [weak self] searchContentNode in
                     guard let self else {
                         return

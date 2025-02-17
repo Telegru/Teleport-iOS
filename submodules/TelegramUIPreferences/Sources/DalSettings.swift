@@ -34,6 +34,9 @@ public struct DalSettings: Codable, Equatable {
     public var chatsFoldersAtBottom: Bool
     public var hideAllChatsFolder: Bool
     public var infiniteScrolling: Bool
+    
+    //Недавние чаты
+    public var showRecentChats: Bool?
 
     public static var defaultSettings: DalSettings {
         return DalSettings(
@@ -50,7 +53,8 @@ public struct DalSettings: Codable, Equatable {
             videoMessageCamera: CameraType.front,
             chatsFoldersAtBottom: true,
             hideAllChatsFolder: false,
-            infiniteScrolling: false
+            infiniteScrolling: false,
+            showRecentChats: nil
         )
     }
     
@@ -68,7 +72,8 @@ public struct DalSettings: Codable, Equatable {
         videoMessageCamera: CameraType,
         chatsFoldersAtBottom: Bool,
         hideAllChatsFolder: Bool,
-        infiniteScrolling: Bool
+        infiniteScrolling: Bool,
+        showRecentChats: Bool?
     ) {
         self.tabBarSettings = tabBarSettings
         self.menuItemsSettings = menuItemsSettings
@@ -84,6 +89,7 @@ public struct DalSettings: Codable, Equatable {
         self.chatsFoldersAtBottom = chatsFoldersAtBottom
         self.hideAllChatsFolder = hideAllChatsFolder
         self.infiniteScrolling = infiniteScrolling
+        self.showRecentChats = showRecentChats
     }
     
     public init(from decoder: Decoder) throws {
@@ -109,6 +115,9 @@ public struct DalSettings: Codable, Equatable {
         self.chatsFoldersAtBottom = (try container.decodeIfPresent(Int32.self, forKey: "chatsFoldersAtBottom") ?? 1) != 0
         self.hideAllChatsFolder = (try container.decodeIfPresent(Int32.self, forKey: "hideAllChatsFolder") ?? 0) != 0
         self.infiniteScrolling = (try container.decodeIfPresent(Int32.self, forKey: "infiniteScrolling") ?? 0) != 0
+        if let showRecentChats = (try container.decodeIfPresent(Int32.self, forKey: "showRecentChats")) {
+            self.showRecentChats = showRecentChats != 0
+        }
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -129,6 +138,9 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.chatsFoldersAtBottom ? 1 : 0) as Int32, forKey: "chatsFoldersAtBottom")
         try container.encode((self.hideAllChatsFolder ? 1 : 0) as Int32, forKey: "hideAllChatsFolder")
         try container.encode((self.infiniteScrolling ? 1 : 0) as Int32, forKey: "infiniteScrolling")
+        if let showRecentChats = self.showRecentChats {
+            try container.encode((showRecentChats ? 1 : 0) as Int32, forKey: "showRecentChats")
+        }
     }
 }
 

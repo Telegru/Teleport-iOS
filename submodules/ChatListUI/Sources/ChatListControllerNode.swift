@@ -1351,6 +1351,9 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
             tabsNode = value
         }
         
+        let withRecentChats = !tabsNodeIsSearch && self.controller?.showRecentChats == true
+        let recentChatsNode: ASDisplayNode? = withRecentChats ? self.controller?.recentChatsNode : nil
+        
         var effectiveStorySubscriptions: EngineStorySubscriptions?
         if let controller = self.controller, case .forum = controller.location {
             effectiveStorySubscriptions = nil
@@ -1382,6 +1385,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 tabsNodeIsSearch: tabsNodeIsSearch,
                 accessoryPanelContainer: self.controller?.accessoryPanelContainer,
                 accessoryPanelContainerHeight: self.controller?.accessoryPanelContainerHeight ?? 0.0,
+                recentChatsPanelNode: recentChatsNode,
                 activateSearch: { [weak self] searchContentNode in
                     guard let self, let controller = self.controller else {
                         return

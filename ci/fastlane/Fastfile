@@ -3,11 +3,23 @@ default_platform(:ios)
 lane :deploy_tf do
   setup_ci if ENV['CI']
 
+  build_number = latest_testflight_build_number(
+    api_key: generate_app_store_connect_api_key(),
+    app_identifier: app_bundle_id(build_type: 'appstore')
+  ) + 1
+
+  unless ENV['GITHUB_RUN_NUMBER'].nil?
+    run_number = ENV['GITHUB_RUN_NUMBER'].to_i
+    unless ENV['TF_BUILD_INDENT'].nil?
+      run_number = run_number + ENV['TF_BUILD_INDENT'].to_i
+    end
+    if run_number > build_number
+      build_number = run_number
+    end
+  end
+
   ipa_path = archive(
-    build_number: latest_testflight_build_number(
-      api_key: generate_app_store_connect_api_key(),
-      app_identifier: app_bundle_id(build_type: 'appstore')
-    ) + 1,
+    build_number: build_number,
     build_type: 'appstore'
   )
   upload_to_testflight(
@@ -35,6 +47,13 @@ lane :deploy_ad do
     latest_release[:buildVersion].to_i + 1
   end
 
+  unless ENV['GITHUB_RUN_NUMBER'].nil?
+    run_number = ENV['GITHUB_RUN_NUMBER'].to_i
+    if run_number > build_number
+      build_number = run_number
+    end
+  end
+
   ipa_path = archive(
     build_number: build_number,
     build_type: 'adhoc'
@@ -46,7 +65,8 @@ lane :deploy_ad do
     app: ENV['FIREBASE_APP_ID'],
     firebase_cli_token: ENV['FIREBASE_TOKEN'],
     ipa_path: ipa_path,
-    release_notes: release_notes
+    release_notes: release_notes,
+    groups: "qa-team"
   )
 end
 

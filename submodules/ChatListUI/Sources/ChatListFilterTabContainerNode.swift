@@ -73,6 +73,7 @@ private final class ItemNode: ASDisplayNode {
     private let shortTitleActiveNode: ImmediateTextNodeWithEntities
     private let badgeContainerNode: ASDisplayNode
     private let badgeTextNode: ImmediateTextNode
+    private let badgeTextActiveNode: ImmediateTextNode
     private let badgeBackgroundActiveNode: ASImageNode
     private let badgeBackgroundInactiveNode: ASImageNode
     private let selectionIndicatorContainer: ASDisplayNode
@@ -138,6 +139,8 @@ private final class ItemNode: ASDisplayNode {
         
         self.badgeTextNode = ImmediateTextNode()
         self.badgeTextNode.displaysAsynchronously = false
+        self.badgeTextActiveNode = ImmediateTextNode()
+        self.badgeTextActiveNode.displaysAsynchronously = false
         
         self.badgeBackgroundActiveNode = ASImageNode()
         self.badgeBackgroundActiveNode.displaysAsynchronously = false
@@ -167,6 +170,7 @@ private final class ItemNode: ASDisplayNode {
         self.badgeContainerNode.addSubnode(self.badgeBackgroundInactiveNode)
         self.badgeContainerNode.addSubnode(self.badgeBackgroundActiveNode)
         self.badgeContainerNode.addSubnode(self.badgeTextNode)
+        self.badgeContainerNode.addSubnode(self.badgeTextActiveNode)
         self.extractedContainerNode.contentNode.addSubnode(self.badgeContainerNode)
         self.extractedContainerNode.contentNode.addSubnode(self.buttonNode)
         self.selectionIndicatorContainer.addSubnode(self.selectionIndicatorNode)
@@ -330,7 +334,8 @@ private final class ItemNode: ASDisplayNode {
         
         if unreadCount != 0 {
             if themeUpdated || unreadCountUpdated || self.badgeTextNode.attributedText == nil {
-                self.badgeTextNode.attributedText = NSAttributedString(string: "\(unreadCount)", font: Font.regular(14.0), textColor: presentationData.theme.list.itemCheckColors.foregroundColor)
+                self.badgeTextNode.attributedText = NSAttributedString(string: "\(unreadCount)", font: Font.regular(14.0), textColor: presentationData.theme.chatList.unreadBadgeInactiveTextColor)
+                self.badgeTextActiveNode.attributedText = NSAttributedString(string: "\(unreadCount)", font: Font.regular(14.0), textColor: presentationData.theme.list.itemCheckColors.foregroundColor)
             }
             
             let badgeSelectionFraction: CGFloat = unreadHasUnmuted ? 1.0 : selectionFraction
@@ -338,8 +343,10 @@ private final class ItemNode: ASDisplayNode {
             //let badgeDeselectionAlpha: CGFloat = 1.0 - badgeSelectionFraction
             
             transition.updateAlpha(node: self.badgeBackgroundActiveNode, alpha: badgeSelectionAlpha * badgeSelectionAlpha)
+            transition.updateAlpha(node: self.badgeTextActiveNode, alpha: badgeSelectionAlpha * badgeSelectionAlpha)
             //transition.updateAlpha(node: self.badgeBackgroundInactiveNode, alpha: badgeDeselectionAlpha)
             self.badgeBackgroundInactiveNode.alpha = 1.0
+            self.badgeTextNode.alpha = 1.0
         }
         
         if self.isReordering != isReordering {
@@ -376,12 +383,14 @@ private final class ItemNode: ASDisplayNode {
         }
         
         let badgeSize = self.badgeTextNode.updateLayout(CGSize(width: 200.0, height: .greatestFiniteMagnitude))
+        _ = self.badgeTextActiveNode.updateLayout(CGSize(width: 200.0, height: .greatestFiniteMagnitude))
         let badgeInset: CGFloat = 4.0
         let badgeBackgroundFrame = CGRect(origin: CGPoint(x: titleSize.width - self.titleNode.insets.left - self.titleNode.insets.right + 4.0, y: floor((height - 18.0) / 2.0)), size: CGSize(width: max(18.0, badgeSize.width + badgeInset * 2.0), height: 18.0))
         self.badgeContainerNode.frame = badgeBackgroundFrame
         self.badgeBackgroundActiveNode.frame = CGRect(origin: CGPoint(), size: badgeBackgroundFrame.size)
         self.badgeBackgroundInactiveNode.frame = CGRect(origin: CGPoint(), size: badgeBackgroundFrame.size)
         self.badgeTextNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((badgeBackgroundFrame.width - badgeSize.width) / 2.0), y: floor((badgeBackgroundFrame.height - badgeSize.height) / 2.0)), size: badgeSize)
+        self.badgeTextActiveNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((badgeBackgroundFrame.width - badgeSize.width) / 2.0), y: floor((badgeBackgroundFrame.height - badgeSize.height) / 2.0)), size: badgeSize)
         
         let width: CGFloat
         if self.unreadCount == 0 || self.isReordering || self.isEditing || self.isDisabled {
