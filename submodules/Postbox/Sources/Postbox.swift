@@ -3237,6 +3237,75 @@ final class PostboxImpl {
         }
     }
     
+    public func aggregatedGlobalMessagesHistoryViewForPeerIds(
+        peerIds: [PeerId],
+        from: [PeerId: MessageIndex],
+        count: Int,
+        clipHoles: Bool,
+        namespaces: MessageId.Namespace
+    ) -> Signal<MessageHistoryView, NoError> {
+        return self.transaction { transaction -> MessageHistoryView in
+            var allMessages: [MessageHistoryEntry] = []
+            
+            let perPeerRequestCount = count * 2
+            
+            for peerId in peerIds {
+                if let index = from[peerId] {
+                    let messages = self.messageHistoryTable.fetch(peerId: peerId, namespace:namespaces, tag: nil, customTag: nil, threadId: nil, from: index, includeFrom: true, to: MessageIndex.upperBound(peerId: peerId, namespace: namespaces), ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), limit: perPeerRequestCount)
+                    for message in messages {
+                        allMessages.append(MessageHistoryEntry(message: self.renderIntermediateMessage(message), isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes.init(authorIsContact: false)))
+                    }
+                }
+            }
+            
+            allMessages.sort { $0.message.timestamp < $1.message.timestamp }
+            
+            let globalMessages = Array(allMessages.prefix(count))
+      
+            let aggregatedView = MessageHistoryView(tag: nil, namespaces: .just(Set([namespaces])), entries: globalMessages, holeEarlier: false, holeLater: false, isLoading: false)
+            
+            return aggregatedView
+        }
+    }
+    
+    // TODO: has methods better
+    public func oldestUnreadMessagesForPeerIds(
+        peerIds: [PeerId],
+        clipHoles: Bool,
+        namespaces: MessageIdNamespaces
+    ) -> Signal<[PeerId: Message], NoError> {
+        return self.transaction { transaction -> [PeerId: Message] in
+            var result: [PeerId: Message] = [:]
+            
+            for peerId in peerIds {
+                let view = transaction.getMessagesHistoryViewState(
+                    input: MessageHistoryViewInput.single(peerId: peerId, threadId: nil),
+                    ignoreMessagesInTimestampRange: nil,
+                    ignoreMessageIds: Set(),
+                    count: 10,
+                    clipHoles: clipHoles,
+                    anchor: .unread,
+                    namespaces: namespaces
+                )
+                
+                if let combinedState = transaction.getCombinedPeerReadState(peerId) {
+                    let unreadEntries = view.entries.filter { entry in
+                        return combinedState.isIncomingMessageIndexRead(entry.message.index) == false
+                    }
+                    if let oldestEntry = unreadEntries.sorted(by: { $0.message.timestamp < $1.message.timestamp }).first {
+                        result[peerId] = oldestEntry.message
+                    }
+                } else {
+                    if let oldestEntry = view.entries.sorted(by: { $0.message.timestamp < $1.message.timestamp }).first {
+                        result[peerId] = oldestEntry.message
+                    }
+                }
+            }
+            
+            return result
+        }
+    }
+    
     fileprivate func syncAroundMessageHistoryViewForPeerId(
         subscriber: Subscriber<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>,
         peerIds: MessageHistoryViewInput,
@@ -4542,6 +4611,46 @@ public class Postbox {
                 ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
             }
 
+            return disposable.strict()
+        }
+    }
+    
+    public func aggregatedGlobalMessagesHistoryViewForPeerIds(
+            peerIds: [PeerId],
+            from: [PeerId: MessageIndex],
+            count: Int,
+            clipHoles: Bool,
+            namespaces: MessageId.Namespace) -> Signal<MessageHistoryView, NoError> {
+        return Signal { subscriber in
+            let disposable = MetaDisposable()
+
+            self.impl.with { impl in
+                disposable.set(impl.aggregatedGlobalMessagesHistoryViewForPeerIds(
+                    peerIds: peerIds,
+                    from: from,
+                    count: count,
+                    clipHoles: clipHoles,
+                    namespaces: namespaces
+                ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            }
+            return disposable.strict()
+        }
+    }
+    
+    public func oldestUnreadMessagesForPeerIds(
+            peerIds: [PeerId],
+            clipHoles: Bool,
+            namespaces: MessageIdNamespaces) -> Signal<[PeerId: Message], NoError>  {
+        return Signal { subscriber in
+            let disposable = MetaDisposable()
+
+            self.impl.with { impl in
+                disposable.set(impl.oldestUnreadMessagesForPeerIds(
+                    peerIds: peerIds,
+                    clipHoles: clipHoles,
+                    namespaces: namespaces
+                ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            }
             return disposable.strict()
         }
     }
