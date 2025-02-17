@@ -3,6 +3,7 @@ import UIKit
 import TelegramCore
 import TelegramUIPreferences
 import Postbox
+import DWallpaper
 
 private let defaultDahlDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
 public let defaultDahlDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false)
@@ -938,7 +939,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
     )
 
     let chat = PresentationThemeChat(
-        defaultWallpaper: .builtin(WallpaperSettings()),
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: true) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: message,
         serviceMessage: serviceMessage,

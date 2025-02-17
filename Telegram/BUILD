@@ -379,7 +379,6 @@ swift_library(
         "//Teleport/TPOnboarding:TPOnboardingAssets",
         "//Teleport/TPSettings:TPSettingsAssets",
         "//Teleport/TPUI:TPUIAssets",
-        "//Teleport/TPUI:TPUIRaw",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [
@@ -1971,6 +1970,7 @@ ios_application(
         ":LaunchScreen",
         ":DefaultAppIcon",
         #":AdditionalIcons",
+        "//Teleport/DWallpaper:DWallpaperImages"
     ],
     frameworks = [
         ":MtProtoKitFramework",

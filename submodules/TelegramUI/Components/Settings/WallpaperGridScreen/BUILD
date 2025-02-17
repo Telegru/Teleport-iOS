@@ -37,6 +37,7 @@ swift_library(
         "//submodules/TelegramUI/Components/Settings/ThemeAccentColorScreen",
         "//submodules/TelegramUI/Components/PremiumLockButtonSubtitleComponent",
         "//submodules/TelegramUI/Components/Settings/BoostLevelIconComponent",
+        "//submodules/LocalMediaResources",
     ],
     visibility = [
         "//visibility:public",

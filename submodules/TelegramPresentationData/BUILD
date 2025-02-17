@@ -23,7 +23,8 @@ swift_library(
         "//submodules/FastBlur:FastBlur",
         "//Teleport/DAuth:DAuth",
         "//Telegram:PresentationStrings",
-        "//Teleport/TPUI:TPUI"
+        "//Teleport/TPUI:TPUI",
+        "//Teleport/DWallpaper:DWallpaper"
     ],
     visibility = [
         "//visibility:public",

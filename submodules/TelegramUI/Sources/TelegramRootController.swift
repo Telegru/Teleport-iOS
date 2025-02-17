@@ -38,6 +38,7 @@ import TelegramUIPreferences
 import WebUI
 import PresentationDataUtils
 import LocalizedPeerData
+import DWallpaper
 
 private class DetailsChatPlaceholderNode: ASDisplayNode, NavigationDetailsPlaceholderNode {
     private var presentationData: PresentationData
@@ -127,6 +128,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
         
         super.init(mode: .automaticMasterDetail, theme: NavigationControllerTheme(presentationTheme: self.presentationData.theme))
+        self.storeLocalWallpaperIfNeeded()
         
         self.presentationDataDisposable = (context.sharedContext.presentationData
         |> deliverOnMainQueue).startStrict(next: { [weak self] presentationData in
@@ -1078,6 +1080,30 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         controller.tabBarItem.selectedImage = icon
         controller.tabBarItem.title = "Apps.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
         return controller
+    }
+    
+    private func storeLocalWallpaperIfNeeded() {
+        let allWallpapers = DWallpaper.allCases
+        
+        for wallpaperCase in allWallpapers {
+            guard let localResource = wallpaperCase.makeLocalFileMediaResource() else {
+                continue
+            }
+            
+            let storePaths = context.account.postbox.mediaBox.storePathsForId(localResource.id)
+            if FileManager.default.fileExists(atPath: storePaths.complete) {
+                continue
+            }
+            
+            guard let data = wallpaperCase.fileDataForDWallpaper() else {
+                continue
+            }
+            
+            context.account.postbox.mediaBox.storeResourceData(localResource.id,
+                data: data,
+                synchronous: true
+            )
+        }
     }
 }
 
