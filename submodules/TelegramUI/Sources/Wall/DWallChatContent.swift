@@ -76,6 +76,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         }
     }
     
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
+        self.impl.with { impl in
+            impl.markAllMessagesRead(olderThan: messageIndex)
+        }
+    }
+
     func enqueueMessages(messages: [EnqueueMessage]) {}
     func deleteMessages(ids: [EngineMessage.Id]) {}
     func businessLinkUpdate(message: String, entities: [TelegramCore.MessageTextEntity], title: String?) {}
@@ -111,7 +117,8 @@ extension DWallChatContent {
         
         private var ignoredPeerIds: Atomic<Set<PeerId>> = Atomic(value: [])
         private var initialAnchorsDisposable: Disposable?
-
+        private var readViewDisposable: Disposable?
+        
         private var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
         private var ignoredPeerIds: Atomic<Set<PeerId>> = Atomic(value: [])
         private var count = 44
@@ -191,6 +198,7 @@ extension DWallChatContent {
             self.historyViewDisposable?.dispose()
             self.loadingDisposable?.dispose()
             self.initialAnchorsDisposable?.dispose()
+            self.readViewDisposable?.dispose()
         }
         
         func reloadData() {
@@ -204,6 +212,34 @@ extension DWallChatContent {
         func loadAll() {
             count = 8800
             updateHistoryViewRequest(reload: false, showLoading: true)
+        }
+                
+        func markAllMessagesRead(olderThan threshold: MessageIndex) {
+            guard let mergedView = self.mergedHistoryView else {
+                return
+            }
+            
+            var maxReadIndices: [PeerId: MessageIndex] = [:]
+            
+            for entry in mergedView.entries {
+                let message = entry.message
+                if message.timestamp <= threshold.timestamp {
+                    let peerId = message.id.peerId
+                    if let existing = maxReadIndices[peerId] {
+                        if existing < message.index {
+                            maxReadIndices[peerId] = message.index
+                        }
+                    } else {
+                        maxReadIndices[peerId] = message.index
+                    }
+                }
+            }
+            
+            for (peerId, messageIndex) in maxReadIndices {
+                let location = ChatLocation.peer(id: peerId)
+                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                self.context.applyMaxReadIndex(for: location, contextHolder: contextHolder, messageIndex: messageIndex)
+            }
         }
         
         private func updateHistoryViewRequest(reload: Bool, showLoading: Bool = false) {

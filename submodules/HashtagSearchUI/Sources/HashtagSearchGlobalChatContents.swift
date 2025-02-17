@@ -207,6 +207,9 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
     
     func loadAll() {}
     
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
+    }
+    
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in } {
         didSet {
             self.impl.with { impl in

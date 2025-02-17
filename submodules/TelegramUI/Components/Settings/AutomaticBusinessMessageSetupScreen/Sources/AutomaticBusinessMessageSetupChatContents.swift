@@ -277,5 +277,7 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     func hashtagSearchUpdate(query: String) {
     }
     
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex)  { }
+    
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }
 }

@@ -1179,6 +1179,8 @@ public protocol ChatCustomContentsProtocol: AnyObject {
 
     func hashtagSearchUpdate(query: String)
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void { get set }
+    
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex)
 }
 
 public enum ChatHistoryListDisplayHeaders {
