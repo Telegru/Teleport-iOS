@@ -577,8 +577,15 @@ extension ChatControllerImpl {
         
         if let peerId = self.chatLocation.peerId {
             self.chatThemeEmoticonPromise.set(self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.ThemeEmoticon(id: peerId)))
-            let chatWallpaper = self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Wallpaper(id: peerId))
-            |> take(1)
+            let chatWallpaper = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> mapToSignal { [weak self] sharedData -> Signal<TelegramWallpaper?, NoError> in
+                let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                guard let self, settings.premiumSettings.showCustomWallpaperInChannels else {
+                    return .single(nil)
+                }
+                return self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Wallpaper(id: peerId))
+            } |> take(1)
+            
             self.chatWallpaperPromise.set(chatWallpaper)
         } else {
             self.chatThemeEmoticonPromise.set(.single(nil))
@@ -716,9 +723,11 @@ extension ChatControllerImpl {
                 customEmojiAvailable,
                 isForum,
                 threadData,
-                forumTopicData
-            ).startStrict(next: { [weak self] cachedDataAndMessages, hasPendingMessages, isTopReplyThreadMessageShown, topPinnedMessage, customEmojiAvailable, isForum, threadData, forumTopicData in
+                forumTopicData,
+                self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            ).startStrict(next: { [weak self] cachedDataAndMessages, hasPendingMessages, isTopReplyThreadMessageShown, topPinnedMessage, customEmojiAvailable, isForum, threadData, forumTopicData, sharedData in
                 if let strongSelf = self {
+                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
                     let (cachedData, messages) = cachedDataAndMessages
                     
                     if cachedData != nil {
@@ -731,7 +740,9 @@ extension ChatControllerImpl {
                             themeEmoticon = cachedData.themeEmoticon
                         } else if let cachedData = cachedData as? CachedChannelData {
                             themeEmoticon = cachedData.themeEmoticon
-                            chatWallpaper = cachedData.wallpaper
+                            if dahlSettings.premiumSettings.showCustomWallpaperInChannels {
+                                chatWallpaper = cachedData.wallpaper
+                            }
                         }
                         
                         strongSelf.chatThemeEmoticonPromise.set(.single(themeEmoticon))

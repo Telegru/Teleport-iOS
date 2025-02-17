@@ -82,6 +82,7 @@ private enum DalSettingsSection: Int32, CaseIterable {
     case proxy
     case tabBar
     case menuItems
+    case premiumSettings
     case stories
     case confidentiality
     case confirmation
@@ -128,6 +129,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
 
     // Раздел Пункты меню
     case menuItems
+    
+    case premiumSettings
 
     // Раздел Stories
     case hidePublishStoriesButton(PresentationTheme, String, Bool)
@@ -162,7 +165,10 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             
         case .menuItems:
             return DalSettingsSection.menuItems.rawValue
-
+            
+        case .premiumSettings:
+            return DalSettingsSection.premiumSettings.rawValue
+            
         case .storiesHeader, .hidePublishStoriesButton, .hideStories, .hideViewedStories:
             return DalSettingsSection.stories.rawValue
             
@@ -180,10 +186,12 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     var stableId: Int32 {
         switch self {
         case .proxy:
-            return -3
+            return -4
         case .tabBar:
-            return -2
+            return -3
         case .menuItems:
+            return -2
+        case .premiumSettings:
             return -1
         case .storiesHeader:
             return 0
@@ -254,7 +262,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.infiniteScrolling
         case .showRecentChats:
             return DalSettingsEntryTag.showRecentChats
-        case .storiesHeader, .privacyHeader, .confirmationHeader, .chatsFoldersHeader, .tabBar, .menuItems, .recentChatsHeader:
+        case .storiesHeader, .privacyHeader, .confirmationHeader, .chatsFoldersHeader, .tabBar, .menuItems, .recentChatsHeader, .premiumSettings:
             return nil
         }
     }
@@ -387,7 +395,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsFoldersHeader(_, _), .tabBar, .menuItems, .recentChatsHeader(_,_):
+        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsFoldersHeader(_, _), .tabBar, .menuItems, .recentChatsHeader(_,_), .premiumSettings:
             if lhs.stableId != rhs.stableId {
                 return false
             }
@@ -610,6 +618,19 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                     arguments.pushController(menuItemsSettingsController)
                 }
             )
+            
+        case .premiumSettings:
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: "Premium функции",
+                label: "",
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    let controller = dPremiumSettingsController(context: arguments.context)
+                    arguments.pushController(controller)
+                }
+            )
 
         case let .recentChatsHeader(_, text):
             return ItemListSectionHeaderItem(
@@ -666,6 +687,8 @@ private func dalSettingsEntries(
     entries.append(.tabBar)
     
     entries.append(.menuItems)
+    
+    entries.append(.premiumSettings)
 
     entries.append(.storiesHeader(presentationData.theme, "DahlSettings.StoriesHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePublishStoriesButton(
