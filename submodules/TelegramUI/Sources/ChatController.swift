@@ -7192,11 +7192,11 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
         let disableReadHistory = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
         |> map { sharedData -> Bool in
             var hideReadTime = false
-            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
-                hideReadTime = current.disableReadHistory
-            } else {
+//            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+//                hideReadTime = current.disableReadHistory
+//            } else {
                 hideReadTime = DalSettings.defaultSettings.disableReadHistory
-            }
+//            }
             return hideReadTime
         })
 

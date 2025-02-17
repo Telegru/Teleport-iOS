@@ -690,16 +690,16 @@ private func dalSettingsEntries(
         "DahlSettings.HidePhone".tp_loc(lang: lang),
         hidePhone
     ))
-    entries.append(.disableReadHistory(
-        presentationData.theme,
-        "DahlSettings.HideActivity".tp_loc(lang: lang),
-        disableReadHistory
-    ))
-    entries.append(.offlineMode(
-        presentationData.theme,
-        "DahlSettings.OfflineMode".tp_loc(lang: lang),
-        offlintMode
-    ))
+//    entries.append(.disableReadHistory(
+//        presentationData.theme,
+//        "DahlSettings.HideActivity".tp_loc(lang: lang),
+//        disableReadHistory
+//    ))
+//    entries.append(.offlineMode(
+//        presentationData.theme,
+//        "DahlSettings.OfflineMode".tp_loc(lang: lang),
+//        offlintMode
+//    ))
     
     entries.append(.confirmationHeader(presentationData.theme, "DahlSettings.ActionConfirmationHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.callConfirmation(

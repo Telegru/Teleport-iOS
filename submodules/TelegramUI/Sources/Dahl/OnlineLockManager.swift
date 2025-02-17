@@ -38,11 +38,11 @@ final class OnlineLockManager {
         |> mapToSignal { sharedAccountContext -> Signal<Bool, NoError> in
             return (sharedAccountContext.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
         |> map { sharedData -> Bool in
-                if let currentSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
-                    return currentSettings.offlineMode
-                } else {
+//                if let currentSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+//                    return currentSettings.offlineMode
+//                } else {
                     return DalSettings.defaultSettings.offlineMode
-                }
+//                }
             }
         |> distinctUntilChanged)
         }
