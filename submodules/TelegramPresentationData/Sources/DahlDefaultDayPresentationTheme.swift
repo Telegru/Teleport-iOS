@@ -1057,10 +1057,3 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
         preview: preview
     )
 }
-
-public let defaultDahlBuiltinWallpaperGradientColors: [UIColor] = [
-    UIColor(rgb: 0xdbddbb),
-    UIColor(rgb: 0x6ba587),
-    UIColor(rgb: 0xd5d88d),
-    UIColor(rgb: 0x88b884)
-]
