@@ -38,6 +38,7 @@ public final class ChatListNavigationBar: Component {
     public let tabsNodeIsSearch: Bool
     public let accessoryPanelContainer: ASDisplayNode?
     public let accessoryPanelContainerHeight: CGFloat
+    public let recentChatsPanelNode: ASDisplayNode?
     public let activateSearch: (NavigationBarSearchContentNode) -> Void
     public let openStatusSetup: (UIView) -> Void
     public let allowAutomaticOrder: () -> Void
@@ -60,6 +61,7 @@ public final class ChatListNavigationBar: Component {
         tabsNodeIsSearch: Bool,
         accessoryPanelContainer: ASDisplayNode?,
         accessoryPanelContainerHeight: CGFloat,
+        recentChatsPanelNode: ASDisplayNode?,
         activateSearch: @escaping (NavigationBarSearchContentNode) -> Void,
         openStatusSetup: @escaping (UIView) -> Void,
         allowAutomaticOrder: @escaping () -> Void
@@ -84,6 +86,7 @@ public final class ChatListNavigationBar: Component {
         self.activateSearch = activateSearch
         self.openStatusSetup = openStatusSetup
         self.allowAutomaticOrder = allowAutomaticOrder
+        self.recentChatsPanelNode = recentChatsPanelNode
     }
 
     public static func ==(lhs: ChatListNavigationBar, rhs: ChatListNavigationBar) -> Bool {
@@ -138,6 +141,9 @@ public final class ChatListNavigationBar: Component {
         if lhs.accessoryPanelContainerHeight != rhs.accessoryPanelContainerHeight {
             return false
         }
+        if lhs.recentChatsPanelNode !== rhs.recentChatsPanelNode {
+            return false
+        }
         return true
     }
     
@@ -184,6 +190,8 @@ public final class ChatListNavigationBar: Component {
         private var disappearingTabsViewSearch: Bool = false
         
         private var currentHeaderComponent: ChatListHeaderComponent?
+        
+        private var recentChatsPanelNode: ASDisplayNode?
         
         override public init(frame: CGRect) {
             self.backgroundView = BlurredBackgroundView(color: .clear, enableBlur: true)
@@ -312,6 +320,9 @@ public final class ChatListNavigationBar: Component {
             }
             if !component.isSearchActive {
                 searchFrame.origin.y -= component.accessoryPanelContainerHeight
+                if component.recentChatsPanelNode != nil{
+                    searchFrame.origin.y -= 56.0
+                }
             }
             
             let clippedSearchOffset = max(0.0, min(clippedScrollOffset, searchOffsetDistance))
@@ -454,12 +465,34 @@ public final class ChatListNavigationBar: Component {
                 }
             }
             
+            var disappearingRecentChatsView: UIView?
+        
+            if component.recentChatsPanelNode !== self.recentChatsPanelNode && self.recentChatsPanelNode?.view.superview === self {
+                if let node = self.recentChatsPanelNode{
+                    node.view.layer.anchorPoint = CGPoint()
+                    self.recentChatsPanelNode = nil
+                    disappearingRecentChatsView = node.view
+                    transition.setAlpha(view: node.view, alpha: 0.0) { [weak self, weak disappearingRecentChatsView] _ in
+                        guard let self, let component = self.component, let disappearingRecentChatsView else {
+                            return
+                        }
+                        if disappearingRecentChatsView !== component.recentChatsPanelNode?.view {
+                            disappearingRecentChatsView.removeFromSuperview()
+                        }
+                    }
+                }
+            }
+            
             var tabsFrame = CGRect(origin: CGPoint(x: 0.0, y: visibleSize.height), size: CGSize(width: visibleSize.width, height: 46.0))
             if !component.isSearchActive {
                 tabsFrame.origin.y -= component.accessoryPanelContainerHeight
             }
             if component.tabsNode != nil {
                 tabsFrame.origin.y -= 46.0
+            }
+            
+            if component.recentChatsPanelNode != nil{
+                tabsFrame.origin.y -= 56.0
             }
             
             var accessoryPanelContainerFrame = CGRect(origin: CGPoint(x: 0.0, y: visibleSize.height), size: CGSize(width: visibleSize.width, height: component.accessoryPanelContainerHeight))
@@ -496,6 +529,30 @@ public final class ChatListNavigationBar: Component {
                 }
                 
                 tabsNodeTransition.setFrameWithAdditivePosition(view: tabsNode.view, frame: tabsFrame.offsetBy(dx: 0.0, dy: component.tabsNodeIsSearch ? (-currentLayout.size.height + 2.0) : 0.0))
+            }
+            
+            let recentChatsFrame = CGRect(origin: CGPoint(x: 0.0, y: visibleSize.height - 56.0), size: CGSize(width: visibleSize.width, height: 56.0))
+            
+            if let disappearingRecentChatsView = disappearingRecentChatsView {
+                disappearingRecentChatsView.layer.anchorPoint = CGPoint()
+                transition.setFrameWithAdditivePosition(view: disappearingRecentChatsView, frame: recentChatsFrame.offsetBy(dx: 0.0, dy: 0.0))
+            }
+            
+            if let node = component.recentChatsPanelNode, !component.isSearchActive {
+                self.recentChatsPanelNode = node
+                var nodeTransition = transition
+                if node.view.superview !== self {
+                    node.view.layer.anchorPoint = CGPoint()
+                    nodeTransition = .immediate
+                    node.view.alpha = 1.0
+                    self.addSubview(node.view)
+                    if !transition.animation.isImmediate {
+                        node.view.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2)
+                    }
+                } else {
+                    transition.setAlpha(view: node.view, alpha: 1.0)
+                }
+                nodeTransition.setFrameWithAdditivePosition(view: node.view, frame: recentChatsFrame)
             }
             
             if let accessoryPanelContainer = component.accessoryPanelContainer {
@@ -540,6 +597,7 @@ public final class ChatListNavigationBar: Component {
                     tabsNodeIsSearch: component.tabsNodeIsSearch,
                     accessoryPanelContainer: component.accessoryPanelContainer,
                     accessoryPanelContainerHeight: component.accessoryPanelContainerHeight,
+                    recentChatsPanelNode: component.recentChatsPanelNode,
                     activateSearch: component.activateSearch,
                     openStatusSetup: component.openStatusSetup,
                     allowAutomaticOrder: component.allowAutomaticOrder
@@ -617,6 +675,10 @@ public final class ChatListNavigationBar: Component {
             
             if component.accessoryPanelContainer != nil && !component.isSearchActive {
                 contentHeight += component.accessoryPanelContainerHeight
+            }
+            
+            if component.recentChatsPanelNode != nil {
+                contentHeight += 56.0
             }
             
             let size = CGSize(width: availableSize.width, height: contentHeight)

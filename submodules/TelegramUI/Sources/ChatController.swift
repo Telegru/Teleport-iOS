@@ -658,13 +658,11 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     
     var lastPostedScheduledMessagesToastTimestamp: Double = 0.0
     var postedScheduledMessagesEventsDisposable: Disposable?
-    
-    
-    
-    
-    
         
     var confirmSendAudioMessage = false
+    
+    private var addToRecentChats: Bool = false
+    private var addToRecentChatsDisposable: Disposable?
     
     public init(
         context: AccountContext,
@@ -7229,6 +7227,17 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                 return state.updatedInterfaceState({ $0.withUpdatedSelectedMessages(messageIds) })
             })
         }
+        
+        self.addToRecentChatsDisposable =  (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                                            |> map { sharedData -> DalSettings in
+            return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+        }
+                                            |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] dalSettings in
+            if let self {
+                self.addToRecentChats = dalSettings.showRecentChats != nil
+            }
+        })
     }
     
     required public init(coder aDecoder: NSCoder) {
@@ -7333,6 +7342,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             self.displaySendWhenOnlineTipDisposable.dispose()
             self.networkSpeedEventsDisposable?.dispose()
             self.postedScheduledMessagesEventsDisposable?.dispose()
+            self.addToRecentChatsDisposable?.dispose()
         }
         deallocate()
     }
@@ -7861,7 +7871,9 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+        if let peerId = self.chatLocation.peerId, self.addToRecentChats{
+            self.context.engine.peers.addRecentChat(peerId: peerId)
+        }
         self.didAppear = true
         
         self.chatDisplayNode.historyNode.experimentalSnapScrollToItem = false
