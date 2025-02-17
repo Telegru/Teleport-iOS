@@ -120,7 +120,6 @@ extension DWallChatContent {
         private var readViewDisposable: Disposable?
         
         private var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
-        private var ignoredPeerIds: Atomic<Set<PeerId>> = Atomic(value: [])
         private var count = 44
         
         init(
@@ -171,7 +170,7 @@ extension DWallChatContent {
              |> mapToSignal { peerIds -> Signal<[PeerId: MessageIndex], NoError> in
                 return context.account.postbox.oldestUnreadMessagesForPeerIds(
                     peerIds: peerIds,
-                    clipHoles: false,
+                    clipHoles: true,
                     namespaces: .all
                 )
                 |> map { unreadDict -> [PeerId: MessageIndex] in
@@ -259,7 +258,7 @@ extension DWallChatContent {
                         peerIds: peerIds,
                         from: anchors,
                         count: strongSelf.count,
-                        clipHoles: false,
+                        clipHoles: true,
                         namespaces: Namespaces.Message.Cloud
                     )
                 }
