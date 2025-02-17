@@ -34,6 +34,13 @@ jobs:
           cp -R $GITHUB_WORKSPACE /Users/Shared/
           mv /Users/Shared/$(basename $GITHUB_WORKSPACE) /Users/Shared/telegram-ios
 
+      - name: Restore Bazel cache
+        id: restore-bazel-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: "/Users/Shared/telegram-bazel-cache"
+          key: bazel
+
       - name: New testflight build
         run: |
           set -x
@@ -41,6 +48,13 @@ jobs:
           mkdir -p $BUILD_WORKING_DIR
           cd $SOURCE_PATH/ci
           fastlane deploy_tf
+
+      - name: Save Bazel cache
+        id: save-bazel-cache
+        uses: actions/cache/save@v4
+        with:
+          path: "/Users/Shared/telegram-bazel-cache"
+          key: bazel
 
       # - name: Upload artifacts
       #   uses: actions/upload-artifact@v4
@@ -61,3 +75,4 @@ jobs:
       SOURCE_PATH: /Users/Shared/telegram-ios
       TELEGRAM_CODESIGNING_GIT_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       TELEGRAM_CODESIGNING_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      GITHUB_RUN_NUMBER: ${{ github.run_number }}

@@ -50,6 +50,13 @@ jobs:
           cp -R $GITHUB_WORKSPACE /Users/Shared/
           mv /Users/Shared/$(basename $GITHUB_WORKSPACE) /Users/Shared/telegram-ios
 
+      - name: Restore Bazel cache
+        id: restore-bazel-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: "/Users/Shared/telegram-bazel-cache"
+          key: bazel
+
       - name: Build project
         run: |
           set -x
@@ -57,6 +64,13 @@ jobs:
           mkdir -p $BUILD_WORKING_DIR
           cd $SOURCE_PATH/ci
           fastlane build
+
+      - name: Save Bazel cache
+        id: save-bazel-cache
+        uses: actions/cache/save@v4
+        with:
+          path: "/Users/Shared/telegram-bazel-cache"
+          key: bazel
 
     env:
       CI: 1
