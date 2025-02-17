@@ -3251,7 +3251,7 @@ final class PostboxImpl {
             
             for peerId in peerIds {
                 if let index = from[peerId] {
-                    let messages = self.messageHistoryTable.fetch(peerId: peerId, namespace:namespaces, tag: nil, customTag: nil, threadId: nil, from: index, includeFrom: false, to: MessageIndex.upperBound(peerId: peerId, namespace: namespaces), ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), limit: perPeerRequestCount)
+                    let messages = self.messageHistoryTable.fetch(peerId: peerId, namespace:namespaces, tag: nil, customTag: nil, threadId: nil, from: index, includeFrom: true, to: MessageIndex.upperBound(peerId: peerId, namespace: namespaces), ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), limit: perPeerRequestCount)
                     for message in messages {
                         allMessages.append(MessageHistoryEntry(message: self.renderIntermediateMessage(message), isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes.init(authorIsContact: false)))
                     }
@@ -3262,7 +3262,7 @@ final class PostboxImpl {
             
             let globalMessages = Array(allMessages.prefix(count))
       
-            let aggregatedView = MessageHistoryView(tag: nil, namespaces: .all, entries: globalMessages, holeEarlier: false, holeLater: false, isLoading: false)
+            let aggregatedView = MessageHistoryView(tag: nil, namespaces: .just(Set([namespaces])), entries: globalMessages, holeEarlier: false, holeLater: false, isLoading: false)
             
             return aggregatedView
         }

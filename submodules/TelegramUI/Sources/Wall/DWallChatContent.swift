@@ -170,7 +170,7 @@ extension DWallChatContent {
              |> mapToSignal { peerIds -> Signal<[PeerId: MessageIndex], NoError> in
                 return context.account.postbox.oldestUnreadMessagesForPeerIds(
                     peerIds: peerIds,
-                    clipHoles: true,
+                    clipHoles: false,
                     namespaces: .all
                 )
                 |> map { unreadDict -> [PeerId: MessageIndex] in
@@ -190,7 +190,7 @@ extension DWallChatContent {
             })
             
             self.isLoadingPromise.set(false)
-            self.updateHistoryViewRequest(reload: false, showLoading: false)
+            self.updateHistoryViewRequest(reload: false, showLoading: true)
         }
         
         deinit {
@@ -201,7 +201,7 @@ extension DWallChatContent {
         }
         
         func reloadData() {
-            updateHistoryViewRequest(reload: true)
+            updateHistoryViewRequest(reload: true, showLoading: true)
         }
         
         func loadMore() {
@@ -258,7 +258,7 @@ extension DWallChatContent {
                         peerIds: peerIds,
                         from: anchors,
                         count: strongSelf.count,
-                        clipHoles: true,
+                        clipHoles: false,
                         namespaces: Namespaces.Message.Cloud
                     )
                 }
@@ -266,15 +266,12 @@ extension DWallChatContent {
             )
             .start(next: { [weak self] view in
                 guard let self = self else { return }
-                let index = view.entries.last?.message.index
                 
-                let updateType: ViewUpdateType = (self.mergedHistoryView == nil) ? ((index != nil) ? .InitialUnread(index!) : .Initial) : .FillHole
+                let updateType: ViewUpdateType = (self.mergedHistoryView?.entries.isEmpty == true) ? .UpdateVisible : .FillHole
 
+                self.isLoadingPromise.set(false)
                 self.mergedHistoryView = view
                 self.historyViewStream.putNext((view, updateType))
-                if showLoading {
-                    self.isLoadingPromise.set(false)
-                }
                 self.count += 44
             })
         }
