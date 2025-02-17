@@ -29,7 +29,7 @@ public enum DWallpaper: CaseIterable {
             return nil
         }
         
-        let (fileId, accessHash, randomId) = fileData
+        let (fileId, accessHash, randomId, slug) = fileData
         
         return TelegramWallpaper.file(
             TelegramWallpaper.File(
@@ -39,7 +39,7 @@ public enum DWallpaper: CaseIterable {
                 isDefault: true,
                 isPattern: true,
                 isDark: darkMode,
-                slug: "",
+                slug: slug,
                 file: TelegramMediaFile(
                     fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: fileId),
                     partialReference: nil,
@@ -103,7 +103,7 @@ public enum DWallpaper: CaseIterable {
             return nil
         }
         
-        let (fileId, _, _) = fileData
+        let (fileId, _, _, _) = fileData
         
         return LocalFileMediaResource(fileId: fileId, size: fileSize)
     }
@@ -128,16 +128,16 @@ public enum DWallpaper: CaseIterable {
         }
     }
     
-    private var fileData: (Int64, Int64, Int64) {
+    private var fileData: (Int64, Int64, Int64, String) {
         switch self {
         case .kazan:
-            return (231222124451, 123444, 1234)
+            return (231222124451, 123444, 1234, "slugKazan")
         case .russia:
-            return (241222124562, 223555, 5678)
+            return (241222124562, 223555, 5678, "slugRussia")
         case .saintPetersburg:
-            return (251222124673, 323666, 9876)
+            return (251222124673, 323666, 9876, "slugSaintPetersburg")
         case .moscow:
-            return (223442223441, 533112, 3451)
+            return (223442223441, 533112, 3451, "slugMoscow")
         }
     }
     
