@@ -52,6 +52,7 @@ import ArchiveInfoScreen
 import BirthdayPickerScreen
 import OldChannelsController
 import TextFormat
+import TPUI
 
 private final class ContextControllerContentSourceImpl: ContextControllerContentSource {
     let controller: ViewController
@@ -2252,17 +2253,17 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
 
             var items: [ContextMenuItem] = []
 
-            items.append(.action(ContextMenuActionItem(text: strongSelf.presentationData.strings.ChatList_Context_RemoveFromRecents, textColor: .destructive, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Clear"), color: theme.contextMenu.destructiveColor) }, action: { [weak self] _, f in
+            items.append(.action(ContextMenuActionItem(text: strongSelf.presentationData.strings.ChatList_Context_RemoveFromRecents, textColor: .destructive, icon: { theme in generateTintedImage(image: TPIconManager.shared.icon(.contextMenuClear), color: theme.contextMenu.destructiveColor) }, action: { [weak self] _, f in
                 self?.context.engine.peers.removeRecentChat(peerId: peer.id)
                 f(.default)
             })))
 
-            items.append(.action(ContextMenuActionItem(text: "Chat.ClearHistory".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), textColor: .destructive, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Delete"), color: theme.contextMenu.destructiveColor) }, action: { [weak self] _, f in
+            items.append(.action(ContextMenuActionItem(text: "Chat.ClearHistory".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), textColor: .destructive, icon: { theme in generateTintedImage(image: TPIconManager.shared.icon(.contextMenuDelete), color: theme.contextMenu.destructiveColor) }, action: { [weak self] _, f in
                 self?.askToClearRecentChatsHistory()
                 f(.default)
             })))
 
-            items.append(.action(ContextMenuActionItem(text: "DahlSettings.DisablePanel".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), textColor: .primary, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Eye"), color: theme.contextMenu.primaryColor) }, action: { [weak self] _, f in
+            items.append(.action(ContextMenuActionItem(text: "DahlSettings.DisablePanel".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), textColor: .primary, icon: { theme in generateTintedImage(image: TPIconManager.shared.icon(.contextMenuEye), color: theme.contextMenu.primaryColor) }, action: { [weak self] _, f in
                 guard let self else { return }
                 let _ = updateDalSettingsInteractively(
                     accountManager: self.context.sharedContext.accountManager,

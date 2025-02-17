@@ -33,7 +33,7 @@ public final class NavigationBarBadgeNode: ASDisplayNode {
         self.backgroundNode = ASImageNode()
         self.backgroundNode.isLayerBacked = true
         self.backgroundNode.displaysAsynchronously = false
-        self.backgroundNode.image = isRectangleShape ? generateFilledRoundedRectImage(size: CGSize(width: 9, height: 9), cornerRadius: 2,color: fillColor, backgroundColor: nil) : generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
+        self.backgroundNode.image = isRectangleShape ? generateStretchableFilledRectImage(size: CGSize(width: 9, height: 9), cornerRadius: 4,color: fillColor, backgroundColor: nil) : generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
         
         super.init()
         
@@ -46,7 +46,7 @@ public final class NavigationBarBadgeNode: ASDisplayNode {
         self.strokeColor = strokeColor
         self.textColor = textColor
         self.isRectangleShape = isRectangleShape
-        self.backgroundNode.image = isRectangleShape ? generateFilledRoundedRectImage(size: CGSize(width: 9, height: 9), cornerRadius: 2,color: fillColor, backgroundColor: nil) : generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
+        self.backgroundNode.image = isRectangleShape ? generateStretchableFilledRectImage(size: CGSize(width: 9, height: 9), cornerRadius: 4, color: fillColor, backgroundColor: nil) : generateStretchableFilledCircleImage(radius: 9.0, color: fillColor, backgroundColor: nil)
         self.textNode.attributedText = NSAttributedString(string: self.text, font: self.font, textColor: self.textColor)
         self.textNode.redrawIfPossible()
     }

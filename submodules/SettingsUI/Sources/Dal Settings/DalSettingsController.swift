@@ -82,10 +82,10 @@ private enum DalSettingsSection: Int32, CaseIterable {
     case proxy
     case tabBar
     case menuItems
+    case chats
     case stories
     case confidentiality
     case confirmation
-    case chatsFolders
     case recentChats
 }
 
@@ -100,6 +100,7 @@ public enum DalSettingsEntryTag: ItemListItemTag {
     case callConfirmation
     case sendAudioConfirmation
     case proxy
+    case chatsList
     case chatsFoldersAtBottom
     case hideAllChatsFolder
     case infiniteScrolling
@@ -118,9 +119,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case storiesHeader(PresentationTheme, String)
     case privacyHeader(PresentationTheme, String)
     case confirmationHeader(PresentationTheme, String)
-    case chatsFoldersHeader(PresentationTheme, String)
     case recentChatsHeader(PresentationTheme, String)
-
+    case chatsHeader(PresentationTheme, String)
+    
     case proxy(PresentationTheme, String, Bool)
 
 	// Раздел нижнего меню
@@ -144,7 +145,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
     case sendAudioConfirmation(PresentationTheme, String, Bool)
     case cameraChoice(PresentationTheme, String, String)
     
-    // Папки с чатами
+    // Чаты
+    case chatsList
     case chatsFoldersAtBottom(PresentationTheme, String, Bool)
     case hideAllChatsFolder(PresentationTheme, String, Bool)
     case infiniteScrolling(PresentationTheme, String, Bool)
@@ -170,8 +172,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsSection.confidentiality.rawValue
         case .confirmationHeader, .callConfirmation, .sendAudioConfirmation, .cameraChoice:
             return DalSettingsSection.confirmation.rawValue
-        case .chatsFoldersHeader, .chatsFoldersAtBottom, .hideAllChatsFolder, .infiniteScrolling:
-            return DalSettingsSection.chatsFolders.rawValue
+        case .chatsHeader, .chatsList, .chatsFoldersAtBottom, .hideAllChatsFolder, .infiniteScrolling:
+            return DalSettingsSection.chats.rawValue
         case .recentChatsHeader, .showRecentChats:
             return DalSettingsSection.recentChats.rawValue
         }
@@ -185,42 +187,44 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return -2
         case .menuItems:
             return -1
-        case .storiesHeader:
+        case .chatsHeader:
             return 0
-        case .hidePublishStoriesButton:
+        case .chatsList:
             return 1
-        case .hideStories:
-            return 2
-        case .hideViewedStories:
-            return 3
-        case .privacyHeader:
-            return 4
-        case .hidePhone:
-            return 5
-        case .disableReadHistory:
-            return 6
-        case .offlineMode:
-            return 7
-        case .confirmationHeader:
-            return 8
-        case .callConfirmation:
-            return 9
-        case .sendAudioConfirmation:
-            return 10
-        case .cameraChoice:
-            return 11
-        case .chatsFoldersHeader:
-            return 12
         case .chatsFoldersAtBottom:
-            return 13
+            return 2
         case .hideAllChatsFolder:
-            return 14
+            return 3
         case .infiniteScrolling:
+            return 4
+        case .storiesHeader:
+            return 7
+        case .hidePublishStoriesButton:
+            return 8
+        case .hideStories:
+            return 9
+        case .hideViewedStories:
+            return 10
+        case .privacyHeader:
+            return 11
+        case .hidePhone:
+            return 12
+        case .disableReadHistory:
+            return 13
+        case .offlineMode:
+            return 14
+        case .confirmationHeader:
             return 15
-        case .recentChatsHeader:
+        case .callConfirmation:
             return 16
-        case .showRecentChats:
+        case .sendAudioConfirmation:
             return 17
+        case .cameraChoice:
+            return 18
+        case .recentChatsHeader:
+            return 19
+        case .showRecentChats:
+            return 20
         }
     }
 
@@ -254,7 +258,9 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             return DalSettingsEntryTag.infiniteScrolling
         case .showRecentChats:
             return DalSettingsEntryTag.showRecentChats
-        case .storiesHeader, .privacyHeader, .confirmationHeader, .chatsFoldersHeader, .tabBar, .menuItems, .recentChatsHeader:
+        case .chatsList:
+            return DalSettingsEntryTag.chatsList
+        case .storiesHeader, .privacyHeader, .confirmationHeader, .tabBar, .menuItems, .recentChatsHeader, .chatsHeader:
             return nil
         }
     }
@@ -387,7 +393,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
-        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsFoldersHeader(_, _), .tabBar, .menuItems, .recentChatsHeader(_,_):
+        case .storiesHeader(_, _), .privacyHeader(_, _), .confirmationHeader(_,_), .chatsHeader(_, _), .tabBar, .menuItems, .chatsList, .recentChatsHeader(_,_):
             if lhs.stableId != rhs.stableId {
                 return false
             }
@@ -566,7 +572,7 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 text: text,
                 sectionId: self.section
             )
-        case let .chatsFoldersHeader(_, text):
+        case let .chatsHeader(_, text):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
                 text: text,
@@ -608,6 +614,17 @@ private enum DalSettingsEntry: ItemListNodeEntry {
                 action: {
                     let menuItemsSettingsController = dMenuItemsSettingsController(context: arguments.context)
                     arguments.pushController(menuItemsSettingsController)
+                })
+        case .chatsList:
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: "DahlSettings.ChatsList".tp_loc(lang: presentationData.strings.baseLanguageCode),
+                label: "",
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    let chatsSettingsController = dChatsSettingsController(context: arguments.context)
+                    arguments.pushController(chatsSettingsController)
                 }
             )
 
@@ -667,6 +684,24 @@ private func dalSettingsEntries(
     
     entries.append(.menuItems)
 
+    entries.append(.chatsHeader(presentationData.theme, "DahlSettings.ChatsHeader".tp_loc(lang: lang).uppercased()))
+    entries.append(.chatsList)
+    entries.append(.chatsFoldersAtBottom(
+        presentationData.theme,
+        "DahlSettings.ChatsFoldersAtBottom".tp_loc(lang: lang),
+        chatsFoldersAtBottom
+    ))
+    entries.append(.hideAllChatsFolder(
+        presentationData.theme,
+        "DahlSettings.HideAllChatsFolder".tp_loc(lang: lang),
+        hideAllChatsFolder
+    ))
+    entries.append(.infiniteScrolling(
+        presentationData.theme,
+        "DahlSettings.InfiniteScrolling".tp_loc(lang: lang),
+        infiniteScrolling
+    ))
+    
     entries.append(.storiesHeader(presentationData.theme, "DahlSettings.StoriesHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.hidePublishStoriesButton(
         presentationData.theme,
@@ -716,22 +751,6 @@ private func dalSettingsEntries(
         presentationData.theme,
         "DahlSettings.VideoMessage".tp_loc(lang: lang),
         videoMessageCamera.rawValue
-    ))
-    entries.append(.chatsFoldersHeader(presentationData.theme, "DahlSettings.ChatsFoldersHeader".tp_loc(lang: lang).uppercased()))
-    entries.append(.chatsFoldersAtBottom(
-        presentationData.theme,
-        "DahlSettings.ChatsFoldersAtBottom".tp_loc(lang: lang),
-        chatsFoldersAtBottom
-    ))
-    entries.append(.hideAllChatsFolder(
-        presentationData.theme,
-        "DahlSettings.HideAllChatsFolder".tp_loc(lang: lang),
-        hideAllChatsFolder
-    ))
-    entries.append(.infiniteScrolling(
-        presentationData.theme,
-        "DahlSettings.InfiniteScrolling".tp_loc(lang: lang),
-        infiniteScrolling
     ))
     entries.append(.recentChatsHeader(presentationData.theme, "DahlSettings.RecentChatsHeader".tp_loc(lang: lang).uppercased()))
     entries.append(.showRecentChats(

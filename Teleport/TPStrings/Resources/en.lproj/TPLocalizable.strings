@@ -51,6 +51,12 @@
 "DahlSettings.ConfirmAudioMessageToggle" = "Confirm before sending audio message";
 "DahlSettings.VideoMessageCameraLink" = "Camera for video messages";
 
+"DahlSettings.ChatsHeader" = "Chats";
+"DahlSettings.ChatsList" = "Chats list";
+"DahlSettings.ChatsList.SingleLine" = "Single Line";
+"DahlSettings.ChatsList.DoubleLine" = "Double Line";
+"DahlSettings.ChatsList.TripleLine" = "Triple Line";
+"DahlSettings.ChatsList.ListView" = "List view";
 "DahlSettings.ChatsFoldersHeader" = "Chats folders";
 "DahlSettings.ChatsFoldersAtBottom" = "Folders at the bottom";
 "DahlSettings.HideAllChatsFolder" = "Hide \"All Chats\" Folder";

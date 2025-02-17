@@ -290,7 +290,8 @@ final class QuickReplySetupScreenComponent: Component {
                     header: nil,
                     enableContextActions: true,
                     hiddenOffset: false,
-                    interaction: chatListNodeInteraction
+                    interaction: chatListNodeInteraction,
+                    chatListItemTextLineCount: 2
                 )
             }
         }

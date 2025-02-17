@@ -36,6 +36,9 @@ public enum IconType: String {
     case peerLeave
     case avatarSaved
     case avatarArchive
+    case contextMenuClear
+    case contextMenuDelete
+    case contextMenuEye
 }
 
 public enum IconRef: Equatable {
