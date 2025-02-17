@@ -152,6 +152,10 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
         })
     }
     
+    var isLoadingSignal: Signal<Bool, NoError> {
+        return .complete()
+    }
+    
     var searching: Signal<Bool, NoError> {
         return self.impl.signalWith({ impl, subscriber in
             return impl.isSearchingPromise.get().start(next: subscriber.putNext)
@@ -199,6 +203,11 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
         self.impl.with { impl in
             impl.loadMore()
         }
+    }
+    
+    func loadAll() {}
+    
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
     }
     
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in } {
