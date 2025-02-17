@@ -3,16 +3,10 @@ load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 filegroup(
     name = "DWallpaperImages",
-    srcs = [
-        "WallpaperKazan.png",
-        "WallpaperKazan.svg",
-        "WallpaperSP.png",
-        "WallpaperSP.svg",
-        "WallpaperRussia.png",
-        "WallpaperRussia.svg",
-        "WallpaperMoscow.png",
-        "WallpaperMoscow.svg"
-    ],
+    srcs = glob([
+        "Resources/**/*.png",
+        "Resources/**/*.svg",
+    ]),
     visibility = ["//visibility:public"],
 )
 
