@@ -46,6 +46,7 @@ import ChatMessageReactionsFooterContentNode
 import ManagedDiceAnimationNode
 import MessageHaptics
 import ChatMessageTransitionNode
+import TelegramUIPreferences
 
 private let nameFont = Font.medium(14.0)
 private let inlineBotPrefixFont = Font.regular(14.0)
@@ -88,6 +89,7 @@ public class ChatMessageAnimatedStickerItemNode: ChatMessageItemView {
     private var animationSize: CGSize?
     private var didSetUpAnimationNode = false
     private var isPlaying = false
+    private var isPremiumStickerAnimationEnabled = false
     
     private let textNode: TextNodeWithEntities
     
@@ -434,6 +436,17 @@ public class ChatMessageAnimatedStickerItemNode: ChatMessageItemView {
         if self.wasPending && (item.message.id.namespace != Namespaces.Message.Local && item.message.id.namespace != Namespaces.Message.ScheduledLocal && item.message.id.namespace != Namespaces.Message.QuickReplyLocal) {
             self.didChangeFromPendingToSent = true
         }
+        
+        disposables.add(
+            (item.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+             |> map { sharedData -> DalSettings in
+                 return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+             }
+             |> deliverOnMainQueue)
+            .startStrict(next: { [weak self] settings in
+                self?.isPremiumStickerAnimationEnabled = settings.premiumSettings.showPremiumStickerAnimation
+            })
+        )
                 
         for media in item.message.media {
             if let telegramFile = media as? TelegramMediaFile {
@@ -1970,7 +1983,7 @@ public class ChatMessageAnimatedStickerItemNode: ChatMessageItemView {
     
     private var playedPremiumStickerAnimation = false
     func playPremiumStickerAnimation() {
-        guard !self.playedPremiumStickerAnimation, let item = self.item, let file = self.telegramFile, file.isPremiumSticker, let effect = file.videoThumbnails.first else {
+        guard self.isPremiumStickerAnimationEnabled, !self.playedPremiumStickerAnimation, let item = self.item, let file = self.telegramFile, file.isPremiumSticker, let effect = file.videoThumbnails.first else {
             return
         }
         self.playedPremiumStickerAnimation = true
