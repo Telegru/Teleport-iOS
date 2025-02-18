@@ -3,21 +3,32 @@ import Foundation
 import AppBundle
 import Postbox
 
+private class DWallpaperClass { }
+
 public enum DWallpaper: CaseIterable {
     case kazan
     case russia
     case saintPetersburg
     case moscow
 
+    private static var resourceBundle: Bundle? {
+        let frameworkBundle = Bundle(for: DWallpaperClass.self)
+        guard let bundleURL = frameworkBundle.url(forResource: "DWallpaperResourcesBundle", withExtension: "bundle") else {
+            return nil
+        }
+        return Bundle(url: bundleURL)
+    }
+    
     public func makeWallpaper(darkMode: Bool = false) -> TelegramWallpaper? {
         let (resourceName, resourceType) = resourceData
         let (previewName, previewType) = previewData
-
-        guard let path = Bundle.main.path(forResource: resourceName, ofType: resourceType) else {
+        
+        guard let bundle = DWallpaper.resourceBundle,
+              let path = bundle.path(forResource: resourceName, ofType: resourceType) else {
             return nil
         }
         
-        guard let previewPath = Bundle.main.path(forResource: previewName, ofType: previewType) else {
+        guard let previewPath = bundle.path(forResource: previewName, ofType: previewType) else {
             return nil
         }
         
@@ -77,7 +88,8 @@ public enum DWallpaper: CaseIterable {
     public func fileDataForDWallpaper() -> Data? {
         let (resourceName, resourceType) = self.resourceData
         
-        guard let path = Bundle.main.path(forResource: resourceName, ofType: resourceType) else {
+        guard let bundle = DWallpaper.resourceBundle,
+              let path = bundle.path(forResource: resourceName, ofType: resourceType) else {
             return nil
         }
         
@@ -91,7 +103,8 @@ public enum DWallpaper: CaseIterable {
     
     public func makeLocalFileMediaResource() -> LocalFileMediaResource? {
         let (resourceName, resourceType) = resourceData
-        guard let path = Bundle.main.path(forResource: resourceName, ofType: resourceType) else {
+        guard let bundle = DWallpaper.resourceBundle,
+              let path = bundle.path(forResource: resourceName, ofType: resourceType) else {
             return nil
         }
         
@@ -121,10 +134,10 @@ public enum DWallpaper: CaseIterable {
     
     private var previewData: (String, String) {
         switch self {
-        case .kazan:           return ("WallpaperKazan", "png")
-        case .russia:          return ("WallpaperRussia", "png")
-        case .saintPetersburg: return ("WallpaperSP", "png")
-        case .moscow:          return ("WallpaperMoscow", "png")
+        case .kazan:           return ("WallpaperPreviewKazan", "png")
+        case .russia:          return ("WallpaperPreviewRussia", "png")
+        case .saintPetersburg: return ("WallpaperPreviewSP", "png")
+        case .moscow:          return ("WallpaperPreviewMoscow", "png")
         }
     }
     

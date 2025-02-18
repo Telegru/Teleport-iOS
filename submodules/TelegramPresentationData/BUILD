@@ -24,7 +24,10 @@ swift_library(
         "//Teleport/DAuth:DAuth",
         "//Telegram:PresentationStrings",
         "//Teleport/TPUI:TPUI",
-        "//Teleport/DWallpaper:DWallpaper"
+        "//Teleport/DWallpaper:DWallpaper",
+    ],
+    data = [
+        "//Teleport/DWallpaper:DWallpaperImages"
     ],
     visibility = [
         "//visibility:public",

@@ -1970,7 +1970,6 @@ ios_application(
         ":LaunchScreen",
         ":DefaultAppIcon",
         #":AdditionalIcons",
-        "//Teleport/DWallpaper:DWallpaperImages"
     ],
     frameworks = [
         ":MtProtoKitFramework",
