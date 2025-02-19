@@ -1085,24 +1085,31 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     private func storeLocalWallpaperIfNeeded() {
         let allWallpapers = DWallpaper.allCases
         
-        for wallpaperCase in allWallpapers {
-            guard let localResource = wallpaperCase.makeLocalFileMediaResource() else {
+        for wallpaper in allWallpapers {
+            guard let localResource = wallpaper.makeLocalFileMediaResource(),
+                  let previewResource = wallpaper.makePreviewLocalFileMediaResource() else {
                 continue
             }
             
-            let storePaths = context.account.postbox.mediaBox.storePathsForId(localResource.id)
-            if FileManager.default.fileExists(atPath: storePaths.complete) {
-                continue
+            let mainStorePaths = context.account.postbox.mediaBox.storePathsForId(localResource.id)
+            if !FileManager.default.fileExists(atPath: mainStorePaths.complete) {
+                guard let data = wallpaper.fileDataForDWallpaper() else {
+                    continue
+                }
+                context.account.postbox.mediaBox.storeResourceData(localResource.id,
+                                                                   data: data,
+                                                                   synchronous: true)
             }
             
-            guard let data = wallpaperCase.fileDataForDWallpaper() else {
-                continue
+            let previewStorePaths = context.account.postbox.mediaBox.storePathsForId(previewResource.id)
+            if !FileManager.default.fileExists(atPath: previewStorePaths.complete) {
+                guard let previewData = wallpaper.fileDataForPreview() else {
+                    continue
+                }
+                context.account.postbox.mediaBox.storeResourceData(previewResource.id,
+                                                                   data: previewData,
+                                                                   synchronous: true)
             }
-            
-            context.account.postbox.mediaBox.storeResourceData(localResource.id,
-                data: data,
-                synchronous: true
-            )
         }
     }
 }

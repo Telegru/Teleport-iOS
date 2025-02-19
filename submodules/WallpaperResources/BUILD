@@ -25,6 +25,7 @@ swift_library(
         "//submodules/GZip:GZip",
         "//submodules/GradientBackground:GradientBackground",
         "//submodules/TelegramPresentationData:TelegramPresentationData",
+        "//Teleport/DWallpaper:DWallpaper",
     ],
     visibility = [
         "//visibility:public",
