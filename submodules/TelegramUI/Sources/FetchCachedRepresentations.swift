@@ -591,6 +591,12 @@ private func fetchPreparedPatternWallpaperRepresentation(resource: MediaResource
                 let _ = try? data.write(to: url)
                 subscriber.putNext(.temporaryPath(path))
                 subscriber.putCompletion()
+            } else if let data = prepareSvgImage(data, true) {
+                let path = NSTemporaryDirectory() + "\(Int64.random(in: Int64.min ... Int64.max))"
+                let url = URL(fileURLWithPath: path)
+                let _ = try? data.write(to: url)
+                subscriber.putNext(.temporaryPath(path))
+                subscriber.putCompletion()
             }
         }
         return EmptyDisposable

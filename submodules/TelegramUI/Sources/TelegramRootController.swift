@@ -38,6 +38,7 @@ import TelegramUIPreferences
 import WebUI
 import PresentationDataUtils
 import LocalizedPeerData
+import DWallpaper
 
 private class DetailsChatPlaceholderNode: ASDisplayNode, NavigationDetailsPlaceholderNode {
     private var presentationData: PresentationData
@@ -127,6 +128,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.presentationData = context.sharedContext.currentPresentationData.with { $0 }
         
         super.init(mode: .automaticMasterDetail, theme: NavigationControllerTheme(presentationTheme: self.presentationData.theme))
+        self.storeLocalWallpaperIfNeeded()
         
         self.presentationDataDisposable = (context.sharedContext.presentationData
         |> deliverOnMainQueue).startStrict(next: { [weak self] presentationData in
@@ -1078,6 +1080,37 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         controller.tabBarItem.selectedImage = icon
         controller.tabBarItem.title = "Apps.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
         return controller
+    }
+    
+    private func storeLocalWallpaperIfNeeded() {
+        let allWallpapers = DWallpaper.allCases
+        
+        for wallpaper in allWallpapers {
+            guard let localResource = wallpaper.makeLocalFileMediaResource(),
+                  let previewResource = wallpaper.makePreviewLocalFileMediaResource() else {
+                continue
+            }
+            
+            let mainStorePaths = context.account.postbox.mediaBox.storePathsForId(localResource.id)
+            if !FileManager.default.fileExists(atPath: mainStorePaths.complete) {
+                guard let data = wallpaper.fileDataForDWallpaper() else {
+                    continue
+                }
+                context.account.postbox.mediaBox.storeResourceData(localResource.id,
+                                                                   data: data,
+                                                                   synchronous: true)
+            }
+            
+            let previewStorePaths = context.account.postbox.mediaBox.storePathsForId(previewResource.id)
+            if !FileManager.default.fileExists(atPath: previewStorePaths.complete) {
+                guard let previewData = wallpaper.fileDataForPreview() else {
+                    continue
+                }
+                context.account.postbox.mediaBox.storeResourceData(previewResource.id,
+                                                                   data: previewData,
+                                                                   synchronous: true)
+            }
+        }
     }
 }
 

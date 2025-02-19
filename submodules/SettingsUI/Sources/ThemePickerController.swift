@@ -21,6 +21,7 @@ import ItemListPeerActionItem
 import AnimationUI
 import ThemeSettingsThemeItem
 import ThemeAccentColorScreen
+import DWallpaper
 
 private final class ThemePickerControllerArguments {
     let context: AccountContext
@@ -364,7 +365,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
     var selectAccentColorImpl: ((TelegramBaseTheme?, PresentationThemeAccentColor?) -> Void)?
     var openAccentColorPickerImpl: ((PresentationThemeReference, Bool) -> Void)?
     
-    let _ = telegramWallpapers(postbox: context.account.postbox, network: context.account.network).start()
+    let _ = telegramWallpapersWithDWallpapers(postbox: context.account.postbox, network: context.account.network).start()
     
     let cloudThemes = Promise<[TelegramTheme]>()
     let updatedCloudThemes = telegramThemes(postbox: context.account.postbox, network: context.account.network, accountManager: context.sharedContext.accountManager)
