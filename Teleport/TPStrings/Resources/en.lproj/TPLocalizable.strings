@@ -71,6 +71,7 @@
 "DahlSettings.RecentChatsHeader" = "Recent chats";
 "DahlSettings.EnablePanel" = "Enable panel";
 "DahlSettings.DisablePanel" = "Disable panel";
+"DahlSettings.RecentChatsInfo" = "A quick access panel for your recently visited chats will appear above the chat list.";
 
 // Wallet
 "Wallet.TabTitle" = "Wallet";
