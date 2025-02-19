@@ -155,6 +155,12 @@ public final class AccountContextImpl: AccountContext {
         return self._countriesConfiguration.get()
     }
     
+    public var currentDahlSettings: Atomic<DalSettings>
+    private let _dahlSettings = Promise<DalSettings>()
+    public var dahlSettings: Signal<DalSettings, NoError> {
+        return self._dahlSettings.get()
+    }
+    
     public var watchManager: WatchManager?
     
     private var storedPassword: (String, CFAbsoluteTime, SwiftSignalKit.Timer)?
@@ -162,6 +168,7 @@ public final class AccountContextImpl: AccountContext {
     private var contentSettingsDisposable: Disposable?
     private var appConfigurationDisposable: Disposable?
     private var countriesConfigurationDisposable: Disposable?
+    private var dahlSettingsDisposable: Disposable?
     
     private let deviceSpecificContactImportContexts: QueueLocalObject<DeviceSpecificContactImportContexts>
     private var managedAppSpecificContactsDisposable: Disposable?
@@ -268,7 +275,7 @@ public final class AccountContextImpl: AccountContext {
     
     public let imageCache: AnyObject?
     
-    public init(sharedContext: SharedAccountContextImpl, account: Account, limitsConfiguration: LimitsConfiguration, contentSettings: ContentSettings, appConfiguration: AppConfiguration, availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions, temp: Bool = false)
+    public init(sharedContext: SharedAccountContextImpl, account: Account, limitsConfiguration: LimitsConfiguration, contentSettings: ContentSettings, dahlSettings: DalSettings, appConfiguration: AppConfiguration, availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions, temp: Bool = false)
     {
         self.sharedContextImpl = sharedContext
         self.account = account
@@ -342,6 +349,18 @@ public final class AccountContextImpl: AccountContext {
         self.contentSettingsDisposable = (self._contentSettings.get()
         |> deliverOnMainQueue).start(next: { value in
             let _ = currentContentSettings.swap(value)
+        })
+        
+        let updateDahlSettings = sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        |> map { sharedData -> DalSettings in
+            return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+        }
+        self.currentDahlSettings = Atomic(value: dahlSettings)
+        self._dahlSettings.set(.single(dahlSettings) |> then(updateDahlSettings))
+        
+        let currentDahlSettings = self.currentDahlSettings
+        self.dahlSettingsDisposable = (self._dahlSettings.get() |> deliverOnMainQueue).start(next: { value in
+            let _ = currentDahlSettings.swap(value)
         })
         
         let updatedAppConfiguration = getAppConfiguration(postbox: account.postbox)
@@ -458,6 +477,7 @@ public final class AccountContextImpl: AccountContext {
         self.managedAppSpecificContactsDisposable?.dispose()
         self.contentSettingsDisposable?.dispose()
         self.appConfigurationDisposable?.dispose()
+        self.dahlSettingsDisposable?.dispose()
         self.countriesConfigurationDisposable?.dispose()
         self.experimentalUISettingsDisposable?.dispose()
         self.animatedEmojiStickersDisposable?.dispose()

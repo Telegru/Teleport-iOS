@@ -794,14 +794,16 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
             var verifiedIcon: EmojiStatusComponent.Content?
             switch item.peer {
             case let .peer(peer, _):
+                let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+                
                 if let peer = peer, (peer.id != item.context.account.peerId || item.peerMode == .memberList || item.aliasHandling == .treatSelfAsSaved) {
                     if peer.isScam {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                     } else if peer.isFake {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-                    } else if let emojiStatus = peer.emojiStatus {
+                    } else if let emojiStatus = peer.emojiStatus, isPremiumStatusEnabled {
                         credibilityIcon = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 20.0, height: 20.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
-                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                         credibilityIcon = .premium(color: item.presentationData.theme.list.itemAccentColor)
                     }
                     

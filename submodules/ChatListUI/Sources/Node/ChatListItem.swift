@@ -3104,6 +3104,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 isAccountPeer = true
             }
             
+            let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+            
             if !isPeerGroup && !isAccountPeer && threadInfo == nil {
                 if displayAsMessage {
                     switch item.content {
@@ -3117,9 +3119,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                                 currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                             } else if peer.isFake {
                                 currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-                            } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled {
+                            } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled, isPremiumStatusEnabled {
                                 currentStatusIconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
-                            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                                 currentCredibilityIconContent = .premium(color: item.presentationData.theme.list.itemAccentColor)
                             }
                             
@@ -3137,6 +3139,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     if peer.isSubscription {
                         isSubscription = true
                     }
+                    let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+                    
                     if case let .peer(peerData) = item.content, peerData.customMessageListData?.hidePeerStatus == true {
                         currentCredibilityIconContent = nil
                     } else if case .savedMessagesChats = item.chatListLocation, peer.id == item.context.account.peerId {
@@ -3145,9 +3149,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                     } else if peer.isFake {
                         currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-                    } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled {
+                    } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled, isPremiumStatusEnabled {
                         currentStatusIconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
-                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                         currentCredibilityIconContent = .premium(color: item.presentationData.theme.list.itemAccentColor)
                     }
                     
