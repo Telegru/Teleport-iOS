@@ -72,6 +72,7 @@
 "DahlSettings.RecentChatsHeader" = "Недавние чаты";
 "DahlSettings.EnablePanel" = "Включить панель";
 "DahlSettings.DisablePanel" = "Выключить панель";
+"DahlSettings.RecentChatsInfo" = "Над списком чатов появится панель быстрого перехода к недавно посещенным чатам.";
 
 // Wallet
 "Wallet.TabTitle" = "Кошелек";
