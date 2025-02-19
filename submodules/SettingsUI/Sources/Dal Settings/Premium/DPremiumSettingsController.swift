@@ -133,13 +133,13 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
         arguments: Any
     ) -> ListViewItem {
         let arguments = arguments as! DPremiumSettingsArguments
-//        let lang = presentationData.strings.baseLanguageCode
+        let lang = presentationData.strings.baseLanguageCode
         
         switch self {
         case let .showStatusIcon(value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
-                title: "Иконки статусов",
+                title: "DahlSettings.PremiumSettings.Status".tp_loc(lang: lang),
                 value: value,
                 sectionId: section,
                 style: .blocks,
@@ -152,7 +152,7 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
         case let .showAnimatedAvatar(value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
-                title: "Анимированные аватары",
+                title: "DahlSettings.PremiumSettings.AnimatedAvatars".tp_loc(lang: lang),
                 value: value,
                 sectionId: section,
                 style: .blocks,
@@ -165,7 +165,7 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
         case let .showAnimatedReactions(value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
-                title: "Анимированные реакции",
+                title: "DahlSettings.PremiumSettings.AnimatedReactions".tp_loc(lang: lang),
                 value: value,
                 sectionId: section,
                 style: .blocks,
@@ -178,7 +178,7 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
         case let .showPremiumStickerAnimation(value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
-                title: "Анимация премиум-стикеров",
+                title: "DahlSettings.PremiumSettings.AnimatedPremiumStickers".tp_loc(lang: lang),
                 value: value,
                 sectionId: section,
                 style: .blocks,
@@ -191,7 +191,7 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
         case let .showCustomWallpaperInChannels(value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
-                title: "Кастомные обои в каналах",
+                title: "DahlSettings.PremiumSettings.CustomChannelWallpapers".tp_loc(lang: lang),
                 value: value,
                 sectionId: section,
                 style: .blocks,
@@ -293,7 +293,7 @@ public func dPremiumSettingsController(
         
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
-            title: .navigationItemTitle("Premium функции"),
+            title: .navigationItemTitle("DahlSettings.PremiumSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)

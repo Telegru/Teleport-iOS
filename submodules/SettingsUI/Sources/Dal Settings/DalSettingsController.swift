@@ -616,8 +616,8 @@ private enum DalSettingsEntry: ItemListNodeEntry {
         case .premiumSettings:
             return ItemListDisclosureItem(
                 presentationData: presentationData,
+                title: "DahlSettings.PremiumSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode),
                 label: "",
-                title: "Premium функции",
                 sectionId: self.section,
                 style: .blocks,
                 action: {
