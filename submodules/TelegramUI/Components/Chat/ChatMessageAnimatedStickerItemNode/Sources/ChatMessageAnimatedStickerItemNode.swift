@@ -437,16 +437,7 @@ public class ChatMessageAnimatedStickerItemNode: ChatMessageItemView {
             self.didChangeFromPendingToSent = true
         }
         
-        disposables.add(
-            (item.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-             |> map { sharedData -> DalSettings in
-                 return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
-             }
-             |> deliverOnMainQueue)
-            .startStrict(next: { [weak self] settings in
-                self?.isPremiumStickerAnimationEnabled = settings.premiumSettings.showPremiumStickerAnimation
-            })
-        )
+        isPremiumStickerAnimationEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showPremiumStickerAnimation
                 
         for media in item.message.media {
             if let telegramFile = media as? TelegramMediaFile {
