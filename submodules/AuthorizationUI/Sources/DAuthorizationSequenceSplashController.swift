@@ -208,7 +208,7 @@ public final class DAuthorizationSequenceSplashController: ViewController {
             if let current = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) {
                 return current.primaryComponent.languageCode
             } else {
-                return Locale.current.languageCode == "ru" ? "ru" : "en"
+                return "en"
             }
         }
         let suggestedCode = self.suggestedLocalization.get()
