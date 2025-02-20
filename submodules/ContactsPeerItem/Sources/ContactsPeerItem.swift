@@ -789,14 +789,14 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
             }
             
             let premiumConfiguration = PremiumConfiguration.with(appConfiguration: item.context.currentAppConfiguration.with { $0 })
+            let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
             
             var credibilityIcon: EmojiStatusComponent.Content?
             var verifiedIcon: EmojiStatusComponent.Content?
             switch item.peer {
             case let .peer(peer, _):
-                let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
                 
-                if let peer = peer, (peer.id != item.context.account.peerId || item.peerMode == .memberList || item.aliasHandling == .treatSelfAsSaved) {
+                if let peer = peer, (peer.id != item.context.account.peerId || item.peerMode == .memberList || item.aliasHandling == .treatSelfAsSaved || true) {
                     if peer.isScam {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                     } else if peer.isFake {
