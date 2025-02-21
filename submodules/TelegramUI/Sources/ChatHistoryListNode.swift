@@ -3253,7 +3253,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                                 }
                             }
                             if let currentMessage {
-                                self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .message(currentMessage.index), quote: nil), anchorIndex: .message(currentMessage.index), sourceIndex: .upperBound, scrollPosition: .top(0.0), animated: false, highlight: true, setupReply: false), id: self.takeNextHistoryLocationId())
+                                self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .message(currentMessage.index), quote: nil), anchorIndex: .message(currentMessage.index), sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: true, setupReply: false), id: self.takeNextHistoryLocationId())
                                 customChatContents.loadMore()
                             }
                         default:
