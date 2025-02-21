@@ -121,9 +121,9 @@ extension DWallChatContent {
         var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
         private var count = 44
         
-        // Новое свойство для хранения предыдущего списка анкеров
         private var previousAnchors: [PeerId: MessageIndex]?
-        
+        private var nextAnchors: [PeerId: MessageIndex]?
+
         init(
             queue: Queue,
             context: AccountContext,
@@ -135,25 +135,6 @@ extension DWallChatContent {
             self.tailChatsCount = tailChatsCount
             self.filterPredicate = filterPredicate
             
-            loadingDisposable = (isLoadingPromise.get()
-                |> distinctUntilChanged)
-                .startStrict(next: { [weak self] isLoading in
-                    guard let self = self else { return }
-                    if isLoading {
-                        let historyView = MessageHistoryView(
-                            tag: nil,
-                            namespaces: .all,
-                            entries: [],
-                            holeEarlier: false,
-                            holeLater: false,
-                            isLoading: true
-                        )
-                        self.mergedHistoryView = historyView
-                        self.historyViewStream.putNext((historyView, .Initial))
-                    }
-                })
-            
-            // Непрерывное отслеживание анкеров
             self.initialAnchorsDisposable = (context.account.viewTracker.tailChatListView(
                 groupId: .root,
                 filterPredicate: filterPredicate,
@@ -187,30 +168,29 @@ extension DWallChatContent {
             })
             .start(next: { [weak self] anchors in
                 guard let self = self else { return }
-                var updateNeeded = false
-                if let previous = self.previousAnchors {
-                    // Определяем набор ключей предыдущих анкеров
-                    let previousKeys = Set(previous.keys)
-                    // Если в новом наборе есть пир, которого раньше не было, значит для него раньше было nil
-                    let newKeys = Set(anchors.keys)
-                    if !newKeys.isSubset(of: previousKeys) {
-                        updateNeeded = true
+                var mergedAnchors: [PeerId: MessageIndex] = self.previousAnchors ?? [:]
+                var newPeerAdded = false
+
+                for (peerId, newAnchor) in anchors {
+                    if mergedAnchors[peerId] == nil {
+                        mergedAnchors[peerId] = newAnchor
+                        newPeerAdded = true
                     }
-                    // Для пиров, которые уже присутствуют, изменения их значений игнорируем, даже если они изменились,
-                    // поскольку в процессе скролла сообщения помечаются прочитанными и анкеры могут обновляться.
-                } else {
-                    updateNeeded = true
                 }
-                
-                if updateNeeded {
-                    // При появлении нового пира инициируем полную перезагрузку
-                    self.updateHistoryViewRequest(anchors: anchors, reload: true, showLoading: true)
+
+                if newPeerAdded || self.previousAnchors == nil {
+                    self.showLoading()
+                    self.updateHistoryViewRequest(anchors: mergedAnchors, reload: true)
+                    self.previousAnchors = mergedAnchors
                 }
-                self.previousAnchors = anchors
+                self.nextAnchors = anchors
             })
             
-            self.isLoadingPromise.set(false)
-            // Первоначальный вызов загрузки производится через обновление анкеров из потока выше
+            self.loadingDisposable = (self.historyViewStream.signal()
+                |> map { $0.0.isLoading })
+                .start(next: { [weak self] isLoading in
+                    self?.isLoadingPromise.set(isLoading)
+                })
         }
         
         deinit {
@@ -221,22 +201,24 @@ extension DWallChatContent {
         }
         
         func reloadData() {
-            // Если требуется полная перезагрузка, можно использовать текущее состояние анкеров
+            self.previousAnchors = nextAnchors
             if let anchors = self.previousAnchors {
-                updateHistoryViewRequest(anchors: anchors, reload: true, showLoading: true)
+                showLoading()
+                updateHistoryViewRequest(anchors: anchors, reload: true)
             }
         }
         
         func loadMore() {
             if let anchors = self.previousAnchors {
-                updateHistoryViewRequest(anchors: anchors, reload: false, showLoading: false)
+                updateHistoryViewRequest(anchors: anchors, reload: false)
             }
         }
         
         func loadAll() {
             count = 8800
             if let anchors = self.previousAnchors {
-                updateHistoryViewRequest(anchors: anchors, reload: false, showLoading: true)
+                showLoading()
+                updateHistoryViewRequest(anchors: anchors, reload: false)
             }
         }
                 
@@ -268,15 +250,23 @@ extension DWallChatContent {
             }
         }
         
-        // Изменённый метод, принимающий актуальные анкеры в качестве параметра
-        private func updateHistoryViewRequest(anchors: [PeerId: MessageIndex], reload: Bool, showLoading: Bool = false) {
+        private func showLoading() {
+            let historyView = MessageHistoryView(
+                tag: nil,
+                namespaces: .all,
+                entries: [],
+                holeEarlier: false,
+                holeLater: false,
+                isLoading: true
+            )
+            self.mergedHistoryView = historyView
+            self.historyViewStream.putNext((historyView, .Initial))
+        }
+        
+        private func updateHistoryViewRequest(anchors: [PeerId: MessageIndex], reload: Bool) {
             self.historyViewDisposable?.dispose()
             if reload {
-                // При полном обновлении сбрасываем счётчик
                 self.count = 44
-            }
-            if showLoading {
-                self.isLoadingPromise.set(true)
             }
             
             let context = self.context
@@ -288,13 +278,12 @@ extension DWallChatContent {
                 clipHoles: false,
                 namespaces: Namespaces.Message.Cloud
             )
-            |> deliverOnMainQueue)
+            |> delay(1.0, queue: .mainQueue()))
             .start(next: { [weak self] view in
                 guard let self = self else { return }
                 
                 let updateType: ViewUpdateType = (self.mergedHistoryView?.entries.isEmpty == true) ? .UpdateVisible : .FillHole
                 
-                self.isLoadingPromise.set(false)
                 self.mergedHistoryView = view
                 self.historyViewStream.putNext((view, updateType))
                 self.count += 44
