@@ -594,7 +594,8 @@ public final class StoryPeerListComponent: Component {
             realTitleContentWidth += titleLockOffset
             
             var titleIconSize: CGSize?
-            if let peerStatus = component.titlePeerStatus {
+            let isPremiumStatusEnabled = component.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+            if let peerStatus = component.titlePeerStatus, isPremiumStatusEnabled {
                 let statusContent: EmojiStatusComponent.Content
                 switch peerStatus {
                 case .premium:

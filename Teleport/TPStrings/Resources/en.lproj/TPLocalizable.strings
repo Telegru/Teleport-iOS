@@ -73,6 +73,14 @@
 "DahlSettings.DisablePanel" = "Disable panel";
 "DahlSettings.RecentChatsInfo" = "A quick access panel for your recently visited chats will appear above the chat list.";
 
+"DahlSettings.PremiumSettings.Title" = "Premium features";
+"DahlSettings.PremiumSettings.Status" = "Status icons";
+"DahlSettings.PremiumSettings.AnimatedAvatars" = "Animated avatars";
+"DahlSettings.PremiumSettings.AnimatedReactions" = "Animated reactions";
+"DahlSettings.PremiumSettings.AnimatedPremiumStickers" = "Animation of premium stickers";
+"DahlSettings.PremiumSettings.CustomChannelWallpapers" = "Custom wallpapers in channels";
+
+
 // Wallet
 "Wallet.TabTitle" = "Wallet";
 

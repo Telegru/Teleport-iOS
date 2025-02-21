@@ -533,6 +533,7 @@ final class PeerInfoHeaderNode: ASDisplayNode {
         self.presentationData = presentationData
         
         let premiumConfiguration = PremiumConfiguration.with(appConfiguration: self.context.currentAppConfiguration.with { $0 })
+        let isPremiumStatusEnabled = self.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
         var credibilityIcon: CredibilityIcon = .none
         var verifiedIcon: CredibilityIcon = .none
         var statusIcon: CredibilityIcon = .none
@@ -543,9 +544,10 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 credibilityIcon = .fake
             } else if peer.isScam {
                 credibilityIcon = .scam
-            } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled {
+            } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled,
+                      isPremiumStatusEnabled {
                 statusIcon = .emojiStatus(emojiStatus)
-            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && (peer.id != self.context.account.peerId || self.isSettings || self.isMyProfile) {
+            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && (peer.id != self.context.account.peerId || self.isSettings || self.isMyProfile) && isPremiumStatusEnabled {
                 credibilityIcon = .premium
             } else {
                 credibilityIcon = .none
@@ -784,13 +786,19 @@ final class PeerInfoHeaderNode: ASDisplayNode {
             var currentEmojiStatus: PeerEmojiStatus?
             let emojiRegularStatusContent: EmojiStatusComponent.Content
             let emojiExpandedStatusContent: EmojiStatusComponent.Content
+            let isPremiumStatusEnabled = self.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
             switch credibilityIcon {
             case .none:
                 emojiRegularStatusContent = .none
                 emojiExpandedStatusContent = .none
             case .premium:
-                emojiRegularStatusContent = .premium(color: navigationContentsAccentColor)
-                emojiExpandedStatusContent = .premium(color: navigationContentsAccentColor)
+                if isPremiumStatusEnabled {
+                    emojiRegularStatusContent = .premium(color: navigationContentsAccentColor)
+                    emojiExpandedStatusContent = .premium(color: navigationContentsAccentColor)
+                } else {
+                    emojiRegularStatusContent = .none
+                    emojiExpandedStatusContent = .none
+                }
             case .verified:
                 emojiRegularStatusContent = .verified(fillColor: presentationData.theme.list.itemCheckColors.fillColor, foregroundColor: presentationData.theme.list.itemCheckColors.foregroundColor, sizeType: .large)
                 emojiExpandedStatusContent = .verified(fillColor: navigationContentsAccentColor, foregroundColor: .clear, sizeType: .large)
@@ -801,9 +809,14 @@ final class PeerInfoHeaderNode: ASDisplayNode {
                 emojiRegularStatusContent = .text(color: presentationData.theme.chat.message.incoming.scamColor, string: presentationData.strings.Message_ScamAccount.uppercased())
                 emojiExpandedStatusContent = emojiRegularStatusContent
             case let .emojiStatus(emojiStatus):
-                currentEmojiStatus = emojiStatus
-                emojiRegularStatusContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 80.0, height: 80.0), placeholderColor: presentationData.theme.list.mediaPlaceholderColor, themeColor: navigationContentsAccentColor, loopMode: .forever)
-                emojiExpandedStatusContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 80.0, height: 80.0), placeholderColor: navigationContentsAccentColor, themeColor: navigationContentsAccentColor, loopMode: .forever)
+                if isPremiumStatusEnabled {
+                    currentEmojiStatus = emojiStatus
+                    emojiRegularStatusContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 80.0, height: 80.0), placeholderColor: presentationData.theme.list.mediaPlaceholderColor, themeColor: navigationContentsAccentColor, loopMode: .forever)
+                    emojiExpandedStatusContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 80.0, height: 80.0), placeholderColor: navigationContentsAccentColor, themeColor: navigationContentsAccentColor, loopMode: .forever)
+                } else {
+                    emojiRegularStatusContent = .none
+                    emojiExpandedStatusContent = .none
+                }
             }
                         
             let iconSize = self.titleCredibilityIconView.update(

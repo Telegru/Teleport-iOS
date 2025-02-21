@@ -30,6 +30,7 @@ import AppBundle
 import MultilineTextComponent
 import MultilineTextWithEntitiesComponent
 import ShimmerEffect
+import TelegramUIPreferences
 
 public enum ChatListItemContent {
     public struct ThreadInfo: Equatable {
@@ -1281,6 +1282,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     
     private var hierarchyTrackingLayer: HierarchyTrackingLayer?
     private var cachedDataDisposable = MetaDisposable()
+    private var dahlSettingsDisposable: Disposable?
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [ContentImageSpec] = []
@@ -1648,6 +1650,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     
     deinit {
         self.cachedDataDisposable.dispose()
+        self.dahlSettingsDisposable?.dispose()
     }
     
     override public func secondaryAction(at point: CGPoint) {
@@ -1696,6 +1699,20 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
         if item.interaction.activateChatPreview == nil {
             enablePreview = false
         }
+        
+        self.dahlSettingsDisposable?.dispose()
+        dahlSettingsDisposable = (
+            item.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+                return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+            }
+            |> distinctUntilChanged
+            |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] _ in
+            guard let self, let layoutParams else { return }
+            let (_, apply) = asyncLayout()(layoutParams.0, layoutParams.5, layoutParams.1, layoutParams.2, layoutParams.3, layoutParams.4)
+            apply(false, false)
+        })
         
         self.avatarNode.setStoryStats(storyStats: storyState.flatMap { storyState in
             return AvatarNode.StoryStats(
@@ -3104,6 +3121,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 isAccountPeer = true
             }
             
+            let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+            
             if !isPeerGroup && !isAccountPeer && threadInfo == nil {
                 if displayAsMessage {
                     switch item.content {
@@ -3117,9 +3136,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                                 currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                             } else if peer.isFake {
                                 currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-                            } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled {
+                            } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled, isPremiumStatusEnabled {
                                 currentStatusIconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
-                            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                            } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                                 currentCredibilityIconContent = .premium(color: item.presentationData.theme.list.itemAccentColor)
                             }
                             
@@ -3137,6 +3156,8 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     if peer.isSubscription {
                         isSubscription = true
                     }
+                    let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+                    
                     if case let .peer(peerData) = item.content, peerData.customMessageListData?.hidePeerStatus == true {
                         currentCredibilityIconContent = nil
                     } else if case .savedMessagesChats = item.chatListLocation, peer.id == item.context.account.peerId {
@@ -3145,9 +3166,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                     } else if peer.isFake {
                         currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-                    } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled {
+                    } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled, isPremiumStatusEnabled {
                         currentStatusIconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
-                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                         currentCredibilityIconContent = .premium(color: item.presentationData.theme.list.itemAccentColor)
                     }
                     

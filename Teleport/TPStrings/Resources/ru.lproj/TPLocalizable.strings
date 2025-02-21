@@ -74,6 +74,13 @@
 "DahlSettings.DisablePanel" = "Выключить панель";
 "DahlSettings.RecentChatsInfo" = "Над списком чатов появится панель быстрого перехода к недавно посещенным чатам.";
 
+"DahlSettings.PremiumSettings.Title" = "Premium функции";
+"DahlSettings.PremiumSettings.Status" = "Иконки статусов";
+"DahlSettings.PremiumSettings.AnimatedAvatars" = "Анимированные аватары";
+"DahlSettings.PremiumSettings.AnimatedReactions" = "Анимированные реакции";
+"DahlSettings.PremiumSettings.AnimatedPremiumStickers" = "Анимация премиум-стикеров";
+"DahlSettings.PremiumSettings.CustomChannelWallpapers" = "Кастомные обои в каналах";
+
 // Wallet
 "Wallet.TabTitle" = "Кошелек";
 

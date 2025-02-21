@@ -23,6 +23,10 @@ final class PeerInfoEditingAvatarNode: ASDisplayNode {
     private var videoStartTimestamp: Double?
     var item: PeerInfoAvatarListItem?
     
+    private var isVideoAvatarEnabled: Bool {
+        context.currentDahlSettings.with { $0 }.premiumSettings.showAnimatedAvatar
+    }
+    
     var tapped: ((Bool) -> Void)?
         
     var canAttachVideo: Bool = true
@@ -156,7 +160,7 @@ final class PeerInfoEditingAvatarNode: ASDisplayNode {
                 }
                 markupNode.update(markup: markup, size: CGSize(width: 320.0, height: 320.0))
                 markupNode.updateVisibility(true)
-            } else if threadData == nil, let video = videoRepresentations.last, let peerReference = PeerReference(peer) {
+            } else if isVideoAvatarEnabled, threadData == nil, let video = videoRepresentations.last, let peerReference = PeerReference(peer) {
                 if let markupNode = self.markupNode {
                     self.markupNode = nil
                     markupNode.removeFromSupernode()

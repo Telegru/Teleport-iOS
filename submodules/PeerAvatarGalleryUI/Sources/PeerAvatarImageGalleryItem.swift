@@ -12,6 +12,7 @@ import PhotoResources
 import GalleryUI
 import TelegramUniversalVideoContent
 import UndoUI
+import TelegramUIPreferences
 
 private struct PeerAvatarImageGalleryThumbnailItem: GalleryThumbnailItem {
     let account: Account
@@ -147,10 +148,15 @@ final class PeerAvatarImageGalleryItemNode: ZoomableContentGalleryItemNode {
     private let statusNode: RadialStatusNode
     fileprivate let footerContentNode: AvatarGalleryItemFooterContentNode
     
+    private var isVideoAvatarEnabled: Bool {
+        context.currentDahlSettings.with { $0 }.premiumSettings.showAnimatedAvatar
+    }
+    
     private let fetchDisposable = MetaDisposable()
     private let statusDisposable = MetaDisposable()
     private var status: EngineMediaResource.FetchStatus?
     private let playbackStatusDisposable = MetaDisposable()
+    private var dSettingsDisposable: Disposable?
     
     fileprivate var edit: (() -> Void)?
     
@@ -216,6 +222,7 @@ final class PeerAvatarImageGalleryItemNode: ZoomableContentGalleryItemNode {
         self.fetchDisposable.dispose()
         self.statusDisposable.dispose()
         self.playbackStatusDisposable.dispose()
+        self.dSettingsDisposable?.dispose()
     }
     
     override func ready() -> Signal<Void, NoError> {
@@ -252,7 +259,7 @@ final class PeerAvatarImageGalleryItemNode: ZoomableContentGalleryItemNode {
                 let representations = entry.representations
                 if representations.last != previousRepresentations?.last {
                     self.imageNode.setSignal(chatAvatarGalleryPhoto(account: self.context.account, representations: representations, immediateThumbnailData: entry.immediateThumbnailData, attemptSynchronously: synchronous), attemptSynchronously: synchronous, dispatchOnDisplayLink: false)
-                    if entry.videoRepresentations.isEmpty {
+                    if entry.videoRepresentations.isEmpty || !isVideoAvatarEnabled {
                         self.imageNode.imageUpdated = { [weak self] _ in
                             self?._ready.set(.single(Void()))
                         }
@@ -276,7 +283,7 @@ final class PeerAvatarImageGalleryItemNode: ZoomableContentGalleryItemNode {
                         id = id &+ resource.photoId
                     }
                 }
-                if let video = entry.videoRepresentations.last, let peerReference = PeerReference(self.peer._asPeer()) {
+                if isVideoAvatarEnabled, let video = entry.videoRepresentations.last, let peerReference = PeerReference(self.peer._asPeer()) {
                     if video != previousVideoRepresentations?.last {
                         let mediaManager = self.context.sharedContext.mediaManager
                         let videoFileReference = FileMediaReference.avatarList(peer: peerReference, media: TelegramMediaFile(fileId: EngineMedia.Id(namespace: Namespaces.Media.LocalFile, id: 0), partialReference: nil, resource: video.representation.resource, previewRepresentations: representations.map { $0.representation }, videoThumbnails: [], immediateThumbnailData: entry.immediateThumbnailData, mimeType: "video/mp4", size: nil, attributes: [.Animated, .Video(duration: 0, size: video.representation.dimensions, flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)], alternativeRepresentations: []))

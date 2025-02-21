@@ -1202,6 +1202,7 @@ public protocol AccountContext: AnyObject {
     var currentContentSettings: Atomic<ContentSettings> { get }
     var currentAppConfiguration: Atomic<AppConfiguration> { get }
     var currentCountriesConfiguration: Atomic<CountriesConfiguration> { get }
+    var currentDahlSettings: Atomic<DalSettings> { get }
     
     var cachedGroupCallContexts: AccountGroupCallContextCache { get }
     
