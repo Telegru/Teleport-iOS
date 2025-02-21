@@ -28,8 +28,11 @@ public final class DIntroViewController: UIViewController {
     // Public properties
     
     public var defaultFrame: CGRect = .zero
-    public var isEnabled: Bool = true
-    public var startMessaging: (() -> Void)?
+    public var isEnabled: Bool = true {
+        didSet {
+            alternativeLanguageButton.isEnabled = isEnabled
+        }
+    }
     public var startMessagingInAlternativeLanguage: ((String) -> Void)?
     public var createStartButton: ((CGFloat) -> UIView)!
     
@@ -52,8 +55,6 @@ public final class DIntroViewController: UIViewController {
     // Private properties
     
     private var loadedView: Bool = false
-    private var alternativeLocalization: SVariable?
-    private var alternativeLocalizationInfo: TGSuggestedLocalization?
     private var localizationsDisposable: SDisposable?
     private var deviceScreen: DeviceScreen {
         let viewSize = view.frame.size
@@ -118,23 +119,19 @@ public final class DIntroViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
         
         localizationsDisposable = suggestedLocalizationSignal.deliver(on: .main())
-            .startStrict(next: { [weak self] next in
-                guard let self,
-                      let next = next as? TGSuggestedLocalization else {
+            .startStrict(next: { [weak self] _ in
+                guard let self else {
                     return
                 }
-                if alternativeLocalizationInfo == nil {
-                    alternativeLocalizationInfo = next
-                    alternativeLanguageButton.setTitle("Intro.Continue".tp_loc(), for: .normal)
-                    alternativeLanguageButton.isHidden = false
-                    alternativeLanguageButton.sizeToFit()
-                    
-                    if isViewLoaded {
-                        alternativeLanguageButton.alpha = 0.0
-                        UIView.animate(withDuration: 0.3) {
-                            self.alternativeLanguageButton.alpha = self.isEnabled ? 1.0 : 0.6
-                            self.viewWillLayoutSubviews()
-                        }
+                alternativeLanguageButton.setTitle("Intro.Continue".tp_loc(), for: .normal)
+                alternativeLanguageButton.isHidden = false
+                alternativeLanguageButton.sizeToFit()
+                
+                if isViewLoaded {
+                    alternativeLanguageButton.alpha = 0.0
+                    UIView.animate(withDuration: 0.3) {
+                        self.alternativeLanguageButton.alpha = self.isEnabled ? 1.0 : 0.6
+                        self.viewWillLayoutSubviews()
                     }
                 }
             }, file: #file, line: #line)
@@ -246,10 +243,5 @@ public final class DIntroViewController: UIViewController {
     private func alternativeLanguageButtonPressed() {
         let language = Locale.current.languageCode == "ru" ? "en" : "ru"
         startMessagingInAlternativeLanguage?(language)
-    }
-    
-    @objc
-    private func startButtonPressed() {
-        startMessaging?()
     }
 }
