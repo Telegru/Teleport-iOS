@@ -160,6 +160,21 @@ public struct DalSettings: Codable, Equatable {
         }
         try container.encode(self.chatsListViewType.rawValue, forKey: "chatsListViewType")
     }
+    
+    public func withUpdatedShowCallTab() -> DalSettings {
+        var dalSettings = self
+        var activeTabs = tabBarSettings.activeTabs
+        if activeTabs.contains(.calls) {
+            return self
+        }
+        if activeTabs.count == 5 {
+            let index = activeTabs.firstIndex { !$0.isAlwaysShow } ?? 0
+            activeTabs.remove(at: index)
+        }
+        activeTabs.append(.calls)
+        dalSettings.tabBarSettings.activeTabs = activeTabs
+        return dalSettings
+    }
 }
 
 public func updateDalSettingsInteractively(accountManager: AccountManager<TelegramAccountManagerTypes>, _ f: @escaping (DalSettings) -> DalSettings) -> Signal<Void, NoError> {
