@@ -30,6 +30,7 @@ import AppBundle
 import MultilineTextComponent
 import MultilineTextWithEntitiesComponent
 import ShimmerEffect
+import TelegramUIPreferences
 
 public enum ChatListItemContent {
     public struct ThreadInfo: Equatable {
@@ -1281,6 +1282,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     
     private var hierarchyTrackingLayer: HierarchyTrackingLayer?
     private var cachedDataDisposable = MetaDisposable()
+    private var dahlSettingsDisposable: Disposable?
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [ContentImageSpec] = []
@@ -1648,6 +1650,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     
     deinit {
         self.cachedDataDisposable.dispose()
+        self.dahlSettingsDisposable?.dispose()
     }
     
     override public func secondaryAction(at point: CGPoint) {
@@ -1696,6 +1699,20 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
         if item.interaction.activateChatPreview == nil {
             enablePreview = false
         }
+        
+        self.dahlSettingsDisposable?.dispose()
+        dahlSettingsDisposable = (
+            item.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+                return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+            }
+            |> distinctUntilChanged
+            |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] _ in
+            guard let self, let layoutParams else { return }
+            let (_, apply) = asyncLayout()(layoutParams.0, layoutParams.5, layoutParams.1, layoutParams.2, layoutParams.3, layoutParams.4)
+            apply(false, false)
+        })
         
         self.avatarNode.setStoryStats(storyStats: storyState.flatMap { storyState in
             return AvatarNode.StoryStats(
