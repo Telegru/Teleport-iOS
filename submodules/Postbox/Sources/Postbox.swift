@@ -3268,6 +3268,24 @@ final class PostboxImpl {
         }
     }
     
+    public func maximumUnreadMessagesCountAmongPeers(peerIds: [PeerId]) -> Signal<Int32, NoError> {
+        let peerSignals = peerIds.map { peerId -> Signal<Int, NoError> in
+            let unreadCountsKey: PostboxViewKey = .unreadCounts(items: [.peer(id: peerId, handleThreads: false)])
+            return self.combinedView(keys: [unreadCountsKey])
+            |> map { views in
+                if let view = views.views[unreadCountsKey] as? UnreadMessageCountsView,
+                   let count = view.count(for: .peer(id: peerId, handleThreads: false)) {
+                    return Int(count)
+                }
+                return 0
+            }
+        }
+        return combineLatest(peerSignals)
+        |> map { counts in
+            return Int32(counts.max() ?? 0)
+        }
+    }
+    
     // TODO: has methods better
     public func oldestUnreadMessagesForPeerIds(
         peerIds: [PeerId],
@@ -4650,6 +4668,17 @@ public class Postbox {
                     clipHoles: clipHoles,
                     namespaces: namespaces
                 ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            }
+            return disposable.strict()
+        }
+    }
+    
+    public func maximumUnreadMessagesCountAmongPeers(peerIds: [PeerId]) -> Signal<Int32, NoError> {
+        return Signal { subscriber in
+            let disposable = MetaDisposable()
+            self.impl.with { impl in
+                disposable.set(impl.maximumUnreadMessagesCountAmongPeers(peerIds: peerIds)
+                    .start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
             }
             return disposable.strict()
         }
