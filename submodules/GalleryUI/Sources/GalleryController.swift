@@ -776,7 +776,6 @@ public class GalleryController: ViewController, StandalonePresentableController,
                             let entries = view.entries
                                 .filter { $0.message.id == message.id || $0.message.groupingKey == message.groupingKey }
                                 .map(\.message)
-                                .reversed()
                                 .map { message in
                                     MessageHistoryEntry(message: message, isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
                                 }
