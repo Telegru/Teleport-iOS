@@ -14016,15 +14016,16 @@ private final class AccountPeerContextItemNode: ASDisplayNode, ContextMenuCustom
             let textFrame = CGRect(origin: CGPoint(x: sideInset, y: verticalOrigin), size: textSize)
             transition.updateFrameAdditive(node: self.textNode, frame: textFrame)
             
+            let isPremiumStatusEnabled = self.item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
             var iconContent: EmojiStatusComponent.Content?
             if case let .user(user) = self.item.peer {
-                if let emojiStatus = user.emojiStatus {
+                if let emojiStatus = user.emojiStatus, isPremiumStatusEnabled {
                     iconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 28.0, height: 28.0), placeholderColor: self.presentationData.theme.list.mediaPlaceholderColor, themeColor: self.presentationData.theme.list.itemAccentColor, loopMode: .forever)
-                } else if user.isPremium {
+                } else if user.isPremium, isPremiumStatusEnabled {
                     iconContent = .premium(color: self.presentationData.theme.list.itemAccentColor)
                 }
             } else if case let .channel(channel) = self.item.peer {
-                if let emojiStatus = channel.emojiStatus {
+                if let emojiStatus = channel.emojiStatus, isPremiumStatusEnabled {
                     iconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 28.0, height: 28.0), placeholderColor: self.presentationData.theme.list.mediaPlaceholderColor, themeColor: self.presentationData.theme.list.itemAccentColor, loopMode: .forever)
                 }
             }

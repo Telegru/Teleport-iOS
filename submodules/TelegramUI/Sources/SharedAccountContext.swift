@@ -88,7 +88,7 @@ private final class AccountUserInterfaceInUseContext {
     }
 }
 
-typealias AccountInitialData = (limitsConfiguration: LimitsConfiguration?, contentSettings: ContentSettings?, appConfiguration: AppConfiguration?, availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions)
+typealias AccountInitialData = (limitsConfiguration: LimitsConfiguration?, contentSettings: ContentSettings?, dahlSettings: DalSettings?, appConfiguration: AppConfiguration?, availableReplyColors: EngineAvailableColorOptions, availableProfileColors: EngineAvailableColorOptions)
 
 private struct AccountAttributes: Equatable {
     let sortIndex: Int32
@@ -584,20 +584,28 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                         switch result {
                             case let .authorized(account):
                                 setupAccount(account, fetchCachedResourceRepresentation: fetchCachedResourceRepresentation, transformOutgoingMessageMedia: transformOutgoingMessageMedia)
-                                return TelegramEngine(account: account).data.get(
+                                return combineLatest(
+                                    TelegramEngine(account: account).data.get(
                                     TelegramEngine.EngineData.Item.Configuration.Limits(),
                                     TelegramEngine.EngineData.Item.Configuration.ContentSettings(),
                                     TelegramEngine.EngineData.Item.Configuration.App(),
                                     TelegramEngine.EngineData.Item.Configuration.AvailableColorOptions(scope: .replies),
                                     TelegramEngine.EngineData.Item.Configuration.AvailableColorOptions(scope: .profile)
+                                    ),
+                                    accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                                            |> map { sharedData -> DalSettings in
+                                                return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+                                            } |> take(1)
                                 )
-                                |> map { limitsConfiguration, contentSettings, appConfiguration, availableReplyColors, availableProfileColors -> AddedAccountResult in
-                                    return .ready(id, account, attributes.sortIndex, (limitsConfiguration._asLimits(), contentSettings, appConfiguration, availableReplyColors, availableProfileColors))
+                                |> map { combined -> AddedAccountResult in
+                                    let (limitsConfiguration, contentSettings, appConfiguration, availableReplyColors, availableProfileColors) = combined.0
+                                    let dahlSettings = combined.1
+                                    return .ready(id, account, attributes.sortIndex, (limitsConfiguration._asLimits(), contentSettings, dahlSettings, appConfiguration, availableReplyColors, availableProfileColors))
                                 }
                             case let .upgrading(progress):
                                 return .single(.upgrading(progress))
                             default:
-                                return .single(.ready(id, nil, attributes.sortIndex, (nil, nil, nil, EngineAvailableColorOptions(hash: 0, options: []), EngineAvailableColorOptions(hash: 0, options: []))))
+                            return .single(.ready(id, nil, attributes.sortIndex, (nil, nil, nil, nil, EngineAvailableColorOptions(hash: 0, options: []), EngineAvailableColorOptions(hash: 0, options: []))))
                         }
                     })
                 }
@@ -681,7 +689,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
                                 assertionFailure()
                             }
 
-                            let context = AccountContextImpl(sharedContext: self, account: account, limitsConfiguration: accountRecord.3.limitsConfiguration ?? .defaultValue, contentSettings: accountRecord.3.contentSettings ?? .default, appConfiguration: accountRecord.3.appConfiguration ?? .defaultValue, availableReplyColors: accountRecord.3.availableReplyColors, availableProfileColors: accountRecord.3.availableProfileColors)
+                            let context = AccountContextImpl(sharedContext: self, account: account, limitsConfiguration: accountRecord.3.limitsConfiguration ?? .defaultValue, contentSettings: accountRecord.3.contentSettings ?? .default, dahlSettings: accountRecord.3.dahlSettings ?? .defaultSettings, appConfiguration: accountRecord.3.appConfiguration ?? .defaultValue, availableReplyColors: accountRecord.3.availableReplyColors, availableProfileColors: accountRecord.3.availableProfileColors)
 
                             self.activeAccountsValue!.accounts.append((account.id, context, accountRecord.2))
                             
@@ -1421,7 +1429,7 @@ public final class SharedAccountContextImpl: SharedAccountContext {
     }
     
     public func makeTempAccountContext(account: Account) -> AccountContext {
-        return AccountContextImpl(sharedContext: self, account: account, limitsConfiguration: .defaultValue, contentSettings: .default, appConfiguration: .defaultValue, availableReplyColors: EngineAvailableColorOptions(hash: 0, options: []), availableProfileColors: EngineAvailableColorOptions(hash: 0, options: []), temp: true)
+        return AccountContextImpl(sharedContext: self, account: account, limitsConfiguration: .defaultValue, contentSettings: .default, dahlSettings: .defaultSettings, appConfiguration: .defaultValue, availableReplyColors: EngineAvailableColorOptions(hash: 0, options: []), availableProfileColors: EngineAvailableColorOptions(hash: 0, options: []), temp: true)
     }
     
     public func openChatMessage(_ params: OpenChatMessageParams) -> Bool {
