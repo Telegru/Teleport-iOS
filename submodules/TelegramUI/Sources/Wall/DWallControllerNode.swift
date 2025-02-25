@@ -118,7 +118,7 @@ final class DWallControllerNode: ASDisplayNode {
         let isFirstTime = containerLayout == nil
         containerLayout = (layout, navigationBarHeight)
         
-        var insets = layout.insets(options: [])
+        var insets = layout.insets(options: [.input])
         insets.top += navigationBarHeight
         
         if isFirstTime {
@@ -127,10 +127,27 @@ final class DWallControllerNode: ASDisplayNode {
         
         chatController.externalSearchResultsCount = nil
         
-        let topInset: CGFloat = insets.top
+        let topInset: CGFloat = insets.top - 46.0
+        
         transition.updateFrame(node: chatController.displayNode, frame: CGRect(origin: .zero, size: layout.size))
 
-        chatController.containerLayoutUpdated(ContainerViewLayout(size: layout.size, metrics: layout.metrics, deviceMetrics: layout.deviceMetrics, intrinsicInsets: UIEdgeInsets(top: topInset, left: layout.safeInsets.left, bottom: layout.intrinsicInsets.bottom, right: layout.safeInsets.right), safeInsets: layout.safeInsets, additionalInsets: layout.additionalInsets, statusBarHeight: nil, inputHeight: layout.inputHeight, inputHeightIsInteractivellyChanging: false, inVoiceOver: false), transition: transition)
+        chatController.containerLayoutUpdated(ContainerViewLayout(
+            size: layout.size,
+            metrics: layout.metrics,
+            deviceMetrics: layout.deviceMetrics,
+            intrinsicInsets: UIEdgeInsets(
+                top: topInset,
+                left: layout.safeInsets.left,
+                bottom: layout.intrinsicInsets.bottom,
+                right: layout.safeInsets.right
+            ),
+            safeInsets: layout.safeInsets,
+            additionalInsets: layout.additionalInsets,
+            statusBarHeight: nil,
+            inputHeight: layout.inputHeight,
+            inputHeightIsInteractivellyChanging: false,
+            inVoiceOver: false
+        ), transition: transition)
         
         if chatController.displayNode.supernode == nil {
             chatController.viewWillAppear(false)

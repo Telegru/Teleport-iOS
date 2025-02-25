@@ -367,6 +367,12 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
                                 strongSelf.loadingPlaceholderNode = nil
                             }
                         })
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                            if let strongSelf = self, strongSelf.loadingPlaceholderNode != nil {
+                                strongSelf.loadingPlaceholderNode?.removeFromSupernode()
+                                strongSelf.loadingPlaceholderNode = nil
+                            }
+                        }
                     }
                 } else {
                     self.loadingNode.alpha = 0.0

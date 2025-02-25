@@ -592,7 +592,6 @@ public final class AccountContextImpl: AccountContext {
             filterPredicate: filterPredicate,
             count: tailChatListViewCount
         )
-        |> take(1)
         |> map { view, _ in
             view.entries.compactMap { entry -> PeerId? in
                 switch entry {
@@ -603,6 +602,9 @@ public final class AccountContextImpl: AccountContext {
                 }
             }
         }
+        |> distinctUntilChanged(isEqual: { lhs, rhs in
+            return lhs == rhs
+        })
         
         return peerIdsSignal
         |> mapToSignal { [weak self] peerIds -> Signal<Int, NoError> in

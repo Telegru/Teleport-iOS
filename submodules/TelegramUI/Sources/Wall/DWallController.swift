@@ -105,7 +105,6 @@ public final class DWallController: TelegramBaseController {
         self.displayNode = DWallControllerNode(context: self.context, controller: self)
         
         controllerNode.chatController.parentController = self
-        setupUnreadCounterObserving(single: true)
         self.displayNodeDidLoad()
     }
     
@@ -136,87 +135,28 @@ public final class DWallController: TelegramBaseController {
     }
     
     private func setupUnreadCounterObserving(single: Bool = false) {
-        unreadCountDisposable?.dispose()
-        unreadCountDisposable = nil
-        
         let context = self.context
-        let filterData = ChatListFilterData(
-            isShared: false,
-            hasSharedLinks: false,
-            categories: .channels,
-            excludeMuted: false,
-            excludeRead: true,
-            excludeArchived: false,
-            includePeers: ChatListFilterIncludePeers(),
-            excludePeers: [],
-            color: nil
-        )
-        let unreadChannelFilter = chatListFilterPredicate(
-            filter: filterData,
-            accountPeerId: context.account.peerId
-        )
-        
-        var unreadChannelPeerIdsSignal = (
-            context.engine.peers.getChatListPeers(
-                filterPredicate: unreadChannelFilter,
-                includeArchived: true
-            )
-            |> map { peers -> [PeerId] in
-                peers.compactMap { peer -> PeerId? in
-                    switch peer {
-                    case .channel(let channel):
-                        return channel.id
-                    default:
-                        return nil
-                    }
+
+        if case let .wall(count, filter) = controllerNode.wallContent.kind {
+            unreadCountDisposable?.dispose()
+            unreadCountDisposable = nil
+            
+            let unreadCountSignal = self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+            
+            unreadCountDisposable = (combineLatest(unreadCountSignal, context.sharedContext.presentationData) |> deliverOnMainQueue)
+                .startStrict(next: { [weak self] unreadCount, presentationData in
+                guard let self else { return }
+                if unreadCount == 0 {
+                    tabBarItem.badgeValue = ""
+                } else {
+                    tabBarItem.badgeValue = compactNumericCountString(Int(unreadCount), decimalSeparator: presentationData.dateTimeFormat.decimalSeparator)
                 }
-            }
-        )
-                                          
-        if single {
-            unreadChannelPeerIdsSignal = (unreadChannelPeerIdsSignal |> take(1))
+            })
+            
         }
-        
-        let unreadCountSignal = (
-            unreadChannelPeerIdsSignal
-            |> mapToSignal { peerIds -> Signal<Int32, NoError> in
-                guard !peerIds.isEmpty else { return .single(0) }
-                
-                return (context.engine.data.subscribe(
-                    EngineDataMap(
-                        peerIds.map { peerId -> TelegramEngine.EngineData.Item.Messages.PeerReadCounters in
-                            return TelegramEngine.EngineData.Item.Messages.PeerReadCounters(id: peerId, isMuted: true)
-                        }
-                    )
-                )
-                        |> map { readCounters -> Int32 in
-                    var unreadCount: Int32 = 0
-                    
-                    peerIds.forEach { peerId in
-                        if let value = readCounters[peerId],
-                           value.isUnread && !value.markedUnread {
-                            unreadCount = unreadCount &+ value.count
-                        }
-                    }
-                    
-                    return unreadCount
-                })
-            }
-        )
-        
-        unreadCountDisposable = (combineLatest(unreadCountSignal, context.sharedContext.presentationData) |> deliverOnMainQueue)
-            .startStrict(next: { [weak self] unreadCount, presentationData in
-            guard let self else { return }
-            if unreadCount == 0 {
-                tabBarItem.badgeValue = ""
-            } else {
-                tabBarItem.badgeValue = compactNumericCountString(Int(unreadCount), decimalSeparator: presentationData.dateTimeFormat.decimalSeparator)
-            }
-        })
     }
     
     @objc private func reloadPressed() {
-        setupUnreadCounterObserving(single: true)
         controllerNode.wallContent.reloadData()
     }
 }
