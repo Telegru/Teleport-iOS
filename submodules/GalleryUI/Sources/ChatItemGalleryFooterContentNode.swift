@@ -186,6 +186,8 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
     
     var interacting: ((Bool) -> Void)?
     
+    var shareMediaParameters: (() -> ShareControllerSubject.MediaParameters?)?
+    
     private var seekTimer: SwiftSignalKit.Timer?
     private var currentIsPaused: Bool = true
     private var seekRate: Double = 1.0
@@ -464,7 +466,7 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
                 storeAttributedTextInPasteboard(text)
                 
                 let presentationData = self.context.sharedContext.currentPresentationData.with { $0 }
-                let undoController = UndoOverlayController(presentationData: presentationData, content: .copy(text: presentationData.strings.Conversation_TextCopied), elevatedLayout: false, animateInAsReplacement: false, blurred: true, action: { _ in true })
+                let undoController = UndoOverlayController(presentationData: presentationData, content: .copy(text: presentationData.strings.Conversation_TextCopied), elevatedLayout: false, animateInAsReplacement: false, appearance: UndoOverlayController.Appearance(isBlurred: true), action: { _ in true })
                 
                 self.controllerInteraction?.presentController(undoController, nil)
             case .share:
@@ -1365,6 +1367,11 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
         return panelHeight
     }
     
+    override func animateIn(transition: ContainedViewLayoutTransition) {
+        self.contentNode.alpha = 0.0
+        transition.updateAlpha(node: self.contentNode, alpha: self.visibilityAlpha)
+    }
+    
     override func animateIn(fromHeight: CGFloat, previousContentNode: GalleryFooterContentNode, transition: ContainedViewLayoutTransition) {
         if let scrubberView = self.scrubberView, scrubberView.superview == self.view {
             if let previousContentNode = previousContentNode as? ChatItemGalleryFooterContentNode, previousContentNode.scrubberView != nil {
@@ -1388,6 +1395,10 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
         self.playbackControlButton.alpha = 1.0
         self.buttonNode?.alpha = 1.0
         self.scrollWrapperNode.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.15)
+    }
+    
+    override func animateOut(transition: ContainedViewLayoutTransition) {
+        transition.updateAlpha(node: self.contentNode, alpha: 0.0)
     }
     
     override func animateOut(toHeight: CGFloat, nextContentNode: GalleryFooterContentNode, transition: ContainedViewLayoutTransition, completion: @escaping () -> Void) {
@@ -1604,7 +1615,10 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
                                 preferredAction = .saveToCameraRoll
                                 actionCompletionText = strongSelf.presentationData.strings.Gallery_ImageSaved
                             case .video:
-                                preferredAction = .saveToCameraRoll
+                                if let message = messages.first, let channel = message.peers[message.id.peerId] as? TelegramChannel, channel.addressName != nil {
+                                } else {
+                                    preferredAction = .saveToCameraRoll
+                                }
                                 actionCompletionText = strongSelf.presentationData.strings.Gallery_VideoSaved
                             case .file:
                                 preferredAction = .saveToCameraRoll
@@ -1644,16 +1658,16 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
                                     }
                                 } else {
                                     if let file = content.file {
-                                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: file))
+                                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: file), nil)
                                         preferredAction = .saveToCameraRoll
                                     } else if let image = content.image {
-                                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: image))
+                                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: image), nil)
                                         preferredAction = .saveToCameraRoll
                                         actionCompletionText = strongSelf.presentationData.strings.Gallery_ImageSaved
                                     }
                                 }
                             } else if let file = m as? TelegramMediaFile {
-                                subject = .media(.message(message: MessageReference(messages[0]._asMessage()), media: file))
+                                subject = .media(.message(message: MessageReference(messages[0]._asMessage()), media: file), strongSelf.shareMediaParameters?())
                                 if file.isAnimated {
                                     if messages[0].id.peerId.namespace == Namespaces.Peer.SecretChat {
                                         preferredAction = .default
@@ -1666,7 +1680,7 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
                                                 let presentationData = context.sharedContext.currentPresentationData.with { $0 }
                                                 let controllerInteraction = strongSelf.controllerInteraction
                                                 let _ = (toggleGifSaved(account: context.account, fileReference: .message(message: MessageReference(message._asMessage()), media: file), saved: true)
-                                                         |> deliverOnMainQueue).start(next: { result in
+                                                |> deliverOnMainQueue).start(next: { result in
                                                     switch result {
                                                     case .generic:
                                                         controllerInteraction?.presentController(UndoOverlayController(presentationData: presentationData, content: .universal(animation: "anim_gif", scale: 0.075, colors: [:], title: nil, text: presentationData.strings.Gallery_GifSaved, customUndoText: nil, timeout: nil), elevatedLayout: true, animateInAsReplacement: false, action: { _ in return false }), nil)
@@ -1715,6 +1729,30 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
                         let shareController = ShareController(context: strongSelf.context, subject: subject, preferredAction: preferredAction, externalShare: hasExternalShare, forceTheme: forceTheme)
                         shareController.dismissed = { [weak self] _ in
                             self?.interacting?(false)
+                        }
+                        shareController.onMediaTimestampLinkCopied = { [weak self] timestamp in
+                            guard let self else {
+                                return
+                            }
+                            let presentationData = self.context.sharedContext.currentPresentationData.with { $0 }
+                            let text: String
+                            if let timestamp {
+                                //TODO:localize
+                                let startTimeString: String
+                                let hours = timestamp / (60 * 60)
+                                let minutes = timestamp % (60 * 60) / 60
+                                let seconds = timestamp % 60
+                                if hours != 0 {
+                                    startTimeString = String(format: "%d:%02d:%02d", hours, minutes, seconds)
+                                } else {
+                                    startTimeString = String(format: "%d:%02d", minutes, seconds)
+                                }
+                                text = "Link with start time at \(startTimeString) copied to clipboard."
+                            } else {
+                                text = presentationData.strings.Conversation_LinkCopied
+                            }
+                            
+                            self.controllerInteraction?.presentController(UndoOverlayController(presentationData: presentationData, content: .linkCopied(title: nil, text: text), elevatedLayout: true, animateInAsReplacement: false, action: { _ in return true }), nil)
                         }
                         
                         shareController.actionCompleted = { [weak self] in
@@ -1873,7 +1911,7 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
             }
             
             var preferredAction = ShareControllerPreferredAction.default
-            var subject = ShareControllerSubject.media(.webPage(webPage: WebpageReference(webPage), media: media))
+            var subject = ShareControllerSubject.media(.webPage(webPage: WebpageReference(webPage), media: media), self.shareMediaParameters?())
             
             if let file = media as? TelegramMediaFile {
                 if file.isAnimated {
@@ -1935,10 +1973,10 @@ final class ChatItemGalleryFooterContentNode: GalleryFooterContentNode, ASScroll
                     }
                 } else {
                     if let file = content.file {
-                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: file))
+                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: file), self.shareMediaParameters?())
                         preferredAction = .saveToCameraRoll
                     } else if let image = content.image {
-                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: image))
+                        subject = .media(.webPage(webPage: WebpageReference(webpage), media: image), self.shareMediaParameters?())
                         preferredAction = .saveToCameraRoll
                     }
                 }

@@ -360,7 +360,7 @@
     [_dotImageView addGestureRecognizer:dotTapRecognizer];
     
     if ([self presentedForAvatarCreation] && _item.isVideo) {
-        _scrubberView = [[TGMediaPickerGalleryVideoScrubber alloc] initWithFrame:CGRectMake(0.0f, 0.0, _portraitToolbarView.frame.size.width, 68.0f)];
+        _scrubberView = [[TGMediaPickerGalleryVideoScrubber alloc] initWithFrame:CGRectMake(0.0f, 0.0, _portraitToolbarView.frame.size.width, 68.0f) cover: false];
         _scrubberView.minimumLength = 3.0;
         _scrubberView.layer.allowsGroupOpacity = true;
         _scrubberView.hasDotPicker = true;
@@ -1507,9 +1507,9 @@
                 doneButtonType = TGPhotoEditorDoneButtonDone;
                 
                 if (sideButtonsHiddenInCrop) {
-                    [_portraitToolbarView setCancelDoneButtonsHidden:true animated:true];
-                    [_portraitToolbarView setCenterButtonsHidden:false animated:true];
-                    [_landscapeToolbarView setAllButtonsHidden:false animated:true];
+                    [_portraitToolbarView setCancelDoneButtonsHidden:true animated:false];
+                    [_portraitToolbarView setCenterButtonsHidden:false animated:false];
+                    [_landscapeToolbarView setAllButtonsHidden:false animated:false];
                 } else {
                     [_portraitToolbarView setAllButtonsHidden:false animated:false];
                     [_landscapeToolbarView setAllButtonsHidden:false animated:false];

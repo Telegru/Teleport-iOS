@@ -791,16 +791,20 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
             let premiumConfiguration = PremiumConfiguration.with(appConfiguration: item.context.currentAppConfiguration.with { $0 })
             
             var credibilityIcon: EmojiStatusComponent.Content?
+            var credibilityParticleColor: UIColor?
             var verifiedIcon: EmojiStatusComponent.Content?
             switch item.peer {
             case let .peer(peer, _):
-                if let peer = peer, (peer.id != item.context.account.peerId || item.peerMode == .memberList || item.aliasHandling == .treatSelfAsSaved) {
+                if let peer = peer, (peer.id != item.context.account.peerId || item.peerMode == .memberList || item.aliasHandling == .standard) {
                     if peer.isScam {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                     } else if peer.isFake {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
                     } else if let emojiStatus = peer.emojiStatus {
                         credibilityIcon = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 20.0, height: 20.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
+                        if let color = emojiStatus.color {
+                            credibilityParticleColor = UIColor(rgb: UInt32(bitPattern: color))
+                        }
                     } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
                         credibilityIcon = .premium(color: item.presentationData.theme.list.itemAccentColor)
                     }
@@ -1422,13 +1426,6 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                                 )
                                 strongSelf.verifiedIconComponent = verifiedIconComponent
                                                                 
-                                let iconOrigin: CGFloat
-                                if case .animation = verifiedIcon {
-                                    iconOrigin = titleFrame.minX
-                                } else {
-                                    nextIconX += 4.0
-                                    iconOrigin = nextIconX
-                                }
                                 let containerSize = CGSize(width: 16.0, height: 16.0)
                                 
                                 let iconSize = verifiedIconView.update(
@@ -1438,14 +1435,10 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                                     containerSize: containerSize
                                 )
                                 
-                                transition.updateFrame(view: verifiedIconView, frame: CGRect(origin: CGPoint(x: iconOrigin, y: floorToScreenPixels(titleFrame.midY - iconSize.height / 2.0)), size: iconSize))
+                                transition.updateFrame(view: verifiedIconView, frame: CGRect(origin: CGPoint(x: titleFrame.minX, y: floorToScreenPixels(titleFrame.midY - iconSize.height / 2.0)), size: iconSize))
                                 
-                                if case .animation = verifiedIcon {
-                                    titleLeftOffset += iconSize.width + 4.0
-                                    nextIconX += iconSize.width
-                                } else {
-                                    nextIconX += iconSize.width
-                                }
+                                titleLeftOffset += iconSize.width + 4.0
+                                nextIconX += iconSize.width + 4.0
                             } else if let verifiedIconView = strongSelf.verifiedIconView {
                                 strongSelf.verifiedIconView = nil
                                 verifiedIconView.removeFromSuperview()
@@ -1455,7 +1448,7 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                             transition.updateFrame(node: strongSelf.titleNode, frame: titleFrame)
                             
                             strongSelf.titleNode.alpha = item.enabled ? 1.0 : 0.4
-                            strongSelf.statusNode.textNode.alpha = item.enabled ? 1.0 : 1.0
+                            strongSelf.statusNode.textNode.alpha = item.enabled ? 1.0 : 0.4
                             
                             strongSelf.statusNode.visibilityRect = strongSelf.visibilityStatus == false ? CGRect.zero : CGRect.infinite
                             let _ = statusApply(TextNodeWithEntities.Arguments(
@@ -1509,6 +1502,7 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                                     animationCache: animationCache,
                                     animationRenderer: animationRenderer,
                                     content: credibilityIcon,
+                                    particleColor: credibilityParticleColor,
                                     isVisibleForAnimations: strongSelf.visibilityStatus,
                                     action: nil,
                                     emojiFileUpdated: nil
@@ -1519,7 +1513,7 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                                     transition: .immediate,
                                     component: AnyComponent(credibilityIconComponent),
                                     environment: {},
-                                    containerSize: CGSize(width: 20.0, height: 20.0)
+                                    containerSize: CGSize(width: 16.0, height: 16.0)
                                 )
                                 
                                 nextIconX += 4.0

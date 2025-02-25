@@ -1117,8 +1117,13 @@ public final class GroupCallParticipantsContext {
         
         var pendingMuteStateChanges: [PeerId: MuteStateChange] = [:]
         
+        var hasLocalVideo: PeerId? = nil
+        
         var isEmpty: Bool {
             if !self.pendingMuteStateChanges.isEmpty {
+                return false
+            }
+            if self.hasLocalVideo != nil {
                 return false
             }
             return true
@@ -1254,6 +1259,13 @@ public final class GroupCallParticipantsContext {
                     publicState.participants[i].raiseHandRating = nil
                     sortAgain = true
                 }
+                
+                //TODO:wip-release
+                /*if let hasLocalVideoPeerId = state.overlayState.hasLocalVideo, hasLocalVideoPeerId == publicState.participants[i].peer.id {
+                    if publicState.participants[i].videoDescription == nil {
+                        publicState.participants[i].videoDescription = GroupCallParticipantsContext.Participant.VideoDescription(endpointId: "_local", ssrcGroups: [], audioSsrc: nil, isPaused: false)
+                    }
+                }*/
             }
             if sortAgain {
                 publicState.participants.sort(by: { GroupCallParticipantsContext.Participant.compare(lhs: $0, rhs: $1, sortAscending: publicState.sortAscending) })
@@ -1942,6 +1954,11 @@ public final class GroupCallParticipantsContext {
         self.localVideoIsMuted = isVideoMuted
         self.localIsVideoPaused = isVideoPaused
         self.localIsPresentationPaused = isPresentationPaused
+        
+        //TODO:wip-release
+        /*if let isVideoMuted {
+            self.stateValue.overlayState.hasLocalVideo = isVideoMuted ? nil : peerId
+        }*/
         
         let disposable = MetaDisposable()
 

@@ -52,6 +52,7 @@ import ArchiveInfoScreen
 import BirthdayPickerScreen
 import OldChannelsController
 import TextFormat
+import AvatarUploadToastScreen
 import TPUI
 
 private final class ContextControllerContentSourceImpl: ContextControllerContentSource {
@@ -930,6 +931,9 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 return sourceView
             }
         )
+        controller.pushController = { [weak self] c in
+            self?.push(c)
+        }
         self.emojiStatusSelectionController = controller
         self.present(controller, in: .window(.root))
     }
@@ -1260,7 +1264,54 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 return
             }
             if let rootController = self.navigationController as? TelegramRootControllerInterface {
-                rootController.openPhotoSetup()
+                rootController.openPhotoSetup(completedWithUploadingImage: { [weak self] image, uploadStatus in
+                    guard let self else {
+                        return nil
+                    }
+                    
+                    let toastScreen = AvatarUploadToastScreen(
+                        context: self.context,
+                        image: image,
+                        uploadStatus: uploadStatus,
+                        arrowTarget: { [weak self] in
+                            guard let self else {
+                                return nil
+                            }
+                            guard let tabController = self.parent as? TabBarController else {
+                                return nil
+                            }
+                            guard let settingsController = tabController.controllers.first(where: { $0 is PeerInfoScreen }) as? PeerInfoScreen else {
+                                return nil
+                            }
+                            guard let tabFrame = tabController.frameForControllerTab(controller: settingsController) else {
+                                return nil
+                            }
+                            return (tabController.view, tabFrame)
+                        },
+                        viewUploadedAvatar: { [weak self] in
+                            guard let self else {
+                                return
+                            }
+                            if let rootController = self.navigationController as? TelegramRootControllerInterface {
+                                rootController.openAvatars()
+                            }
+                        }
+                    )
+                    
+                    if let navigationController = self.navigationController as? NavigationController {
+                        var viewControllers = navigationController.viewControllers
+                        if let index = viewControllers.firstIndex(where: { $0 is TabBarController }) {
+                            viewControllers.insert(toastScreen, at: index + 1)
+                        } else {
+                            viewControllers.append(toastScreen)
+                        }
+                        navigationController.setViewControllers(viewControllers, animated: true)
+                    } else {
+                        self.push(toastScreen)
+                    }
+                    
+                    return toastScreen.targetAvatarView
+                })
             }
         }
         
@@ -6733,7 +6784,13 @@ private final class ChatListLocationContext {
                     if channel.flags.contains(.requestToJoin) {
                         actionTitle = presentationData.strings.Group_ApplyToJoin
                     } else {
-                        actionTitle = presentationData.strings.Channel_JoinChannel
+                        switch channel.info {
+                        case .broadcast:
+                            actionTitle = presentationData.strings.Channel_JoinChannel
+                        case .group:
+                            actionTitle = presentationData.strings.Group_JoinGroup
+                        }
+                        
                     }
                     toolbar = Toolbar(leftAction: nil, rightAction: nil, middleAction: ToolbarAction(title: actionTitle, isEnabled: true))
                 }

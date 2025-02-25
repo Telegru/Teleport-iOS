@@ -242,7 +242,7 @@ struct VoiceChatPeerEntry: Identifiable {
 }
 
 public protocol VoiceChatController: ViewController {
-    var call: PresentationGroupCall { get }
+    var call: VideoChatCall { get }
     var currentOverlayController: VoiceChatOverlayController? { get }
     var parentNavigationController: NavigationController? { get set }
     var onViewDidAppear: (() -> Void)? { get set }
@@ -6859,7 +6859,10 @@ final class VoiceChatControllerImpl: ViewController, VoiceChatController {
     }
     
     private let sharedContext: SharedAccountContext
-    public let call: PresentationGroupCall
+    public let callImpl: PresentationGroupCall
+    public var call: VideoChatCall {
+        return .group(self.callImpl)
+    }
     private let presentationData: PresentationData
     public var parentNavigationController: NavigationController?
         
@@ -6891,7 +6894,7 @@ final class VoiceChatControllerImpl: ViewController, VoiceChatController {
     
     public init(sharedContext: SharedAccountContext, accountContext: AccountContext, call: PresentationGroupCall) {
         self.sharedContext = sharedContext
-        self.call = call
+        self.callImpl = call
         self.presentationData = sharedContext.currentPresentationData.with { $0 }
         
         super.init(navigationBarPresentationData: nil)
@@ -6936,7 +6939,7 @@ final class VoiceChatControllerImpl: ViewController, VoiceChatController {
     }
     
     override public func loadDisplayNode() {
-        self.displayNode = Node(controller: self, sharedContext: self.sharedContext, call: self.call)
+        self.displayNode = Node(controller: self, sharedContext: self.sharedContext, call: self.callImpl)
         
         self.displayNodeDidLoad()
     }
@@ -7138,22 +7141,10 @@ public func shouldUseV2VideoChatImpl(context: AccountContext) -> Bool {
     return useV2
 }
 
-public func makeVoiceChatControllerInitialData(sharedContext: SharedAccountContext, accountContext: AccountContext, call: PresentationGroupCall) -> Signal<Any, NoError> {
-    let useV2 = shouldUseV2VideoChatImpl(context: accountContext)
-    
-    if useV2 {
-        return VideoChatScreenV2Impl.initialData(call: call) |> map { $0 as Any }
-    } else {
-        return .single(Void())
-    }
+public func makeVoiceChatControllerInitialData(sharedContext: SharedAccountContext, accountContext: AccountContext, call: VideoChatCall) -> Signal<Any, NoError> {
+    return VideoChatScreenV2Impl.initialData(call: call) |> map { $0 as Any }
 }
 
-public func makeVoiceChatController(sharedContext: SharedAccountContext, accountContext: AccountContext, call: PresentationGroupCall, initialData: Any) -> VoiceChatController {
-    let useV2 = shouldUseV2VideoChatImpl(context: accountContext)
-    
-    if useV2 {
-        return VideoChatScreenV2Impl(initialData: initialData as! VideoChatScreenV2Impl.InitialData, call: call)
-    } else {
-        return VoiceChatControllerImpl(sharedContext: sharedContext, accountContext: accountContext, call: call)
-    }
+public func makeVoiceChatController(sharedContext: SharedAccountContext, accountContext: AccountContext, call: VideoChatCall, initialData: Any, sourceCallController: CallController?) -> VoiceChatController {
+    return VideoChatScreenV2Impl(initialData: initialData as! VideoChatScreenV2Impl.InitialData, call: call, sourceCallController: sourceCallController)
 }

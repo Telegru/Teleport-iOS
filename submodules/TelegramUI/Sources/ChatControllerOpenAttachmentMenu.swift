@@ -880,7 +880,7 @@ extension ChatControllerImpl {
                             hasSchedule = strongSelf.presentationInterfaceState.subject != .scheduledMessages && peer.id.namespace != Namespaces.Peer.SecretChat
                         }
                         
-                        presentedLegacyCamera(context: strongSelf.context, peer: strongSelf.presentationInterfaceState.renderedPeer?.peer, chatLocation: strongSelf.chatLocation, cameraView: cameraView, menuController: menuController, parentController: strongSelf, editingMedia: editMediaOptions != nil, saveCapturedPhotos: storeCapturedPhotos, mediaGrouping: true, initialCaption: inputText, hasSchedule: hasSchedule, enablePhoto: enablePhoto, enableVideo: enableVideo, sendMessagesWithSignals: { [weak self] signals, silentPosting, scheduleTime in
+                        presentedLegacyCamera(context: strongSelf.context, peer: strongSelf.presentationInterfaceState.renderedPeer?.peer, chatLocation: strongSelf.chatLocation, cameraView: cameraView, menuController: menuController, parentController: strongSelf, editingMedia: editMediaOptions != nil, saveCapturedPhotos: storeCapturedPhotos, mediaGrouping: true, initialCaption: inputText, hasSchedule: hasSchedule, enablePhoto: enablePhoto, enableVideo: enableVideo, sendMessagesWithSignals: { [weak self] signals, _, _, _ in
                             if let strongSelf = self {
                                 strongSelf.editMessageMediaWithLegacySignals(signals!)
                                 
@@ -1240,6 +1240,69 @@ extension ChatControllerImpl {
         }
         controller.legacyCompletion = { signals, silently, scheduleTime, parameters, getAnimatedTransitionSource, sendCompletion in
             completion(signals, silently, scheduleTime, parameters, getAnimatedTransitionSource, sendCompletion)
+        }
+        controller.editCover = { [weak self] dimensions, completion in
+            guard let self else {
+                return
+            }
+            var dismissImpl: (() -> Void)?
+            let mainController = coverMediaPickerController(
+                context: self.context,
+                completion: { result, transitionView, transitionRect, transitionImage, fromCamera, transitionOut, cancelled in
+                    let subject: Signal<MediaEditorScreenImpl.Subject?, NoError>
+                    if let asset = result as? PHAsset {
+                        subject = .single(.asset(asset))
+                    } else {
+                        return
+                    }
+                    
+                    let editorController = MediaEditorScreenImpl(
+                        context: self.context,
+                        mode: .coverEditor(dimensions: dimensions),
+                        subject: subject,
+                        transitionIn: fromCamera ? .camera : transitionView.flatMap({ .gallery(
+                            MediaEditorScreenImpl.TransitionIn.GalleryTransitionIn(
+                                sourceView: $0,
+                                sourceRect: transitionRect,
+                                sourceImage: transitionImage
+                            )
+                        ) }),
+                        transitionOut: { finished, isNew in
+                            if !finished, let transitionView {
+                                return MediaEditorScreenImpl.TransitionOut(
+                                    destinationView: transitionView,
+                                    destinationRect: transitionView.bounds,
+                                    destinationCornerRadius: 0.0
+                                )
+                            }
+                            return nil
+                        }, completion: { result, commit in
+                            if case let .image(image, _) = result.media {
+                                completion(image)
+                                commit({})
+                            }
+                            dismissImpl?()
+                        } as (MediaEditorScreenImpl.Result, @escaping (@escaping () -> Void) -> Void) -> Void
+                    )
+                    editorController.cancelled = { _ in
+                        cancelled()
+                    }
+                    self.push(editorController)
+                }, dismissed: {
+                    
+                }
+            )
+            (self.navigationController as? NavigationController)?.pushViewController(mainController, animated: true)
+            dismissImpl = { [weak self, weak mainController] in
+                if let self, let navigationController = self.navigationController, let mainController {
+                    var viewControllers = navigationController.viewControllers
+                    viewControllers = viewControllers.filter { c in
+                        return c !== mainController
+                    }
+                    navigationController.setViewControllers(viewControllers, animated: false)
+                }
+
+            }
         }
         present(controller, mediaPickerContext)
     }
@@ -1716,9 +1779,9 @@ extension ChatControllerImpl {
             }
             let inputText = strongSelf.presentationInterfaceState.interfaceState.effectiveInputState.inputText
             
-            presentedLegacyCamera(context: strongSelf.context, peer: strongSelf.presentationInterfaceState.renderedPeer?.peer, chatLocation: strongSelf.chatLocation, cameraView: cameraView, menuController: nil, parentController: strongSelf, attachmentController: self?.attachmentController, editingMedia: false, saveCapturedPhotos: storeCapturedMedia, mediaGrouping: true, initialCaption: inputText, hasSchedule: hasSchedule, enablePhoto: enablePhoto, enableVideo: enableVideo, sendMessagesWithSignals: { [weak self] signals, silentPosting, scheduleTime in
+            presentedLegacyCamera(context: strongSelf.context, peer: strongSelf.presentationInterfaceState.renderedPeer?.peer, chatLocation: strongSelf.chatLocation, cameraView: cameraView, menuController: nil, parentController: strongSelf, attachmentController: self?.attachmentController, editingMedia: false, saveCapturedPhotos: storeCapturedMedia, mediaGrouping: true, initialCaption: inputText, hasSchedule: hasSchedule, enablePhoto: enablePhoto, enableVideo: enableVideo, sendMessagesWithSignals: { [weak self] signals, silentPosting, scheduleTime, parameters in
                 if let strongSelf = self {
-                    strongSelf.enqueueMediaMessages(signals: signals, silentPosting: silentPosting, scheduleTime: scheduleTime > 0 ? scheduleTime : nil)
+                    strongSelf.enqueueMediaMessages(signals: signals, silentPosting: silentPosting, scheduleTime: scheduleTime > 0 ? scheduleTime : nil, parameters: parameters)
                     if !inputText.string.isEmpty {
                         strongSelf.clearInputText()
                     }

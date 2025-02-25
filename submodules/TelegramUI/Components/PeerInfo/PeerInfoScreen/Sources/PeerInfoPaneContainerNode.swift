@@ -463,7 +463,15 @@ private final class PeerInfoPendingPane {
         let paneNode: PeerInfoPaneNode
         switch key {
         case .gifts:
-            paneNode = PeerInfoGiftsPaneNode(context: context, peerId: peerId, chatControllerInteraction: chatControllerInteraction, openPeerContextAction: openPeerContextAction, profileGifts: data.profileGiftsContext!)
+            var canManage = false
+            if let peer = data.peer {
+                if let channel = peer as? TelegramChannel, case .broadcast = channel.info {
+                    if channel.hasPermission(.sendSomething) {
+                        canManage = true
+                    }
+                }
+            }
+            paneNode = PeerInfoGiftsPaneNode(context: context, peerId: peerId, chatControllerInteraction: chatControllerInteraction, openPeerContextAction: openPeerContextAction, profileGifts: data.profileGiftsContext!, canManage: canManage)
         case .stories, .storyArchive, .botPreview:
             var canManage = false
             if let peer = data.peer {
@@ -545,8 +553,8 @@ private final class PeerInfoPendingPane {
             } else {
                 preconditionFailure()
             }
-        case .recommended:
-            paneNode = PeerInfoRecommendedChannelsPaneNode(context: context, peerId: peerId, chatControllerInteraction: chatControllerInteraction, openPeerContextAction: openPeerContextAction)
+        case .similarChannels, .similarBots:
+            paneNode = PeerInfoRecommendedPeersPaneNode(context: context, peerId: peerId, chatControllerInteraction: chatControllerInteraction, openPeerContextAction: openPeerContextAction)
         case .savedMessagesChats:
             paneNode = PeerInfoChatListPaneNode(context: context, navigationController: chatControllerInteraction.navigationController)
         case .savedMessages:
@@ -1165,7 +1173,7 @@ final class PeerInfoPaneContainerNode: ASDisplayNode, ASGestureRecognizerDelegat
             tabsAlpha = 1.0 - tabsOffset / tabsHeight
         }
         tabsAlpha *= tabsAlpha
-        transition.updateFrame(node: self.tabsContainerNode, frame: CGRect(origin: CGPoint(x: 0.0, y: -tabsOffset), size: CGSize(width: size.width, height: tabsHeight)))
+        transition.updateFrame(node: self.tabsContainerNode, frame: CGRect(origin: CGPoint(x: sideInset, y: -tabsOffset), size: CGSize(width: size.width - sideInset * 2.0, height: tabsHeight)))
         transition.updateAlpha(node: self.tabsContainerNode, alpha: tabsAlpha)
 
         transition.updateFrame(node: self.separatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: -UIScreenPixel - tabsOffset), size: CGSize(width: size.width, height: UIScreenPixel)))
@@ -1175,7 +1183,7 @@ final class PeerInfoPaneContainerNode: ASDisplayNode, ASGestureRecognizerDelegat
 
         transition.updateFrame(node: self.tabsSeparatorNode, frame: CGRect(origin: CGPoint(x: 0.0, y: tabsHeight - tabsOffset), size: CGSize(width: size.width, height: UIScreenPixel)))
 
-        self.tabsContainerNode.update(size: CGSize(width: size.width, height: tabsHeight), presentationData: presentationData, paneList: availablePanes.map { key in
+        self.tabsContainerNode.update(size: CGSize(width: size.width - sideInset * 2.0, height: tabsHeight), presentationData: presentationData, paneList: availablePanes.map { key in
             let title: String
             var icons: [TelegramMediaFile] = []
             switch key {
@@ -1201,8 +1209,10 @@ final class PeerInfoPaneContainerNode: ASDisplayNode, ASGestureRecognizerDelegat
                 title = presentationData.strings.PeerInfo_PaneGroups
             case .members:
                 title = presentationData.strings.PeerInfo_PaneMembers
-            case .recommended:
+            case .similarChannels:
                 title = presentationData.strings.PeerInfo_PaneRecommended
+            case .similarBots:
+                title = presentationData.strings.PeerInfo_PaneRecommendedBots
             case .savedMessagesChats:
                 title = presentationData.strings.DialogList_TabTitle
             case .savedMessages:
@@ -1263,9 +1273,12 @@ final class PeerInfoPaneContainerNode: ASDisplayNode, ASGestureRecognizerDelegat
                 self.isReady.set(.single(true))
             }
         }
-        if let previousCurrentPaneKey = previousCurrentPaneKey, self.currentPaneKey != previousCurrentPaneKey {
-            self.currentPaneUpdated?(self.expandOnSwitch)
-            self.expandOnSwitch = false
+        if let previousCurrentPaneKey, self.currentPaneKey != previousCurrentPaneKey {
+            if self.currentPaneKey == nil && previousCurrentPaneKey == .gifts {
+            } else {
+                self.currentPaneUpdated?(self.expandOnSwitch)
+                self.expandOnSwitch = false
+            }
         }
         if updateCurrentPaneStatus {
             self.currentPaneStatusPromise.set(self.currentPane?.node.status ?? .single(nil))

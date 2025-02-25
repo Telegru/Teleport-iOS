@@ -324,6 +324,7 @@ private func sendUploadedMessageContent(
             }
             var replyToStoryId: StoryId?
             var scheduleTime: Int32?
+            var videoTimestamp: Int32?
             var sendAsPeerId: PeerId?
             var bubbleUpEmojiOrStickersets = false
             
@@ -360,6 +361,9 @@ private func sendUploadedMessageContent(
                     scheduleTime = attribute.scheduleTime
                 } else if let attribute = attribute as? SendAsMessageAttribute {
                     sendAsPeerId = attribute.peerId
+                } else if let attribute = attribute as? ForwardVideoTimestampAttribute {
+                    flags |= Int32(1 << 20)
+                    videoTimestamp = attribute.timestamp
                 }
             }
             
@@ -442,7 +446,7 @@ private func sendUploadedMessageContent(
                     }
                 
                     if let forwardSourceInfoAttribute = forwardSourceInfoAttribute, let sourcePeer = transaction.getPeer(forwardSourceInfoAttribute.messageId.peerId), let sourceInputPeer = apiInputPeer(sourcePeer) {
-                        sendMessageRequest = network.request(Api.functions.messages.forwardMessages(flags: flags, fromPeer: sourceInputPeer, id: [sourceInfo.messageId.id], randomId: [uniqueId], toPeer: inputPeer, topMsgId: topMsgId, scheduleDate: scheduleTime, sendAs: sendAsInputPeer, quickReplyShortcut: nil), tag: dependencyTag)
+                        sendMessageRequest = network.request(Api.functions.messages.forwardMessages(flags: flags, fromPeer: sourceInputPeer, id: [sourceInfo.messageId.id], randomId: [uniqueId], toPeer: inputPeer, topMsgId: topMsgId, scheduleDate: scheduleTime, sendAs: sendAsInputPeer, quickReplyShortcut: nil, videoTimestamp: videoTimestamp), tag: dependencyTag)
                         |> map(NetworkRequestResult.result)
                     } else {
                         sendMessageRequest = .fail(MTRpcError(errorCode: 400, errorDescription: "internal"))
@@ -702,7 +706,7 @@ private func uploadedFile(account: Account, data: Data, mimeType: String, attrib
         |> map { next -> UploadMediaEvent in
             switch next {
                 case let .inputFile(inputFile):
-                    return .result(Api.InputMedia.inputMediaUploadedDocument(flags: 0, file: inputFile, thumb: nil, mimeType: mimeType, attributes: inputDocumentAttributesFromFileAttributes(attributes), stickers: nil, ttlSeconds: nil))
+                    return .result(Api.InputMedia.inputMediaUploadedDocument(flags: 0, file: inputFile, thumb: nil, mimeType: mimeType, attributes: inputDocumentAttributesFromFileAttributes(attributes), stickers: nil, videoCover: nil, videoTimestamp: nil, ttlSeconds: nil))
                 case .inputSecretFile:
                     preconditionFailure()
                 case let .progress(progress):

@@ -966,7 +966,7 @@ func peerInfoScreenSettingsData(context: AccountContext, peerId: EnginePeer.Id, 
     }
 }
 
-func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: PresentationStrings, dateTimeFormat: PresentationDateTimeFormat, isSettings: Bool, isMyProfile: Bool, hintGroupInCommon: PeerId?, existingRequestsContext: PeerInvitationImportersContext?, chatLocation: ChatLocation, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>, privacySettings: Signal<AccountPrivacySettings?, NoError>) -> Signal<PeerInfoScreenData, NoError> {
+func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: PresentationStrings, dateTimeFormat: PresentationDateTimeFormat, isSettings: Bool, isMyProfile: Bool, hintGroupInCommon: PeerId?, existingRequestsContext: PeerInvitationImportersContext?, chatLocation: ChatLocation, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>, privacySettings: Signal<AccountPrivacySettings?, NoError>, forceHasGifts: Bool) -> Signal<PeerInfoScreenData, NoError> {
     return peerInfoScreenInputData(context: context, peerId: peerId, isSettings: isSettings)
     |> mapToSignal { inputData -> Signal<PeerInfoScreenData, NoError> in
         let wasUpgradedGroup = Atomic<Bool?>(value: nil)
@@ -1021,6 +1021,13 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 groupsInCommon = GroupsInCommonContext(account: context.account, peerId: userPeerId, hintGroupInCommon: hintGroupInCommon)
             } else {
                 groupsInCommon = nil
+            }
+            
+            let recommendedBots: Signal<RecommendedBots?, NoError>
+            if case .bot = kind {
+                recommendedBots = context.engine.peers.recommendedBots(peerId: userPeerId)
+            } else {
+                recommendedBots = .single(nil)
             }
             
             let premiumGiftOptions: Signal<[PremiumGiftCodeOption], NoError>
@@ -1266,7 +1273,7 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
             let starsRevenueContextAndState = context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: peerId))
             |> mapToSignal { peer -> Signal<(StarsRevenueStatsContext?, StarsRevenueStats?), NoError> in
                 var canViewStarsRevenue = false
-                if let peer, case let .user(user) = peer, let botInfo = user.botInfo, botInfo.flags.contains(.canEdit) || context.sharedContext.applicationBindings.appBuildType == .internal {
+                if let peer, case let .user(user) = peer, let botInfo = user.botInfo, botInfo.flags.contains(.canEdit) || context.sharedContext.applicationBindings.appBuildType == .internal || context.sharedContext.immediateExperimentalUISettings.devRequests {
                     canViewStarsRevenue = true
                 }
                 #if DEBUG
@@ -1291,7 +1298,7 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
             )
             |> mapToSignal { peer, canViewRevenue -> Signal<(RevenueStatsContext?, RevenueStats?), NoError> in
                 var canViewRevenue = canViewRevenue
-                if let peer, case let .user(user) = peer, let _ = user.botInfo, context.sharedContext.applicationBindings.appBuildType == .internal {
+                if let peer, case let .user(user) = peer, let _ = user.botInfo, context.sharedContext.applicationBindings.appBuildType == .internal || context.sharedContext.immediateExperimentalUISettings.devRequests {
                     canViewRevenue = true
                 }
                 #if DEBUG
@@ -1333,6 +1340,7 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 status,
                 hasStories,
                 hasStoryArchive,
+                recommendedBots,
                 accountIsPremium,
                 savedMessagesPeer,
                 hasSavedMessagesChats,
@@ -1347,7 +1355,7 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 webAppPermissions,
                 dalSettings
             )
-            |> map { peerView, availablePanes, globalNotificationSettings, encryptionKeyFingerprint, status, hasStories, hasStoryArchive, accountIsPremium, savedMessagesPeer, hasSavedMessagesChats, hasSavedMessages, hasSavedMessageTags, hasBotPreviewItems, personalChannel, privacySettings, starsRevenueContextAndState, revenueContextAndState, premiumGiftOptions, webAppPermissions, dalSettings -> PeerInfoScreenData in
+            |> map { peerView, availablePanes, globalNotificationSettings, encryptionKeyFingerprint, status, hasStories, hasStoryArchive, recommendedBots, accountIsPremium, savedMessagesPeer, hasSavedMessagesChats, hasSavedMessages, hasSavedMessageTags, hasBotPreviewItems, personalChannel, privacySettings, starsRevenueContextAndState, revenueContextAndState, premiumGiftOptions, webAppPermissions, dalSettings -> PeerInfoScreenData in
                 var availablePanes = availablePanes
                 if isMyProfile {
                     availablePanes?.insert(.stories, at: 0)
@@ -1397,6 +1405,10 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                         } else if let cachedData = peerView.cachedData as? CachedUserData, let botPreview = cachedData.botPreview, !botPreview.items.isEmpty {
                             availablePanes?.insert(.botPreview, at: 0)
                         }
+                    }
+                    
+                    if let recommendedBots, recommendedBots.count > 0 {
+                        availablePanes?.append(.similarBots)
                     }
                 } else {
                     availablePanes = nil
@@ -1574,6 +1586,7 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 }
             }
             
+            let profileGiftsContext = ProfileGiftsContext(account: context.account, peerId: peerId)
             let dalSettings = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
             |> map { sharedData -> DalSettings in
                 var dalSettings =  DalSettings.defaultSettings
@@ -1601,16 +1614,17 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 isPremiumRequiredForStoryPosting,
                 starsRevenueContextAndState,
                 revenueContextAndState,
-                dalSettings
+                profileGiftsContext.state,
+				dalSettings
             )
-            |> map { peerView, availablePanes, globalNotificationSettings, status, currentInvitationsContext, invitations, currentRequestsContext, requests, hasStories, accountIsPremium, recommendedChannels, hasSavedMessages, hasSavedMessagesChats, hasSavedMessageTags, isPremiumRequiredForStoryPosting, starsRevenueContextAndState, revenueContextAndState, dalSettings -> PeerInfoScreenData in
+            |> map { peerView, availablePanes, globalNotificationSettings, status, currentInvitationsContext, invitations, currentRequestsContext, requests, hasStories, accountIsPremium, recommendedChannels, hasSavedMessages, hasSavedMessagesChats, hasSavedMessageTags, isPremiumRequiredForStoryPosting, starsRevenueContextAndState, revenueContextAndState, profileGiftsState, dalSettings -> PeerInfoScreenData in
                 var availablePanes = availablePanes
                 if let hasStories {
                     if hasStories {
                         availablePanes?.insert(.stories, at: 0)
                     }
                     if let recommendedChannels, !recommendedChannels.channels.isEmpty {
-                        availablePanes?.append(.recommended)
+                        availablePanes?.append(.similarChannels)
                     }
                     
                     if case .peer = chatLocation {
@@ -1623,6 +1637,12 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                                 availablePanesValue.insert(.savedMessages, at: 0)
                             }
                             availablePanes = availablePanesValue
+                        }
+                    }
+                    
+                    if availablePanes != nil, let cachedData = peerView.cachedData as? CachedChannelData {
+                        if (cachedData.starGiftsCount ?? 0) > 0 || (profileGiftsState.count ?? 0) > 0 || forceHasGifts {
+                            availablePanes?.insert(.gifts, at: hasStories ? 1 : 0)
                         }
                     }
                 } else {
@@ -1689,7 +1709,7 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                     starsRevenueStatsContext: starsRevenueContextAndState.0,
                     revenueStatsState: revenueContextAndState.1,
                     revenueStatsContext: revenueContextAndState.0,
-                    profileGiftsContext: nil,
+                    profileGiftsContext: profileGiftsContext,
                     premiumGiftOptions: [],
                     webAppPermissions: nil,
                     dalSettings: dalSettings

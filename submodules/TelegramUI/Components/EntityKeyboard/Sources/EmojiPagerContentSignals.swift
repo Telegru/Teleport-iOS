@@ -126,6 +126,7 @@ public extension EmojiPagerContentComponent {
         if case .status = subject {
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudFeaturedStatusEmoji)
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentStatusEmoji)
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudUniqueStarGifts)
             
             iconStatusEmoji = context.engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false)
             |> map { result -> [TelegramMediaFile] in
@@ -327,7 +328,7 @@ public extension EmojiPagerContentComponent {
                     } else {
                         itemGroupIndexById[groupId] = itemGroups.count
                         
-                        let title = context.sharedContext.currentPresentationData.with({ $0 }).strings.EmojiInput_TrendingEmoji
+                        let title = strings.EmojiInput_TrendingEmoji
                         itemGroups.append(ItemGroup(supergroupId: groupId, id: groupId, title: title, subtitle: nil, badge: nil, isPremiumLocked: false, isFeatured: false, collapsedLineCount: 0, isClearable: false, headerItem: nil, items: [resultItem]))
                     }
                 }
@@ -343,8 +344,11 @@ public extension EmojiPagerContentComponent {
             var featuredAvatarEmoji: OrderedItemListView?
             var featuredBackgroundIconEmoji: OrderedItemListView?
             var defaultTagReactions: OrderedItemListView?
+            var uniqueGifts: OrderedItemListView?
             for orderedView in view.orderedItemListsViews {
-                if orderedView.collectionId == Namespaces.OrderedItemList.LocalRecentEmoji {
+                if orderedView.collectionId == Namespaces.OrderedItemList.CloudUniqueStarGifts {
+                    uniqueGifts = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.LocalRecentEmoji {
                     recentEmoji = orderedView
                 } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
                     featuredStatusEmoji = orderedView
@@ -606,6 +610,37 @@ public extension EmojiPagerContentComponent {
                             
                             itemGroups[groupIndex].items.append(resultItem)
                         }
+                    }
+                }
+                
+                if let uniqueGifts, !uniqueGifts.items.isEmpty {
+                    let groupId = "collectible"
+                    let groupIndex: Int
+                    if let current = itemGroupIndexById[groupId] {
+                        groupIndex = current
+                    } else {
+                        groupIndex = itemGroups.count
+                        itemGroupIndexById[groupId] = groupIndex
+                        itemGroups.append(ItemGroup(supergroupId: groupId, id: groupId, title: strings.EmojiInput_SectionTitleCollectibles.uppercased(), subtitle: nil, badge: nil, isPremiumLocked: false, isFeatured: false, collapsedLineCount: 2, isClearable: false, headerItem: nil, items: []))
+                    }
+                    
+                    for item in uniqueGifts.items {
+                        guard let item = item.contents.get(RecentStarGiftItem.self) else {
+                            continue
+                        }
+                        guard let animationData = EntityKeyboardAnimationData(gift: item.starGift) else {
+                            continue
+                        }
+                        let resultItem = EmojiPagerContentComponent.Item(
+                            animationData: animationData,
+                            content: .animation(animationData),
+                            itemFile: nil,
+                            itemGift: item.starGift,
+                            subgroupId: nil,
+                            icon: .none,
+                            tintMode: .none
+                        )
+                        itemGroups[groupIndex].items.append(resultItem)
                     }
                 }
             } else if case .channelStatus = subject {
