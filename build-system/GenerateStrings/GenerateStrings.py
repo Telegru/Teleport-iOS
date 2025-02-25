@@ -458,7 +458,7 @@ static NSString * _Nonnull getSingle(_PresentationStrings * _Nullable strings, N
         static NSDictionary<NSString *, NSString *> *fallbackDict = nil;
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            NSString *lprojPath = [getAppBundle() pathForResource:@"ru" ofType:@"lproj"];
+            NSString *lprojPath = [getAppBundle() pathForResource:@"en" ofType:@"lproj"];
             if (!lprojPath) {
                 return;
             }

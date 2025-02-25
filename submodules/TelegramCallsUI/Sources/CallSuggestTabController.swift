@@ -223,6 +223,10 @@ func callSuggestTabController(sharedContext: SharedAccountContext) -> AlertContr
         let _ = updateCallListSettingsInteractively(accountManager: sharedContext.accountManager, {
             $0.withUpdatedShowTab(true)
         }).start()
+        
+        let _ = updateDalSettingsInteractively(accountManager: sharedContext.accountManager, {
+            $0.withUpdatedShowCallTab()
+        }).start()
     })]
     
     contentNode = CallSuggestTabAlertContentNode(theme: AlertControllerTheme(presentationData: presentationData), ptheme: theme, strings: strings, actions: actions)

@@ -58,7 +58,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
                     }
                 }
                 
-                if let available = localization.availableLocalizations.first, available.languageCode != "ru" {
+                if let available = localization.availableLocalizations.first, available.languageCode != "en" {
                     let value = TGSuggestedLocalization(info: TGAvailableLocalization(title: available.title, localizedTitle: available.localizedTitle, code: available.languageCode), continueWithLanguageString: continueWithLanguageString, chooseLanguageString: "Choose Language", chooseLanguageOtherString: "Choose Language", englishLanguageNameString: "English")
                     subscriber.putNext(value)
                 }
@@ -82,7 +82,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
         self.statusBar.statusBarStyle = theme.intro.statusBarStyle.style
         
         self.controller.startMessaging = { [weak self] in
-            self?.activateLocalization("ru")
+            self?.activateLocalization("en")
         }
         self.controller.startMessagingInAlternativeLanguage = { [weak self] code in
             if let code = code {
@@ -91,7 +91,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
         }
         
         self.startButton.pressed = { [weak self] in
-            self?.activateLocalization("ru")
+            self?.activateLocalization("en")
         }
         
         self.controller.createStartButton = { [weak self] width in
@@ -191,7 +191,7 @@ public final class AuthorizationSequenceSplashController: ViewController {
             if let current = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) {
                 return current.primaryComponent.languageCode
             } else {
-                return "ru"
+                return "en"
             }
         }
         let suggestedCode = self.suggestedLocalization.get()

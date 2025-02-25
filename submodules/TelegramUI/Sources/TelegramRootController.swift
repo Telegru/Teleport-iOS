@@ -329,18 +329,10 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             sharedContext.switchingData = (nil, nil, nil)
         }
         
-        let dahlSettingsController = {
-            let icon = UIImage(bundleImageName: "Chat List/Tabs/IconDahl")
-            let controller = dalsettingsController(
-                context: self.context,
-                tabBarItem: ItemListControllerTabBarItem(
-                    title: "Dahl.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode),
-                    image: icon,
-                    selectedImage: icon
-                )
-            )
-            return controller
-        }()
+        let dahlSettingsController = dalsettingsController(
+            context: self.context,
+            mode: .tab
+        )
         
         let accountSettingsController = PeerInfoScreenImpl(context: self.context, updatedPresentationData: nil, peerId: self.context.account.peerId, avatarInitiallyExpanded: false, isOpenedFromChat: false, nearbyPeerDistance: nil, reactionSourceMessageId: nil, callMessages: [], isSettings: true)
         accountSettingsController.tabBarItemDebugTapAction = { [weak self] in

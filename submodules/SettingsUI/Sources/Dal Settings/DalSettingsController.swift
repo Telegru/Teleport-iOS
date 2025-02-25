@@ -19,6 +19,11 @@ import MtProtoKit
 import TPStrings
 import BuildConfig
 
+public enum DahlSettingsControllerMode {
+    case tab
+    case navigation
+}
+
 private final class DalSettingsArguments {
     let context: AccountContext
     let presentController: (ViewController, ViewControllerPresentationArguments?) -> Void
@@ -737,7 +742,7 @@ private func dalSettingsEntries(
 
 public func dalsettingsController(
     context: AccountContext,
-    tabBarItem: ItemListControllerTabBarItem? = nil
+    mode: DahlSettingsControllerMode = .navigation
 ) -> ViewController {
     var presentControllerImpl: ((ViewController, ViewControllerPresentationArguments?) -> Void)?
     var pushControllerImpl: ((ViewController) -> Void)?
@@ -917,14 +922,25 @@ public func dalsettingsController(
         
         return sharedData.entries[SharedDataKeys.dahlProxySettings]?.get(DahlProxySettings.self)?.server != nil
     })
+    
+    let tabBarItemSignal = context.sharedContext.presentationData
+    |> map { presentationData -> ItemListControllerTabBarItem in
+        let tabIcon = UIImage(bundleImageName: "Chat List/Tabs/IconDahl")
+        return ItemListControllerTabBarItem(
+            title: "Dahl.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode),
+            image: tabIcon,
+            selectedImage: tabIcon
+        )
+    }
 
     let signal = combineLatest(
         sharedData,
         context.sharedContext.presentationData,
         context.account.postbox.preferencesView(keys: [ApplicationSpecificSharedDataKeys.dalSettings]),
-        isProxyEnabled.get()
+        isProxyEnabled.get(),
+        tabBarItemSignal
     )
-    |> map { sharedData, presentationData, preferences, isProxyEnabledValue -> (ItemListControllerState, (ItemListNodeState, Any)) in
+    |> map { sharedData, presentationData, preferences, isProxyEnabledValue, tabBarItem -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let dalSettings: DalSettings
         if let entry = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
             dalSettings = entry
@@ -962,13 +978,19 @@ public func dalsettingsController(
             }
         }
         
+        let isTabMode = if case .tab = mode {
+            true
+        } else {
+            false
+        }
+        
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
             title: .navigationItemTitle("DahlSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)),
             leftNavigationButton: nil,
             rightNavigationButton: nil,
             backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back),
-            tabBarItem: tabBarItem
+            tabBarItem: isTabMode ? tabBarItem : nil
         )
         let listState = ItemListNodeState(
             presentationData: ItemListPresentationData(presentationData),
@@ -983,11 +1005,13 @@ public func dalsettingsController(
     
     let controller: ItemListController
     
-    if let tabBarItem {
-        controller = ItemListController(context: context, state: signal, tabBarItem: .single(tabBarItem))
-    } else {
+    switch mode {
+    case .navigation:
         controller = ItemListController(context: context, state: signal)
+    case .tab:
+        controller = ItemListController(context: context, state: signal, tabBarItem: tabBarItemSignal)
     }
+    
     presentControllerImpl = { [weak controller] c, a in
         controller?.present(c, in: .window(.root), with: a)
     }
