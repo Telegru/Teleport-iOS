@@ -40,9 +40,11 @@ private enum ApplicationSpecificSharedDataKeyValues: Int32 {
     case translationSettings = 18
     case drawingSettings = 19
     case mediaDisplaySettings = 20
+    case dalSettings = 10000
 }
 
 public struct ApplicationSpecificSharedDataKeys {
+    public static let dalSettings = applicationSpecificSharedDataKey(ApplicationSpecificSharedDataKeyValues.dalSettings.rawValue)
     public static let inAppNotificationSettings = applicationSpecificSharedDataKey(ApplicationSpecificSharedDataKeyValues.inAppNotificationSettings.rawValue)
     public static let presentationPasscodeSettings = applicationSpecificSharedDataKey(ApplicationSpecificSharedDataKeyValues.presentationPasscodeSettings.rawValue)
     public static let automaticMediaDownloadSettings = applicationSpecificSharedDataKey(ApplicationSpecificSharedDataKeyValues.automaticMediaDownloadSettings.rawValue)

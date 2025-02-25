@@ -329,3 +329,52 @@ func _internal_removeRecentlyUsedApp(account: Account, peerId: PeerId) -> Signal
         }
     } |> switchToLatest
 }
+
+
+// MARK: Недавние чаты
+
+public func _internal_addRecentChat(postbox: Postbox, peerId: PeerId) -> Signal<Void, NoError> {
+    return postbox.transaction { transaction -> Void in
+        var maxRating = 1.0
+        for entry in transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.RecentChats) {
+            if let contents = entry.contents.get(RecentPeerItem.self) {
+                maxRating = max(maxRating, contents.rating)
+            }
+        }
+        if let entry = CodableEntry(RecentPeerItem(rating: maxRating)) {
+            transaction.addOrMoveToFirstPositionOrderedItemListItem(collectionId: Namespaces.OrderedItemList.RecentChats, item: OrderedItemListEntry(id: RecentPeerItemId(peerId).rawValue, contents: entry), removeTailIfCountExceeds: nil)
+        }
+    }
+}
+
+public func _internal_recentChats(postbox: Postbox) -> Signal<[Peer], NoError> {
+    return postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.RecentChats)])
+        |> mapToSignal { view -> Signal<[Peer], NoError> in
+            return postbox.transaction { transaction -> [Peer] in
+                var peers: [Peer] = []
+                if let view = view.views[.orderedItemList(id: Namespaces.OrderedItemList.RecentChats)] as? OrderedItemListView {
+                    for item in view.items {
+                        let peerId = RecentPeerItemId(item.id).peerId
+                        if let peer = transaction.getPeer(peerId) {
+                            peers.append(peer)
+                        }
+                    }
+                }
+                return peers
+            }
+    }
+}
+
+public func _internal_removeRecentChat(account: Account, peerId: PeerId) -> Signal<Void, NoError> {
+    return account.postbox.transaction { transaction -> Signal<Void, NoError> in
+        transaction.removeOrderedItemListItem(collectionId: Namespaces.OrderedItemList.RecentChats, itemId: RecentPeerItemId(peerId).rawValue)
+        return .complete()
+    } |> switchToLatest
+}
+
+public func _internal_clearRecentChats(account: Account) -> Signal<Void, NoError> {
+    return account.postbox.transaction { transaction -> Signal<Void, NoError> in
+        transaction.replaceOrderedItemListItems(collectionId: Namespaces.OrderedItemList.RecentChats, items: [])
+        return .complete()
+    } |> switchToLatest
+}

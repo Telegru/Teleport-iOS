@@ -245,7 +245,8 @@ private struct CommandChatInputContextPanelEntry: Comparable, Identifiable {
                     header: nil,
                     enableContextActions: false,
                     hiddenOffset: false,
-                    interaction: chatListNodeInteraction
+                    interaction: chatListNodeInteraction,
+                    chatListItemTextLineCount: 2
                 )
             }
         }

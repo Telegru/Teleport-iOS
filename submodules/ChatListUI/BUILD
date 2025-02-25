@@ -113,6 +113,8 @@ swift_library(
         "//submodules/ShimmerEffect:ShimmerEffect",
         "//submodules/TelegramUI/Components/LottieComponent",
         "//submodules/TelegramUI/Components/AvatarUploadToastScreen",
+        
+        "//Teleport/TPUI:TPUI",
     ],
     visibility = [
         "//visibility:public",

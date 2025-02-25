@@ -6,6 +6,7 @@ import TelegramApi
 import TelegramCore
 import TelegramUIPreferences
 import PersistentStringHash
+import DWallpaper
 
 public final class CachedWallpaper: Codable {
     public let wallpaper: TelegramWallpaper
@@ -28,10 +29,16 @@ public final class CachedWallpaper: Codable {
 }
 
 public func cachedWallpaper(account: Account, slug: String, settings: WallpaperSettings?, update: Bool = false) -> Signal<CachedWallpaper?, NoError> {
-    let engine = TelegramEngine(account: account)
+    if let dWallpaper = DWallpaper.allCases.first(where: { $0.slug == slug }),
+       let wallpaper = dWallpaper.makeWallpaper() {
+        let finalWallpaper = settings.map { wallpaper.withUpdatedSettings($0) } ?? wallpaper
+        return .single(CachedWallpaper(wallpaper: finalWallpaper))
+    }
     
+    let engine = TelegramEngine(account: account)
     let slugKey = ValueBoxKey(length: 8)
     slugKey.setInt64(0, value: Int64(bitPattern: slug.persistentHashValue))
+    
     return engine.data.get(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: ApplicationSpecificItemCacheCollectionId.cachedWallpapers, id: slugKey))
     |> mapToSignal { entry -> Signal<CachedWallpaper?, NoError> in
         if !update, let entry = entry?.get(CachedWallpaper.self) {

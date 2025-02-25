@@ -16,6 +16,7 @@ import HexColor
 import PresentationDataUtils
 import MediaPickerUI
 import WallpaperGalleryScreen
+import DWallpaper
 
 public enum WallpaperSelectionResult {
     case remove
@@ -365,7 +366,7 @@ public final class ThemeGridController: ViewController {
                                     })
                                 }).start()
                                 
-                                let _ = (telegramWallpapers(postbox: strongSelf.context.account.postbox, network: strongSelf.context.account.network)
+                                let _ = (telegramWallpapersWithDWallpapers(postbox: strongSelf.context.account.postbox, network: strongSelf.context.account.network)
                                 |> deliverOnMainQueue).start(completed: { [weak self, weak controller] in
                                     controller?.dismiss()
                                     if let strongSelf = self {

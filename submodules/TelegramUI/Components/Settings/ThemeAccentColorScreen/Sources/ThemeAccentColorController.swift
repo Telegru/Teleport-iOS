@@ -12,6 +12,7 @@ import PresentationDataUtils
 import MediaResources
 import WallpaperGalleryScreen
 import GenerateThemeName
+import DWallpaper
 
 private let randomBackgroundColors: [Int32] = [0x007aff, 0x00c2ed, 0x29b327, 0xeb6ca4, 0xf08200, 0x9472ee, 0xd33213, 0xedb400, 0x6d839e]
 
@@ -386,7 +387,7 @@ public final class ThemeAccentColorController: ViewController {
         
         let _ = (combineLatest(
             self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.presentationThemeSettings]) |> take(1),
-            telegramWallpapers(postbox: context.account.postbox, network: context.account.network) |> take(1)
+            telegramWallpapersWithDWallpapers(postbox: context.account.postbox, network: context.account.network) |> take(1)
         )
         |> deliverOnMainQueue).start(next: { [weak self] sharedData, wallpapers in
             guard let strongSelf = self else {

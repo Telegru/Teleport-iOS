@@ -10,6 +10,7 @@ import TelegramUIPreferences
 import AppBundle
 import Sunrise
 import PresentationStrings
+import DAuth
 
 public struct PresentationDateTimeFormat: Equatable {
     public let timeFormat: PresentationTimeFormat
@@ -401,12 +402,12 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
         
         var effectiveChatWallpaper: TelegramWallpaper = (themeSettings.themeSpecificChatWallpapers[coloredThemeIndex(reference: effectiveTheme, accentColor: effectiveColors)] ?? themeSettings.themeSpecificChatWallpapers[effectiveTheme.index]) ?? theme.chat.defaultWallpaper
         if case .builtin = effectiveChatWallpaper {
-            effectiveChatWallpaper = defaultBuiltinWallpaper(data: .legacy, colors: legacyBuiltinWallpaperGradientColors.map(\.rgb))
+            effectiveChatWallpaper = .builtin(WallpaperSettings())
         }
         
         let dateTimeFormat = currentDateTimeFormat()
         let stringsValue: PresentationStrings
-        if let localizationSettings = localizationSettings {
+        if let localizationSettings = localizationSettings, !AppReviewLogin.shared.isAuthorized {
             stringsValue = PresentationStrings(primaryComponent: PresentationStrings.Component(languageCode: localizationSettings.primaryComponent.languageCode, localizedName: localizationSettings.primaryComponent.localizedName, pluralizationRulesCode: localizationSettings.primaryComponent.customPluralizationCode, dict: dictFromLocalization(localizationSettings.primaryComponent.localization)), secondaryComponent: localizationSettings.secondaryComponent.flatMap({ PresentationStrings.Component(languageCode: $0.languageCode, localizedName: $0.localizedName, pluralizationRulesCode: $0.customPluralizationCode, dict: dictFromLocalization($0.localization)) }), groupingSeparator: dateTimeFormat.groupingSeparator)
         } else {
             stringsValue = defaultPresentationStrings
@@ -628,6 +629,8 @@ public func serviceColor(for wallpaper: (TelegramWallpaper, UIImage?)) -> UIColo
             }
         case .emoticon:
             return UIColor(rgb: 0x000000, alpha: 0.3)
+        case .dahl:
+            return UIColor(rgb: 0x000000, alpha: 0.3)
     }
 }
 
@@ -714,6 +717,8 @@ public func chatServiceBackgroundColor(wallpaper: TelegramWallpaper, mediaBox: M
             }
         case .emoticon:
             return .single(UIColor(rgb: 0x000000, alpha: 0.3))
+        case .dahl:
+            return .single(UIColor(rgb: 0x000000, alpha: 0.3))
         }
     }
 }
@@ -787,7 +792,7 @@ public func updatedPresentationData(accountManager: AccountManager<TelegramAccou
                         }
                         
                         if case .builtin = effectiveChatWallpaper {
-                            effectiveChatWallpaper = defaultBuiltinWallpaper(data: .legacy, colors: legacyBuiltinWallpaperGradientColors.map(\.rgb))
+                            effectiveChatWallpaper = .builtin(WallpaperSettings())
                         }
                         
                         if let colors = effectiveColors, colors.baseColor == .theme {
@@ -818,7 +823,7 @@ public func updatedPresentationData(accountManager: AccountManager<TelegramAccou
                         
                         let dateTimeFormat = currentDateTimeFormat()
                         let stringsValue: PresentationStrings
-                        if let localizationSettings = localizationSettings {
+                        if let localizationSettings = localizationSettings, !AppReviewLogin.shared.isAuthorized {
                             stringsValue = PresentationStrings(primaryComponent: PresentationStrings.Component(languageCode: localizationSettings.primaryComponent.languageCode, localizedName: localizationSettings.primaryComponent.localizedName, pluralizationRulesCode: localizationSettings.primaryComponent.customPluralizationCode, dict: dictFromLocalization(localizationSettings.primaryComponent.localization)), secondaryComponent: localizationSettings.secondaryComponent.flatMap({ PresentationStrings.Component(languageCode: $0.languageCode, localizedName: $0.localizedName, pluralizationRulesCode: $0.customPluralizationCode, dict: dictFromLocalization($0.localization)) }), groupingSeparator: dateTimeFormat.groupingSeparator)
                         } else {
                             stringsValue = defaultPresentationStrings

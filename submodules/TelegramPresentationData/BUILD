@@ -21,7 +21,13 @@ swift_library(
         "//submodules/Sunrise:Sunrise",
         "//submodules/TinyThumbnail:TinyThumbnail",
         "//submodules/FastBlur:FastBlur",
+        "//Teleport/DAuth:DAuth",
         "//Telegram:PresentationStrings",
+        "//Teleport/TPUI:TPUI",
+        "//Teleport/DWallpaper:DWallpaper",
+    ],
+    data = [
+        "//Teleport/DWallpaper:DWallpaperImages"
     ],
     visibility = [
         "//visibility:public",

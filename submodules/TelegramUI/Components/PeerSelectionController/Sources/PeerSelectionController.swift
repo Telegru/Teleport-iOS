@@ -206,7 +206,7 @@ public final class PeerSelectionControllerImpl: ViewController, PeerSelectionCon
                 if force {
                     strongSelf.tabContainerNode?.cancelAnimations()
                 }
-                strongSelf.tabContainerNode?.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: tabContainerData.0, selectedFilter: filter, isReordering: false, isEditing: false, canReorderAllChats: false, filtersLimit: tabContainerData.2, transitionFraction: fraction, presentationData: strongSelf.presentationData, transition: transition)
+                strongSelf.tabContainerNode?.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: tabContainerData.0, selectedFilter: filter, isReordering: false, isEditing: false, canReorderAllChats: false, hideAllChats: false, isInfiniteScroll: false, filtersLimit: tabContainerData.2, transitionFraction: fraction, presentationData: strongSelf.presentationData, transition: transition)
             }
             
             self.tabContainerNode?.tabSelected = { [weak self] id, isDisabled in
@@ -391,7 +391,7 @@ public final class PeerSelectionControllerImpl: ViewController, PeerSelectionCon
             let tabContainerOffset: CGFloat = 0.0
             let navigationBarHeight = self.navigationBar?.frame.maxY ?? 0.0
             transition.updateFrame(node: tabContainerNode, frame: CGRect(origin: CGPoint(x: 0.0, y: navigationBarHeight - self.additionalNavigationBarHeight - 46.0 + tabContainerOffset), size: CGSize(width: layout.size.width, height: 46.0)))
-            tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: self.tabContainerData?.0 ?? [], selectedFilter: mainContainerNode.currentItemFilter, isReordering: false, isEditing: false, canReorderAllChats: false, filtersLimit: self.tabContainerData?.2, transitionFraction: mainContainerNode.transitionFraction, presentationData: self.presentationData, transition: .animated(duration: 0.4, curve: .spring))
+            tabContainerNode.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: self.tabContainerData?.0 ?? [], selectedFilter: mainContainerNode.currentItemFilter, isReordering: false, isEditing: false, canReorderAllChats: false, hideAllChats: false, isInfiniteScroll: false, filtersLimit: self.tabContainerData?.2, transitionFraction: mainContainerNode.transitionFraction, presentationData: self.presentationData, transition: .animated(duration: 0.4, curve: .spring))
         }
     }
     
@@ -540,7 +540,7 @@ public final class PeerSelectionControllerImpl: ViewController, PeerSelectionCon
                 if wasEmpty != isEmpty {
                     strongSelf.containerLayoutUpdated(layout, transition: .immediate)
                 } else {
-                    strongSelf.tabContainerNode?.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: resolvedItems, selectedFilter: selectedEntryId, isReordering: false, isEditing: false, canReorderAllChats: false, filtersLimit: filtersLimit, transitionFraction: 0.0, presentationData: strongSelf.presentationData, transition: .animated(duration: 0.4, curve: .spring))
+                    strongSelf.tabContainerNode?.update(size: CGSize(width: layout.size.width, height: 46.0), sideInset: layout.safeInsets.left, filters: resolvedItems, selectedFilter: selectedEntryId, isReordering: false, isEditing: false, canReorderAllChats: false, hideAllChats: false, isInfiniteScroll: false, filtersLimit: filtersLimit, transitionFraction: 0.0, presentationData: strongSelf.presentationData, transition: .animated(duration: 0.4, curve: .spring))
                 }
             }
             

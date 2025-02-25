@@ -23,6 +23,7 @@ import ThemeCarouselItem
 import ThemeAccentColorScreen
 import WallpaperGridScreen
 import PeerNameColorItem
+import DWallpaper
 
 private final class ThemeSettingsControllerArguments {
     let context: AccountContext
@@ -458,7 +459,7 @@ public func themeSettingsController(context: AccountContext, focusOnItemTag: The
     var selectAccentColorImpl: ((PresentationThemeAccentColor?) -> Void)?
     var openAccentColorPickerImpl: ((PresentationThemeReference, Bool) -> Void)?
     
-    let _ = telegramWallpapers(postbox: context.account.postbox, network: context.account.network).start()
+    let _ = telegramWallpapersWithDWallpapers(postbox: context.account.postbox, network: context.account.network).start()
     
     let currentAppIcon: PresentationAppIcon?
     var appIcons = context.sharedContext.applicationBindings.getAvailableAlternateIcons()

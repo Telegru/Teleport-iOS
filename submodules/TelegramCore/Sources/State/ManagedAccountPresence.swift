@@ -13,19 +13,32 @@ private final class AccountPresenceManagerImpl {
     let isPerformingUpdate = ValuePromise<Bool>(false, ignoreRepeated: true)
     
     private var shouldKeepOnlinePresenceDisposable: Disposable?
+    private var blockOnlinePresenceDisposable: Disposable?
     private let currentRequestDisposable = MetaDisposable()
     private var onlineTimer: SignalKitTimer?
     
     private var wasOnline: Bool = false
     
-    init(queue: Queue, shouldKeepOnlinePresence: Signal<Bool, NoError>, network: Network) {
+    init(
+        queue: Queue,
+        shouldKeepOnlinePresence: Signal<Bool, NoError>,
+        blockOnlinePresence: Signal<Bool, NoError>,
+        network: Network
+    ) {
         self.queue = queue
         self.network = network
         
-        self.shouldKeepOnlinePresenceDisposable = (shouldKeepOnlinePresence
+        // Комбинируем сигналы shouldKeepOnlinePresence и blockOnlinePresence
+        let combinedPresenceSignal = combineLatest(shouldKeepOnlinePresence, blockOnlinePresence)
+        |> map { shouldKeep, isBlocked in
+            // Если заблокировано, всегда офлайн
+            return shouldKeep && !isBlocked
+        }
         |> distinctUntilChanged
-        |> deliverOn(self.queue)).start(next: { [weak self] value in
-            guard let `self` = self else {
+        
+        self.shouldKeepOnlinePresenceDisposable = (combinedPresenceSignal
+                                                   |> deliverOn(self.queue)).start(next: { [weak self] value in
+            guard let self = self else {
                 return
             }
             if self.wasOnline != value {
@@ -38,6 +51,7 @@ private final class AccountPresenceManagerImpl {
     deinit {
         assert(self.queue.isCurrent())
         self.shouldKeepOnlinePresenceDisposable?.dispose()
+        self.blockOnlinePresenceDisposable?.dispose()
         self.currentRequestDisposable.dispose()
         self.onlineTimer?.invalidate()
     }
@@ -77,10 +91,10 @@ final class AccountPresenceManager {
     private let queue = Queue()
     private let impl: QueueLocalObject<AccountPresenceManagerImpl>
     
-    init(shouldKeepOnlinePresence: Signal<Bool, NoError>, network: Network) {
+    init(shouldKeepOnlinePresence: Signal<Bool, NoError>, blockOnlinePresence: Signal<Bool, NoError>, network: Network) {
         let queue = self.queue
         self.impl = QueueLocalObject(queue: self.queue, generate: {
-            return AccountPresenceManagerImpl(queue: queue, shouldKeepOnlinePresence: shouldKeepOnlinePresence, network: network)
+            return AccountPresenceManagerImpl(queue: queue, shouldKeepOnlinePresence: shouldKeepOnlinePresence, blockOnlinePresence: blockOnlinePresence, network: network)
         })
     }
     

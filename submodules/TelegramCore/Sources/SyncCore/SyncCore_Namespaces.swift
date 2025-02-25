@@ -96,6 +96,9 @@ public struct Namespaces {
         public static let CloudDisabledChannelStatusEmoji: Int32 = 28
         public static let CloudDefaultTagReactions: Int32 = 29
         public static let CloudUniqueStarGifts: Int32 = 30
+        
+
+		public static let RecentChats: Int32 = 30000
     }
     
     public struct CachedItemCollection {
@@ -548,6 +551,8 @@ private enum SharedDataKeyValues: Int32 {
     case countriesList = 7
     case wallapersState = 8
     case chatThemes = 10
+    
+    case dahlProxySettings = 10001
 }
 
 public struct SharedDataKeys {
@@ -602,6 +607,12 @@ public struct SharedDataKeys {
     public static let chatThemes: ValueBoxKey = {
         let key = ValueBoxKey(length: 4)
         key.setInt32(0, value: SharedDataKeyValues.chatThemes.rawValue)
+        return key
+    }()
+    
+    public static let dahlProxySettings: ValueBoxKey = {
+        let key = ValueBoxKey(length: 4)
+        key.setInt32(0, value: SharedDataKeyValues.dahlProxySettings.rawValue)
         return key
     }()
 }

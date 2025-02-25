@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import TelegramCore
 import TelegramUIPreferences
+import DWallpaper
 
 public let defaultDarkPresentationTheme = makeDefaultDarkPresentationTheme(preview: false)
 public let defaultDarkColorPresentationTheme = customizeDefaultDarkPresentationTheme(theme: defaultDarkPresentationTheme, editing: false, title: nil, accentColor: UIColor(rgb: 0x3e88f7), backgroundColors: [], bubbleColors: [], animateBubbleColors: false, wallpaper: nil, baseColor: nil)
@@ -365,7 +366,8 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         selectedTextColor: UIColor(rgb: 0xffffff),
         badgeBackgroundColor:  UIColor(rgb: 0xffffff),
         badgeStrokeColor: UIColor(rgb: 0x1c1c1d),
-        badgeTextColor:  UIColor(rgb: 0x000000)
+        badgeTextColor:  UIColor(rgb: 0x000000),
+        useSquareStyle: true
     )
 
     let navigationSearchBar = PresentationThemeNavigationSearchBar(
@@ -724,18 +726,18 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         badgeStrokeColor: UIColor(rgb: 0xffffff),
         badgeTextColor:  UIColor(rgb: 0x000000)
     )
-
-    let defaultPatternWallpaper: TelegramWallpaper = defaultBuiltinWallpaper(data: .default, colors: defaultDarkWallpaperGradientColors.map(\.rgb), intensity: -34)
+    
     
     let chat = PresentationThemeChat(
-        defaultWallpaper: defaultPatternWallpaper,
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: true) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: message,
         serviceMessage: serviceMessage,
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation
+        historyNavigation: historyNavigation,
+        isRectangleCountMessageBadge: true
     )
 
     let actionSheet = PresentationThemeActionSheet(

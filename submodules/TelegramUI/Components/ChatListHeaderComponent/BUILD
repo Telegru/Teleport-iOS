@@ -24,6 +24,8 @@ swift_library(
         "//submodules/Components/ComponentDisplayAdapters",
         "//submodules/SearchUI",
         "//submodules/TelegramUI/Components/MoreHeaderButton",
+        "//Teleport/TPUI:TPUI",
+        "//Teleport/DWallpaper:DWallpaper",
     ],
     visibility = [
         "//visibility:public",

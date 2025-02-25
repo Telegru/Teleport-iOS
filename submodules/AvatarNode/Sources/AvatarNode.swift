@@ -14,12 +14,13 @@ import Accelerate
 import ComponentFlow
 import AvatarStoryIndicatorComponent
 import DirectMediaImageCache
+import TPUI
 
 private let deletedIcon = UIImage(bundleImageName: "Avatar/DeletedIcon")?.precomposed()
 private let phoneIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/PhoneIcon"), color: .white)
-public let savedMessagesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/SavedMessagesIcon"), color: .white)
+public let savedMessagesIcon = generateTintedImage(image: TPIconManager.shared.icon(.avatarSaved), color: .white)
 public let repostStoryIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/RepostStoryIcon"), color: .white)
-private let archivedChatsIcon = UIImage(bundleImageName: "Avatar/ArchiveAvatarIcon")?.precomposed()
+private let archivedChatsIcon = TPIconManager.shared.icon(.avatarArchive).precomposed()
 private let repliesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/RepliesMessagesIcon"), color: .white)
 private let anonymousSavedMessagesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/AnonymousSenderIcon"), color: .white)
 private let anonymousSavedMessagesDarkIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/AnonymousSenderIcon"), color: UIColor(white: 1.0, alpha: 0.4))
@@ -27,13 +28,14 @@ private let myNotesIcon = generateTintedImage(image: UIImage(bundleImageName: "A
 private let cameraIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/CameraIcon"), color: .white)
 
 public func avatarPlaceholderFont(size: CGFloat) -> UIFont {
-    return Font.with(size: size, design: .round, weight: .bold)
+    return Font.with(size: size * 1.484, design: .novgorod, weight: .bold)
 }
 
 public enum AvatarNodeClipStyle {
     case none
     case round
     case roundedRect
+    case rect
 }
 
 private class AvatarNodeParameters: NSObject {
@@ -286,7 +288,7 @@ public final class AvatarNode: ASDisplayNode {
     ]
     
     static let savedMessagesColors: [UIColor] = [
-        UIColor(rgb: 0x2a9ef1), UIColor(rgb: 0x72d5fd)
+        UIColor(rgb: 0x09090C), UIColor(rgb: 0x3D4052)
     ]
     
     static let repostColors: [UIColor] = [
@@ -526,7 +528,7 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .round,
+            clipStyle: AvatarNodeClipStyle = .rect,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false,
@@ -652,7 +654,7 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .round,
+            clipStyle: AvatarNodeClipStyle = .rect,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false
@@ -678,6 +680,9 @@ public final class AvatarNode: ASDisplayNode {
             case .roundedRect:
                 self.imageNode.clipsToBounds = true
                 self.imageNode.cornerRadius = displayDimensions.height * 0.25
+            case .rect:
+                self.imageNode.clipsToBounds = true
+                self.imageNode.cornerRadius = displayDimensions.height * 0.125
             }
             
             if let imageCache = genericContext.imageCache as? DirectMediaImageCache, let peer, let smallProfileImage = peer.smallProfileImage, let peerReference = PeerReference(peer._asPeer()) {
@@ -705,7 +710,7 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .round,
+            clipStyle: AvatarNodeClipStyle = .rect,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false,
@@ -839,9 +844,9 @@ public final class AvatarNode: ASDisplayNode {
                 
                 let parameters: AvatarNodeParameters
                 if let icon = icon, case .phone = icon {
-                    parameters = AvatarNodeParameters(theme: nil, accountPeerId: nil, peerId: nil, colors: calculateAvatarColors(context: nil, explicitColorIndex: explicitIndex, peerId: nil, nameColor: nil, icon: .phoneIcon, theme: nil), letters: [], font: self.font, icon: .phoneIcon, explicitColorIndex: explicitIndex, hasImage: false, clipStyle: .round, cutoutRect: cutoutRect)
+                    parameters = AvatarNodeParameters(theme: nil, accountPeerId: nil, peerId: nil, colors: calculateAvatarColors(context: nil, explicitColorIndex: explicitIndex, peerId: nil, nameColor: nil, icon: .phoneIcon, theme: nil), letters: [], font: self.font, icon: .phoneIcon, explicitColorIndex: explicitIndex, hasImage: false, clipStyle: .rect, cutoutRect: cutoutRect)
                 } else {
-                    parameters = AvatarNodeParameters(theme: nil, accountPeerId: nil, peerId: nil, colors: calculateAvatarColors(context: nil, explicitColorIndex: explicitIndex, peerId: nil, nameColor: nil, icon: .none, theme: nil), letters: letters, font: self.font, icon: .none, explicitColorIndex: explicitIndex, hasImage: false, clipStyle: .round, cutoutRect: cutoutRect)
+                    parameters = AvatarNodeParameters(theme: nil, accountPeerId: nil, peerId: nil, colors: calculateAvatarColors(context: nil, explicitColorIndex: explicitIndex, peerId: nil, nameColor: nil, icon: .none, theme: nil), letters: letters, font: self.font, icon: .none, explicitColorIndex: explicitIndex, hasImage: false, clipStyle: .rect, cutoutRect: cutoutRect)
                 }
                 
                 self.displaySuspended = true
@@ -886,6 +891,10 @@ public final class AvatarNode: ASDisplayNode {
                 } else if case .roundedRect = parameters.clipStyle {
                     context.beginPath()
                     context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height: bounds.size.height), cornerRadius: floor(bounds.size.width * 0.25)).cgPath)
+                    context.clip()
+                }  else if case .rect = parameters.clipStyle {
+                    context.beginPath()
+                    context.addPath(UIBezierPath(roundedRect: CGRect(x: 0.0, y: 0.0, width: bounds.size.width, height: bounds.size.height), cornerRadius: floor(bounds.size.width * 0.125)).cgPath)
                     context.clip()
                 }
             } else {
@@ -1189,7 +1198,7 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .round,
+        clipStyle: AvatarNodeClipStyle = .rect,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false
@@ -1218,7 +1227,7 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .round,
+        clipStyle: AvatarNodeClipStyle = .rect,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false
@@ -1245,7 +1254,7 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .round,
+        clipStyle: AvatarNodeClipStyle = .rect,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false,
@@ -1372,7 +1381,8 @@ public final class AvatarNode: ASDisplayNode {
                         unseenCount: storyStats.unseenCount
                     ),
                     progress: mappedProgress,
-                    isRoundedRect: self.contentNode.clipStyle == .roundedRect || storyPresentationParams.forceRoundedRect
+                    isRoundedRect: self.contentNode.clipStyle == .roundedRect || storyPresentationParams.forceRoundedRect,
+                    isRectSimple: true
                 )),
                 environment: {},
                 containerSize: indicatorSize

@@ -241,7 +241,7 @@ public final class LoadingOverlayNode: ASDisplayNode {
                     requiresPremiumForMessaging: false,
                     displayAsTopicList: false,
                     tags: []
-                )), editing: false, hasActiveRevealControls: false, selected: false, header: nil, enableContextActions: false, hiddenOffset: false, interaction: interaction)
+                )), editing: false, hasActiveRevealControls: false, selected: false, header: nil, enableContextActions: false, hiddenOffset: false, interaction: interaction, chatListItemTextLineCount: 2)
             }
             
             var itemNodes: [ChatListItemNode] = []
@@ -609,7 +609,8 @@ private final class PeerInfoScreenPersonalChannelItemNode: PeerInfoScreenItemNod
             header: nil,
             enableContextActions: false,
             hiddenOffset: false,
-            interaction: chatListNodeInteraction
+            interaction: chatListNodeInteraction,
+            chatListItemTextLineCount: 2
         )
         var itemNode: ListViewItemNode?
         let params = ListViewItemLayoutParams(width: width - safeInsets.left - safeInsets.right, leftInset: 0.0, rightInset: 0.0, availableHeight: 1000.0)

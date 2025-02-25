@@ -289,7 +289,8 @@ public class ChatMessageStoryMentionContentNode: ChatMessageBubbleContentNode {
                                         colors: storyColors,
                                         activeLineWidth: 3.0,
                                         inactiveLineWidth: 1.0 + UIScreenPixel,
-                                        counters: nil
+                                        counters: nil,
+                                        isRectSimple: true
                                     )),
                                     environment: {},
                                     containerSize: indicatorFrame.size

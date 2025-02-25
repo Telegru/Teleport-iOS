@@ -4,7 +4,7 @@ import TelegramCore
 import TelegramUIPreferences
 import Postbox
 
-private let defaultDarkTintedAccentColor = UIColor(rgb: 0x2ea6ff)
+private let defaultDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
 public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false)
 
 private extension PresentationThemeBaseColor {
@@ -554,7 +554,8 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         selectedTextColor: accentColor,
         badgeBackgroundColor: UIColor(rgb: 0xef5b5b),
         badgeStrokeColor: UIColor(rgb: 0xef5b5b),
-        badgeTextColor: UIColor(rgb: 0xffffff)
+        badgeTextColor: UIColor(rgb: 0xffffff),
+        useSquareStyle: true
     )
 
     let rootNavigationBar = PresentationThemeRootNavigationBar(
@@ -709,9 +710,9 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         unreadBadgeActiveBackgroundColor: accentColor,
         unreadBadgeActiveTextColor: secondaryBadgeTextColor,
         unreadBadgeInactiveBackgroundColor: mainSecondaryTextColor.withAlphaComponent(0.4),
-        unreadBadgeInactiveTextColor: additionalBackgroundColor,
+        unreadBadgeInactiveTextColor: secondaryBadgeTextColor,
         reactionBadgeActiveBackgroundColor: UIColor(rgb: 0xFF2D55),
-        pinnedBadgeColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        pinnedBadgeColor: accentColor,
         pinnedSearchBarColor: accentColor.withMultiplied(hue: 1.029, saturation: 0.609, brightness: 0.12),
         regularSearchBarColor: accentColor.withMultiplied(hue: 1.029, saturation: 0.609, brightness: 0.12),
         sectionHeaderFillColor: mainBackgroundColor,
@@ -722,7 +723,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x72d5fd), bottomColor: UIColor(rgb: 0x2a9ef1)), foregroundColor: .white),
         unpinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: accentColor.withMultiplied(hue: 0.985, saturation: 0.268, brightness: 0.47), bottomColor: accentColor.withMultiplied(hue: 0.98, saturation: 0.268, brightness: 0.39)), foregroundColor: additionalBackgroundColor),
         onlineDotColor: UIColor(rgb: 0x4cc91f),
-        storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x34C76F), bottomColor: UIColor(rgb: 0x3DA1FD)),
+        storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x4B52F2), bottomColor: UIColor(rgb: 0x7B86C3)),
         storyUnseenPrivateColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x7CD636), bottomColor: UIColor(rgb: 0x26B470)),
         storySeenColors: PresentationThemeGradientColors(topColor: mainForegroundColor, bottomColor: mainForegroundColor)
     )
@@ -944,7 +945,8 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation
+        historyNavigation: historyNavigation,
+        isRectangleCountMessageBadge: true
     )
 
     let actionSheet = PresentationThemeActionSheet(

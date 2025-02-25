@@ -58,6 +58,7 @@ public struct ItemListBackButton: Equatable {
 
 public enum ItemListControllerTitle: Equatable {
     case text(String)
+    case navigationItemTitle(String)
     case textWithSubtitle(String, String)
     case sectionControl([String], Int)
     case textWithTabs(String, [String], Int)
@@ -324,6 +325,13 @@ open class ItemListController: ViewController, KeyShortcutResponder, Presentable
                                 strongSelf.title = text
                                 strongSelf.navigationItem.titleView = nil
                                 strongSelf.segmentedTitleView = nil
+                                strongSelf.navigationBar?.setContentNode(nil, animated: false)
+                                if strongSelf.isNodeLoaded {
+                                    strongSelf.controllerNode.panRecognizer?.isEnabled = false
+                                }
+                            case let .navigationItemTitle(text):
+                                strongSelf.title = nil
+                                strongSelf.navigationItem.title = text
                                 strongSelf.navigationBar?.setContentNode(nil, animated: false)
                                 if strongSelf.isNodeLoaded {
                                     strongSelf.controllerNode.panRecognizer?.isEnabled = false

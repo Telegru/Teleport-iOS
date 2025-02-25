@@ -20,7 +20,13 @@ class BuildConfiguration:
         app_specific_url_scheme,
         premium_iap_product_id,
         enable_siri,
-        enable_icloud
+        enable_icloud,
+        d_app_reviewer_phone,
+        d_app_reviewer_code,
+        d_app_reviewer_env,
+        d_proxy_server,
+        d_proxy_port,
+        d_proxy_secret
     ):
         self.bundle_id = bundle_id
         self.api_id = api_id
@@ -34,6 +40,12 @@ class BuildConfiguration:
         self.premium_iap_product_id = premium_iap_product_id
         self.enable_siri = enable_siri
         self.enable_icloud = enable_icloud
+        self.d_app_reviewer_phone = d_app_reviewer_phone
+        self.d_app_reviewer_code = d_app_reviewer_code
+        self.d_app_reviewer_env = d_app_reviewer_env
+        self.d_proxy_server = d_proxy_server
+        self.d_proxy_port = d_proxy_port
+        self.d_proxy_secret = d_proxy_secret
 
     def write_to_variables_file(self, bazel_path, use_xcode_managed_codesigning, aps_environment, path):
         string = ''
@@ -53,6 +65,12 @@ class BuildConfiguration:
         string += 'telegram_enable_siri = {}\n'.format(self.enable_siri)
         string += 'telegram_enable_icloud = {}\n'.format(self.enable_icloud)
         string += 'telegram_enable_watch = True\n'
+        string += 'dahl_app_reviewer_phone = "{}"\n'.format(self.d_app_reviewer_phone)
+        string += 'dahl_app_reviewer_code = "{}"\n'.format(self.d_app_reviewer_code)
+        string += 'dahl_app_reviewer_env = "{}"\n'.format(self.d_app_reviewer_env)
+        string += 'dahl_proxy_server = "{}"\n'.format(self.d_proxy_server)
+        string += 'dahl_proxy_port = "{}"\n'.format(self.d_proxy_port)
+        string += 'dahl_proxy_secret = "{}"\n'.format(self.d_proxy_secret)
 
         if os.path.exists(path):
             os.remove(path)
@@ -78,7 +96,13 @@ def build_configuration_from_json(path):
             'app_specific_url_scheme',
             'premium_iap_product_id',
             'enable_siri',
-            'enable_icloud'
+            'enable_icloud',
+            'dahl_app_reviewer_phone',
+            'dahl_app_reviewer_code',
+            'dahl_app_reviewer_env',
+            'dahl_proxy_server',
+            'dahl_proxy_port',
+            'dahl_proxy_secret',
         ]
         for key in required_keys:
             if key not in configuration_dict:
@@ -95,7 +119,13 @@ def build_configuration_from_json(path):
             app_specific_url_scheme=configuration_dict['app_specific_url_scheme'],
             premium_iap_product_id=configuration_dict['premium_iap_product_id'],
             enable_siri=configuration_dict['enable_siri'],
-            enable_icloud=configuration_dict['enable_icloud']
+            enable_icloud=configuration_dict['enable_icloud'],
+            d_app_reviewer_phone=configuration_dict['dahl_app_reviewer_phone'],
+            d_app_reviewer_code=configuration_dict['dahl_app_reviewer_code'],
+            d_app_reviewer_env=configuration_dict['dahl_app_reviewer_env'],
+            d_proxy_server=configuration_dict['dahl_proxy_server'],
+            d_proxy_port=configuration_dict['dahl_proxy_port'],
+            d_proxy_secret=configuration_dict['dahl_proxy_secret'],
         )
 
 
