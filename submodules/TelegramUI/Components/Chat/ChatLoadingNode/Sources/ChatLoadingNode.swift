@@ -290,9 +290,9 @@ public final class ChatLoadingPlaceholderNode: ASDisplayNode {
     }
         
     private var didAnimateOut = false
-    public func animateOut(_ historyNode: ListView, completion: @escaping () -> Void = {}) -> Bool {
+    public func animateOut(_ historyNode: ListView, completion: @escaping () -> Void = {}) {
         guard let (size, _, _) = self.validLayout else {
-            return false
+            return
         }
         let listNode = historyNode
         self.didAnimateOut = true
@@ -376,7 +376,6 @@ public final class ChatLoadingPlaceholderNode: ASDisplayNode {
                 offset -= messageSize.height
             }
         }
-        return true
     }
     
     public func addContentOffset(offset: CGFloat, transition: ContainedViewLayoutTransition) {
