@@ -1173,6 +1173,8 @@ public protocol ChatCustomContentsProtocol: AnyObject {
     var kind: ChatCustomContentsKind { get }
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> { get }
     var messageLimit: Int? { get }
+    var disableFloatingDateHeaders: Bool { get }
+
     var isLoadingSignal: Signal<Bool, NoError> { get }
 
     func enqueueMessages(messages: [EnqueueMessage])

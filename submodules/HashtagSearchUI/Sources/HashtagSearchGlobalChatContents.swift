@@ -142,6 +142,8 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
     }
     
     var kind: ChatCustomContentsKind
+    
+    var disableFloatingDateHeaders: Bool = true
 
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> {
         return self.impl.signalWith({ impl, subscriber in

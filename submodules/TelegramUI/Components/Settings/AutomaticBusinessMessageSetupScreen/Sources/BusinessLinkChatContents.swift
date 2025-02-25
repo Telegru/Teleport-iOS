@@ -28,6 +28,8 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
         }
     }
     
+    var disableFloatingDateHeaders: Bool = true
+
     var kind: ChatCustomContentsKind
 
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> {
