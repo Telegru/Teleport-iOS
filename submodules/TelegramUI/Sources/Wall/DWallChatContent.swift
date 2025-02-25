@@ -27,6 +27,8 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     
     var messageLimit: Int? { nil }
     
+    var disableFloatingDateHeaders: Bool = false
+
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }
     
     private let queue: Queue
