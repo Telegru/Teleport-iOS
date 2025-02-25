@@ -40,7 +40,7 @@ private let activityBorderImage: UIImage = {
 final class VideoChatParticipantVideoComponent: Component {
     let theme: PresentationTheme
     let strings: PresentationStrings
-    let call: PresentationGroupCall
+    let call: VideoChatCall
     let participant: GroupCallParticipantsContext.Participant
     let isMyPeer: Bool
     let isPresentation: Bool
@@ -59,7 +59,7 @@ final class VideoChatParticipantVideoComponent: Component {
     init(
         theme: PresentationTheme,
         strings: PresentationStrings,
-        call: PresentationGroupCall,
+        call: VideoChatCall,
         participant: GroupCallParticipantsContext.Participant,
         isMyPeer: Bool,
         isPresentation: Bool,
@@ -95,6 +95,9 @@ final class VideoChatParticipantVideoComponent: Component {
     }
     
     static func ==(lhs: VideoChatParticipantVideoComponent, rhs: VideoChatParticipantVideoComponent) -> Bool {
+        if lhs.call != rhs.call {
+            return false
+        }
         if lhs.participant != rhs.participant {
             return false
         }
@@ -191,6 +194,7 @@ final class VideoChatParticipantVideoComponent: Component {
         private let pinchContainerNode: PinchSourceContainerNode
         private let extractedContainerView: ContextExtractedContentContainingView
         private var videoSource: AdaptedCallVideoSource?
+        private var videoPlaceholder: VideoSource.Output?
         private var videoDisposable: Disposable?
         private var videoBackgroundLayer: SimpleLayer?
         private var videoLayer: PrivateCallVideoLayer?
@@ -261,6 +265,11 @@ final class VideoChatParticipantVideoComponent: Component {
                 }
                 action()
             }
+        }
+        
+        func updatePlaceholder(placeholder: VideoSource.Output) {
+            self.videoPlaceholder = placeholder
+            self.componentState?.updated(transition: .immediate, isLocal: true)
         }
         
         func update(component: VideoChatParticipantVideoComponent, availableSize: CGSize, state: EmptyComponentState, environment: Environment<Empty>, transition: ComponentTransition) -> CGSize {
@@ -456,6 +465,46 @@ final class VideoChatParticipantVideoComponent: Component {
                     videoBackgroundLayer.isHidden = true
                 }
                 
+                let videoUpdated: () -> Void = { [weak self] in
+                    guard let self, let videoSource = self.videoSource, let videoLayer = self.videoLayer else {
+                        return
+                    }
+                    
+                    var videoOutput = videoSource.currentOutput
+                    var isPlaceholder = false
+                    if videoOutput == nil {
+                        isPlaceholder = true
+                        videoOutput = self.videoPlaceholder
+                    } else {
+                        self.videoPlaceholder = nil
+                    }
+                    
+                    videoLayer.video = videoOutput
+                    
+                    if let videoOutput {
+                        let videoSpec = VideoSpec(resolution: videoOutput.resolution, rotationAngle: videoOutput.rotationAngle, followsDeviceOrientation: videoOutput.followsDeviceOrientation)
+                        if self.videoSpec != videoSpec || self.awaitingFirstVideoFrameForUnpause {
+                            self.awaitingFirstVideoFrameForUnpause = false
+                            
+                            self.videoSpec = videoSpec
+                            if !self.isUpdating {
+                                var transition: ComponentTransition = .immediate
+                                if !isPlaceholder {
+                                    transition = transition.withUserData(AnimationHint(kind: .videoAvailabilityChanged))
+                                }
+                                self.componentState?.updated(transition: transition, isLocal: true)
+                            }
+                        }
+                    } else {
+                        if self.videoSpec != nil {
+                            self.videoSpec = nil
+                            if !self.isUpdating {
+                                self.componentState?.updated(transition: .immediate, isLocal: true)
+                            }
+                        }
+                    }
+                }
+                
                 let videoLayer: PrivateCallVideoLayer
                 if let current = self.videoLayer {
                     videoLayer = current
@@ -468,39 +517,19 @@ final class VideoChatParticipantVideoComponent: Component {
                     
                     videoLayer.blurredLayer.opacity = 0.0
                     
-                    if let input = (component.call as! PresentationGroupCallImpl).video(endpointId: videoDescription.endpointId) {
+                    if let input = component.call.video(endpointId: videoDescription.endpointId) {
                         let videoSource = AdaptedCallVideoSource(videoStreamSignal: input)
                         self.videoSource = videoSource
                         
                         self.videoDisposable?.dispose()
-                        self.videoDisposable = videoSource.addOnUpdated { [weak self] in
-                            guard let self, let videoSource = self.videoSource, let videoLayer = self.videoLayer else {
-                                return
-                            }
-                            
-                            let videoOutput = videoSource.currentOutput
-                            videoLayer.video = videoOutput
-                            
-                            if let videoOutput {
-                                let videoSpec = VideoSpec(resolution: videoOutput.resolution, rotationAngle: videoOutput.rotationAngle, followsDeviceOrientation: videoOutput.followsDeviceOrientation)
-                                if self.videoSpec != videoSpec || self.awaitingFirstVideoFrameForUnpause {
-                                    self.awaitingFirstVideoFrameForUnpause = false
-                                    
-                                    self.videoSpec = videoSpec
-                                    if !self.isUpdating {
-                                        self.componentState?.updated(transition: ComponentTransition.immediate.withUserData(AnimationHint(kind: .videoAvailabilityChanged)), isLocal: true)
-                                    }
-                                }
-                            } else {
-                                if self.videoSpec != nil {
-                                    self.videoSpec = nil
-                                    if !self.isUpdating {
-                                        self.componentState?.updated(transition: .immediate, isLocal: true)
-                                    }
-                                }
-                            }
+                        self.videoDisposable = videoSource.addOnUpdated {
+                            videoUpdated()
                         }
                     }
+                }
+                
+                if let _ = self.videoPlaceholder, videoLayer.video == nil {
+                    videoUpdated()
                 }
                 
                 transition.setFrame(layer: videoBackgroundLayer, frame: CGRect(origin: CGPoint(), size: availableSize))

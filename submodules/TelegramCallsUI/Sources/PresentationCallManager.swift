@@ -325,6 +325,7 @@ public final class PresentationCallManagerImpl: PresentationCallManager {
                         internalId: firstState.2.id,
                         peerId: firstState.2.peerId,
                         isOutgoing: false,
+                        isIncomingConference: firstState.2.isConference,
                         peer: EnginePeer(firstState.1),
                         proxyServer: strongSelf.proxyServer,
                         auxiliaryServers: [],
@@ -572,6 +573,7 @@ public final class PresentationCallManagerImpl: PresentationCallManager {
                         internalId: internalId,
                         peerId: peerId,
                         isOutgoing: true,
+                        isIncomingConference: false,
                         peer: nil,
                         proxyServer: strongSelf.proxyServer,
                         auxiliaryServers: [],
@@ -706,7 +708,7 @@ public final class PresentationCallManagerImpl: PresentationCallManager {
                                 encryptionKey: nil,
                                 conferenceFromCallId: nil,
                                 isConference: false,
-                                sharedAudioDevice: nil
+                                sharedAudioContext: nil
                             )
                             call.schedule(timestamp: timestamp)
                             
@@ -749,7 +751,7 @@ public final class PresentationCallManagerImpl: PresentationCallManager {
                     encryptionKey: nil,
                     conferenceFromCallId: nil,
                     isConference: false,
-                    sharedAudioDevice: nil
+                    sharedAudioContext: nil
                 )
                 strongSelf.updateCurrentGroupCall(call)
                 strongSelf.currentGroupCallPromise.set(.single(call))
@@ -856,6 +858,10 @@ public final class PresentationCallManagerImpl: PresentationCallManager {
         return .joined
     }
     
+    public func switchToConference(call: PresentationCall) {
+        
+    }
+    
     private func startGroupCall(
         accountContext: AccountContext,
         peerId: PeerId,
@@ -933,7 +939,7 @@ public final class PresentationCallManagerImpl: PresentationCallManager {
                 encryptionKey: nil,
                 conferenceFromCallId: nil,
                 isConference: false,
-                sharedAudioDevice: nil
+                sharedAudioContext: nil
             )
             strongSelf.updateCurrentGroupCall(call)
             strongSelf.currentGroupCallPromise.set(.single(call))

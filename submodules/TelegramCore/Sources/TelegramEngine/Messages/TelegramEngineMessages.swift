@@ -337,8 +337,8 @@ public extension TelegramEngine {
             ).startStandalone()
         }
         
-        public func sendStarsReaction(id: EngineMessage.Id, count: Int, isAnonymous: Bool?) -> Signal<Bool, NoError> {
-            return _internal_sendStarsReactionsInteractively(account: self.account, messageId: id, count: count, isAnonymous: isAnonymous)
+        public func sendStarsReaction(id: EngineMessage.Id, count: Int, privacy: TelegramPaidReactionPrivacy?) -> Signal<TelegramPaidReactionPrivacy, NoError> {
+            return _internal_sendStarsReactionsInteractively(account: self.account, messageId: id, count: count, privacy: privacy)
         }
         
         public func cancelPendingSendStarsReaction(id: EngineMessage.Id) {
@@ -349,8 +349,8 @@ public extension TelegramEngine {
             let _ = _internal_forceSendPendingSendStarsReaction(account: self.account, messageId: id).startStandalone()
         }
         
-        public func updateStarsReactionIsAnonymous(id: EngineMessage.Id, isAnonymous: Bool) -> Signal<Never, NoError> {
-            return _internal_updateStarsReactionIsAnonymous(account: self.account, messageId: id, isAnonymous: isAnonymous)
+        public func updateStarsReactionPrivacy(id: EngineMessage.Id, privacy: TelegramPaidReactionPrivacy) -> Signal<Never, NoError> {
+            return _internal_updateStarsReactionPrivacy(account: self.account, messageId: id, privacy: privacy)
         }
 
         public func requestChatContextResults(botId: PeerId, peerId: PeerId, query: String, location: Signal<(Double, Double)?, NoError> = .single(nil), offset: String, incompleteResults: Bool = false, staleCachedResults: Bool = false) -> Signal<RequestChatContextResultsResult?, RequestChatContextResultsError> {
@@ -578,6 +578,28 @@ public extension TelegramEngine {
                 transaction.updateMessage(messageId, update: { currentMessage in
                     let storeForwardInfo = currentMessage.forwardInfo.flatMap(StoreMessageForwardInfo.init)
                     var attributes = currentMessage.attributes.filter { !($0 is DerivedDataMessageAttribute) }
+                    
+                    if !data.isEmpty {
+                        attributes.append(DerivedDataMessageAttribute(data: data))
+                    }
+                    
+                    return .update(StoreMessage(id: currentMessage.id, globallyUniqueId: currentMessage.globallyUniqueId, groupingKey: currentMessage.groupingKey, threadId: currentMessage.threadId, timestamp: currentMessage.timestamp, flags: StoreMessageFlags(currentMessage.flags), tags: currentMessage.tags, globalTags: currentMessage.globalTags, localTags: currentMessage.localTags, forwardInfo: storeForwardInfo, authorId: currentMessage.author?.id, text: currentMessage.text, attributes: attributes, media: currentMessage.media))
+                })
+            }
+            |> ignoreValues
+        }
+        
+        public func updateLocallyDerivedData(messageId: MessageId, update: @escaping ([String: CodableEntry]) -> [String: CodableEntry]) -> Signal<Never, NoError> {
+            return self.account.postbox.transaction { transaction -> Void in
+                transaction.updateMessage(messageId, update: { currentMessage in
+                    let storeForwardInfo = currentMessage.forwardInfo.flatMap(StoreMessageForwardInfo.init)
+                    var attributes = currentMessage.attributes
+                    var data: [String: CodableEntry] = [:]
+                    if let index = attributes.firstIndex(where: { $0 is DerivedDataMessageAttribute }) {
+                        data = (attributes[index] as? DerivedDataMessageAttribute)?.data ?? [:]
+                        attributes.remove(at: index)
+                    }
+                    data = update(data)
                     
                     if !data.isEmpty {
                         attributes.append(DerivedDataMessageAttribute(data: data))

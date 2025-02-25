@@ -1374,6 +1374,8 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
     private var activeEdgeRateState: (initialRate: Double, currentRate: Double)?
     private var activeEdgeRateIndicator: ComponentView<Empty>?
     
+    private var isAnimatingOut: Bool = false
+    
     init(context: AccountContext, presentationData: PresentationData, performAction: @escaping (GalleryControllerInteractionTapAction) -> Void, openActionOptions: @escaping (GalleryControllerInteractionTapAction, Message) -> Void, present: @escaping (ViewController, Any?) -> Void) {
         self.context = context
         self.presentationData = presentationData
@@ -1403,6 +1405,30 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
         super.init()
 
         self.clipsToBounds = true
+        
+        self.footerContentNode.shareMediaParameters = { [weak self] in
+            guard let self, let playerStatusValue = self.playerStatusValue else {
+                return nil
+            }
+            
+            if playerStatusValue.duration >= 60.0 * 10.0 {
+                var publicLinkPrefix: ShareControllerSubject.PublicLinkPrefix?
+                if case let .message(message, _) = self.item?.contentInfo, message.id.namespace == Namespaces.Message.Cloud, let peer = message.peers[message.id.peerId] as? TelegramChannel, let username = peer.username {
+                    let visibleString = "t.me/\(username)/\(message.id.id)"
+                    publicLinkPrefix = ShareControllerSubject.PublicLinkPrefix(
+                        visibleString: visibleString,
+                        actualString: "https://\(visibleString)"
+                    )
+                }
+                
+                return ShareControllerSubject.MediaParameters(
+                    startAtTimestamp: Int32(playerStatusValue.timestamp),
+                    publicLinkPrefix: publicLinkPrefix
+                )
+            } else {
+                return nil
+            }
+        }
         
         self.moreBarButton.addTarget(self, action: #selector(self.moreButtonPressed), forControlEvents: .touchUpInside)
         self.settingsBarButton.addTarget(self, action: #selector(self.settingsButtonPressed), forControlEvents: .touchUpInside)
@@ -1544,7 +1570,7 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
 
         self.hideControlsDisposable = (shouldHideControlsSignal
         |> deliverOnMainQueue).start(next: { [weak self] _ in
-            if let strongSelf = self {
+            if let strongSelf = self, !strongSelf.isAnimatingOut {
                 strongSelf.updateControlsVisibility(false)
             }
         }).strict()
@@ -1738,8 +1764,25 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
             } else if let _ = item.content as? PlatformVideoContent {
                 disablePlayerControls = true
                 forceEnablePiP = true
-            } else if let _ = item.content as? HLSVideoContent {
+            } else if let content = item.content as? HLSVideoContent {
                 isAdaptive = true
+                
+                if let qualitySet = HLSQualitySet(baseFile: content.fileReference, codecConfiguration: HLSCodecConfiguration(isHardwareAv1Supported: false, isSoftwareAv1Supported: true)), let (quality, playlistFile) = qualitySet.playlistFiles.sorted(by: { $0.key < $1.key }).first, let dataFile = qualitySet.qualityFiles[quality] {
+                    var alternativeQualities: [(playlist: FileMediaReference, dataFile: FileMediaReference)] = []
+                    for (otherQuality, otherPlaylistFile) in qualitySet.playlistFiles {
+                        if otherQuality != quality, let otherDataFile = qualitySet.qualityFiles[otherQuality] {
+                            alternativeQualities.append((otherPlaylistFile, dataFile: otherDataFile))
+                        }
+                    }
+                    self.videoFramePreview = MediaPlayerFramePreviewHLS(
+                        postbox: item.context.account.postbox,
+                        userLocation: content.userLocation,
+                        userContentType: .video,
+                        playlistFile: playlistFile,
+                        mainDataFile: dataFile,
+                        alternativeQualities: alternativeQualities
+                    )
+                }
             }
             
             let _ = isAdaptive
@@ -1825,7 +1868,9 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
                     disablePictureInPicture = true
                 } else if Namespaces.Message.allNonRegular.contains(message.id.namespace) || message.id.namespace == Namespaces.Message.Local {
                     disablePictureInPicture = true
-                } else {
+                }
+                
+                if message.paidContent == nil {
                     let throttledSignal = videoNode.status
                     |> mapToThrottled { next -> Signal<MediaPlayerStatus?, NoError> in
                         return .single(next) |> then(.complete() |> delay(0.5, queue: Queue.concurrentDefaultQueue()))
@@ -1839,17 +1884,17 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
 
                         if let status = status {
                             let shouldStorePlaybacksState: Bool
-                            #if DEBUG && false
-                            shouldStorePlaybacksState = status.duration >= 10.0
-                            #else
-                            shouldStorePlaybacksState = status.duration >= 60.0 * 10.0
-                            #endif
+                            shouldStorePlaybacksState = status.duration >= 20.0
                             
-                            var timestamp: Double?
-                            if status.timestamp > 5.0 && status.timestamp < status.duration - 5.0 {
-                                timestamp = status.timestamp
+                            if shouldStorePlaybacksState {
+                                var timestamp: Double?
+                                if status.timestamp > 5.0 && status.timestamp < status.duration - 5.0 {
+                                    timestamp = status.timestamp
+                                }
+                                item.storeMediaPlaybackState(message.id, timestamp, status.baseRate)
+                            } else {
+                                item.storeMediaPlaybackState(message.id, nil, status.baseRate)
                             }
-                            item.storeMediaPlaybackState(message.id, timestamp, status.baseRate)
                         }
                     }))
                 }
@@ -2358,6 +2403,14 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
             var isAnimated = false
             var seek = MediaPlayerSeek.start
             if let item = self.item {
+                if let contentInfo = item.contentInfo, case let .message(message, _) = contentInfo {
+                    for attribute in message.attributes {
+                        if let attribute = attribute as? ForwardVideoTimestampAttribute {
+                            seek = .timecode(Double(attribute.timestamp))
+                        }
+                    }
+                }
+                
                 if let content = item.content as? NativeVideoContent {
                     isAnimated = content.fileReference.media.isAnimated
                     if let time = item.timecode {
@@ -2407,7 +2460,7 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
     }
     
     override func animateIn(from node: (ASDisplayNode, CGRect, () -> (UIView?, UIView?)), addToTransitionSurface: (UIView) -> Void, completion: @escaping () -> Void) {
-        guard let videoNode = self.videoNode else {
+        guard let videoNode = self.videoNode, let validLayout = self.validLayout else {
             return
         }
         
@@ -2417,6 +2470,10 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
         }
         
         if let node = node.0 as? OverlayMediaItemNode, self.context.sharedContext.mediaManager.hasOverlayVideoNode(node) {
+            if let scrubberView = self.scrubberView {
+                scrubberView.animateIn(from: nil, transition: .animated(duration: 0.25, curve: .spring))
+            }
+            
             var transformedFrame = node.view.convert(node.view.bounds, to: videoNode.view)
             let transformedSuperFrame = node.view.convert(node.view.bounds, to: videoNode.view.superview)
             
@@ -2432,6 +2489,20 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
             
             self.context.sharedContext.mediaManager.setOverlayVideoNode(nil)
         } else {
+            var scrubberTransition = (node.0 as? GalleryItemTransitionNode)?.scrubberTransition()
+            
+            if let data = self.context.currentAppConfiguration.with({ $0 }).data {
+                if let value = data["ios_gallery_scrubber_transition"] as? Double {
+                    if value == 0.0 {
+                        scrubberTransition = nil
+                    }
+                }
+            }
+            
+            if let scrubberView = self.scrubberView {
+                scrubberView.animateIn(from: scrubberTransition, transition: .animated(duration: 0.25, curve: .spring))
+            }
+            
             var transformedFrame = node.0.view.convert(node.0.view.bounds, to: videoNode.view)
             var transformedSuperFrame = node.0.view.convert(node.0.view.bounds, to: videoNode.view.superview)
             var transformedSelfFrame = node.0.view.convert(node.0.view.bounds, to: self.view)
@@ -2503,6 +2574,43 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
             
             videoNode.layer.animate(from: NSValue(caTransform3D: transform), to: NSValue(caTransform3D: videoNode.layer.transform), keyPath: "transform", timingFunction: kCAMediaTimingFunctionSpring, duration: 0.25)
             
+            if let scrubberTransition, let contentTransition = scrubberTransition.content {
+                let transitionContentView = contentTransition.makeView()
+                let transitionSelfContentView = contentTransition.makeView()
+                
+                addToTransitionSurface(transitionContentView)
+                self.view.insertSubview(transitionSelfContentView, at: 0)
+                transitionSelfContentView.layer.animateAlpha(from: 0.0, to: 1.0, duration: 0.2, removeOnCompletion: false)
+                
+                if let transitionContentSuperview = transitionContentView.superview {
+                    let transitionContentSourceFrame = contentTransition.sourceView.convert(contentTransition.sourceRect, to: transitionContentSuperview)
+                    let transitionContentDestinationFrame = self.view.convert(self.view.bounds, to: transitionContentSuperview)
+                    
+                    let transitionContentSelfSourceFrame = contentTransition.sourceView.convert(contentTransition.sourceRect, to: self.view)
+                    let transitionContentSelfDestinationFrame = self.view.convert(self.view.bounds, to: self.view)
+                    
+                    let screenCornerRadius: CGFloat = validLayout.layout.deviceMetrics.screenCornerRadius
+                    
+                    transitionContentView.frame = transitionContentSourceFrame
+                    contentTransition.updateView(transitionContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSourceFrame.size, destinationSize: transitionContentDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 0.0), .immediate)
+                    
+                    transitionSelfContentView.frame = transitionContentSelfSourceFrame
+                    contentTransition.updateView(transitionSelfContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSelfSourceFrame.size, destinationSize: transitionContentSelfDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 0.0), .immediate)
+                    
+                    let transition: ContainedViewLayoutTransition = .animated(duration: 0.25, curve: .spring)
+                    
+                    transition.updateFrame(view: transitionContentView, frame: transitionContentDestinationFrame, completion: { [weak transitionContentView] _ in
+                        transitionContentView?.removeFromSuperview()
+                    })
+                    contentTransition.updateView(transitionContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSourceFrame.size, destinationSize: transitionContentDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 1.0), transition)
+                    
+                    transition.updateFrame(view: transitionSelfContentView, frame: transitionContentSelfDestinationFrame, completion: { [weak transitionSelfContentView] _ in
+                        transitionSelfContentView?.removeFromSuperview()
+                    })
+                    contentTransition.updateView(transitionSelfContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSelfSourceFrame.size, destinationSize: transitionContentSelfDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 1.0), transition)
+                }
+            }
+            
             if self.item?.fromPlayingVideo ?? false {
                 Queue.mainQueue().after(0.001) {
                     videoNode.canAttachContent = true
@@ -2526,9 +2634,28 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
     }
     
     override func animateOut(to node: (ASDisplayNode, CGRect, () -> (UIView?, UIView?)), addToTransitionSurface: (UIView) -> Void, completion: @escaping () -> Void) {
+        self.isAnimatingOut = true
+        
         guard let videoNode = self.videoNode else {
             completion()
             return
+        }
+        
+        var scrubberTransition = (node.0 as? GalleryItemTransitionNode)?.scrubberTransition()
+        if let data = self.context.currentAppConfiguration.with({ $0 }).data {
+            if let value = data["ios_gallery_scrubber_transition"] as? Double {
+                if value == 0.0 {
+                    scrubberTransition = nil
+                }
+            }
+        }
+        
+        if let scrubberView = self.scrubberView {
+            var scrubberEffectiveTransition = scrubberTransition
+            if !self.controlsVisibility() {
+                scrubberEffectiveTransition = nil
+            }
+            scrubberView.animateOut(to: scrubberEffectiveTransition, transition: .animated(duration: 0.25, curve: .spring))
         }
         
         let transformedFrame = node.0.view.convert(node.0.view.bounds, to: videoNode.view)
@@ -2684,6 +2811,47 @@ final class UniversalVideoGalleryItemNode: ZoomableContentGalleryItemNode {
             transformCompleted = true
             intermediateCompletion()
         })
+        
+        var scrubberContentTransition = scrubberTransition
+        if !self.controlsVisibility() {
+            scrubberContentTransition = nil
+        }
+        if let scrubberContentTransition, let contentTransition = scrubberContentTransition.content {
+            let transitionContentView = contentTransition.makeView()
+            let transitionSelfContentView = contentTransition.makeView()
+            
+            addToTransitionSurface(transitionContentView)
+            //self.view.insertSubview(transitionSelfContentView, at: 0)
+            transitionSelfContentView.layer.animateAlpha(from: 1.0, to: 0.0, duration: 0.18, removeOnCompletion: false)
+            
+            if let validLayout = self.validLayout, let transitionContentSuperview = transitionContentView.superview {
+                let transitionContentSourceFrame = contentTransition.sourceView.convert(contentTransition.sourceRect, to: transitionContentSuperview)
+                let transitionContentDestinationFrame = self.view.convert(self.view.bounds, to: transitionContentSuperview)
+                
+                let transitionContentSelfSourceFrame = contentTransition.sourceView.convert(contentTransition.sourceRect, to: self.view)
+                let transitionContentSelfDestinationFrame = self.view.convert(self.view.bounds, to: self.view)
+                
+                let screenCornerRadius: CGFloat = validLayout.layout.deviceMetrics.screenCornerRadius
+                
+                transitionContentView.frame = transitionContentDestinationFrame
+                contentTransition.updateView(transitionContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSourceFrame.size, destinationSize: transitionContentDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 1.0), .immediate)
+                
+                transitionSelfContentView.frame = transitionContentSelfDestinationFrame
+                contentTransition.updateView(transitionSelfContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSelfSourceFrame.size, destinationSize: transitionContentSelfDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 1.0), .immediate)
+                
+                let transition: ContainedViewLayoutTransition = .animated(duration: 0.25, curve: .spring)
+                
+                transition.updateFrame(view: transitionContentView, frame: transitionContentSourceFrame, completion: { [weak transitionContentView] _ in
+                    transitionContentView?.removeFromSuperview()
+                })
+                contentTransition.updateView(transitionContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSourceFrame.size, destinationSize: transitionContentDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 0.0), transition)
+                
+                transition.updateFrame(view: transitionSelfContentView, frame: transitionContentSelfSourceFrame, completion: { [weak transitionSelfContentView] _ in
+                    transitionSelfContentView?.removeFromSuperview()
+                })
+                contentTransition.updateView(transitionSelfContentView, GalleryItemScrubberTransition.Content.TransitionState(sourceSize: transitionContentSelfSourceFrame.size, destinationSize: transitionContentSelfDestinationFrame.size, destinationCornerRadius: screenCornerRadius, progress: 0.0), transition)
+            }
+        }
         
         if let pictureInPictureNode = self.pictureInPictureNode {
             let transformedPlaceholderFrame = node.0.view.convert(node.0.view.bounds, to: pictureInPictureNode.view)

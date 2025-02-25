@@ -147,7 +147,7 @@ private class LegacyPaintStickerEntity: LegacyPaintEntity {
         case let .image(image, _):
             self.file = nil
             self.imagePromise.set(.single(image))
-        case .animatedImage, .video, .dualVideoReference, .message:
+        case .animatedImage, .video, .dualVideoReference, .message, .gift:
             self.file = nil
         }
     }
@@ -569,6 +569,7 @@ public final class LegacyPaintEntityRenderer: NSObject, TGPhotoPaintEntityRender
 
 public final class LegacyPaintStickersContext: NSObject, TGPhotoPaintStickersContext {
     public var captionPanelView: (() -> TGCaptionPanelView?)?
+    public var editCover: ((CGSize, @escaping (UIImage) -> Void) -> Void)?
     
     private let context: AccountContext
     

@@ -7,13 +7,19 @@ import TelegramUIPreferences
 import TgVoip
 import TgVoipWebrtc
 
-private let debugUseLegacyVersionForReflectors: Bool = {
+#if os(iOS)
+import UIKit
+import AppBundle
+import Accelerate
+#endif
+
+private func debugUseLegacyVersionForReflectors() -> Bool {
     #if DEBUG && false
     return true
     #else
     return false
     #endif
-}()
+}
 
 private struct PeerTag: Hashable, CustomStringConvertible {
     var bytes: [UInt8] = Array<UInt8>(repeating: 0, count: 16)
@@ -407,8 +413,179 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     }
 }
 
+#if targetEnvironment(simulator)
+private extension UIImage {
+    @available(iOS 13.0, *)
+    func toBiplanarYUVPixelBuffer() -> CVPixelBuffer? {
+        guard let cgImage = self.cgImage else {
+            return nil
+        }
+        
+        // Dimensions
+        let width  = Int(self.size.width  * self.scale)
+        let height = Int(self.size.height * self.scale)
+        
+        // 1) Create an ARGB8888 vImage buffer from the UIImage (CGImage).
+        //    We will first allocate a buffer for ARGB pixels, then use
+        //    vImage to copy cgImage → argbBuffer.
+        
+        // Each ARGB pixel is 4 bytes
+        let argbBytesPerPixel = 4
+        let argbRowBytes      = width * argbBytesPerPixel
+        
+        // Allocate contiguous memory for ARGB data
+        let argbData = malloc(argbRowBytes * height)
+        defer {
+            free(argbData)
+        }
+        
+        // Create a vImage buffer for ARGB
+        var argbBuffer = vImage_Buffer(
+            data: argbData,
+            height: vImagePixelCount(height),
+            width:  vImagePixelCount(width),
+            rowBytes: argbRowBytes
+        )
+        
+        // Initialize the ARGB buffer from our CGImage
+        // This helper function can fail, so check the result:
+        var format = vImage_CGImageFormat(
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            colorSpace: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue),
+            renderingIntent: CGColorRenderingIntent.defaultIntent
+        )!
+        
+        if vImageBuffer_InitWithCGImage(
+            &argbBuffer,
+            &format,
+            nil,
+            cgImage,
+            vImage_Flags(kvImageNoFlags)
+        ) != kvImageNoError {
+            return nil
+        }
+        
+        // 2) Create a CVPixelBuffer in YUV 420 (bi-planar) format.
+        //    Typically, you’d choose either kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        //    or kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange.
+        
+        let pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+        let attrs: [CFString: Any] = [
+            kCVPixelBufferIOSurfacePropertiesKey: [:],
+            // Optionally, specify other attributes if needed.
+        ]
+        
+        var cvPixelBufferOut: CVPixelBuffer?
+        guard CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            pixelFormat,
+            attrs as CFDictionary,
+            &cvPixelBufferOut
+        ) == kCVReturnSuccess,
+              let pixelBuffer = cvPixelBufferOut
+        else {
+            return nil
+        }
+        
+        // 3) Lock the CVPixelBuffer to get direct access to its planes.
+        CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+        defer {
+            CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+        }
+        
+        // Plane 0: Y-plane
+        guard let yBaseAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 0) else {
+            return nil
+        }
+        let yPitch = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 0)
+        
+        // Plane 1: CbCr-plane
+        guard let cbcrBaseAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, 1) else {
+            return nil
+        }
+        let cbcrPitch = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, 1)
+        
+        // 4) Create vImage buffers for each plane.
+        
+        // Y plane is full size (width x height)
+        var yBuffer = vImage_Buffer(
+            data: yBaseAddress,
+            height: vImagePixelCount(height),
+            width:  vImagePixelCount(width),
+            rowBytes: yPitch
+        )
+        
+        // CbCr plane is half height, but each row has interleaved Cb/Cr
+        // so the plane is (width/2) * 2 bytes = width bytes wide, and height/2.
+        var cbcrBuffer = vImage_Buffer(
+            data: cbcrBaseAddress,
+            height: vImagePixelCount(height / 2),
+            width:  vImagePixelCount(width),
+            rowBytes: cbcrPitch
+        )
+        
+        var info = vImage_ARGBToYpCbCr()
+        var pixelRange = vImage_YpCbCrPixelRange(Yp_bias: 0, CbCr_bias: 128, YpRangeMax: 255, CbCrRangeMax: 255, YpMax: 255, YpMin: 1, CbCrMax: 255, CbCrMin: 0)
+        vImageConvert_ARGBToYpCbCr_GenerateConversion(kvImage_ARGBToYpCbCrMatrix_ITU_R_709_2, &pixelRange, &info, kvImageARGB8888, kvImage420Yp8_Cb8_Cr8, 0)
+        
+        let error = vImageConvert_ARGB8888To420Yp8_CbCr8(
+            &argbBuffer,
+            &yBuffer,
+            &cbcrBuffer,
+            &info,
+            nil,
+            UInt32(kvImageDoNotTile)
+        )
+        
+        if error != kvImageNoError {
+            return nil
+        }
+        
+        return pixelBuffer
+    }
+
+    @available(iOS 13.0, *)
+    var cmSampleBuffer: CMSampleBuffer? {
+        guard let pixelBuffer = self.toBiplanarYUVPixelBuffer() else {
+            return nil
+        }
+        var newSampleBuffer: CMSampleBuffer? = nil
+
+        var timingInfo = CMSampleTimingInfo(
+            duration: CMTimeMake(value: 1, timescale: 30),
+            presentationTimeStamp: CMTimeMake(value: 0, timescale: 30),
+            decodeTimeStamp: CMTimeMake(value: 0, timescale: 30)
+        )
+
+        var videoInfo: CMVideoFormatDescription? = nil
+        CMVideoFormatDescriptionCreateForImageBuffer(allocator: nil, imageBuffer: pixelBuffer, formatDescriptionOut: &videoInfo)
+        guard let videoInfo = videoInfo else {
+            return nil
+        }
+        CMSampleBufferCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: pixelBuffer, dataReady: true, makeDataReadyCallback: nil, refcon: nil, formatDescription: videoInfo, sampleTiming: &timingInfo, sampleBufferOut: &newSampleBuffer)
+
+        if let newSampleBuffer = newSampleBuffer {
+            let attachments = CMSampleBufferGetSampleAttachmentsArray(newSampleBuffer, createIfNecessary: true)! as NSArray
+            let dict = attachments[0] as! NSMutableDictionary
+
+            dict.setValue(kCFBooleanTrue as AnyObject, forKey: kCMSampleAttachmentKey_DisplayImmediately as NSString as String)
+        }
+
+        return newSampleBuffer
+    }
+}
+#endif
+
 public final class OngoingCallVideoCapturer {
     internal let impl: OngoingCallThreadLocalContextVideoCapturer
+    
+    #if targetEnvironment(simulator)
+    private var simulatedVideoTimer: Foundation.Timer?
+    #endif
 
     private let isActivePromise = ValuePromise<Bool>(true, ignoreRepeated: true)
     public var isActive: Signal<Bool, NoError> {
@@ -419,12 +596,46 @@ public final class OngoingCallVideoCapturer {
         if isCustom {
             self.impl = OngoingCallThreadLocalContextVideoCapturer.withExternalSampleBufferProvider()
         } else {
+            #if targetEnvironment(simulator) && false
+            self.impl = OngoingCallThreadLocalContextVideoCapturer.withExternalSampleBufferProvider()
+            let imageSize = CGSize(width: 600.0, height: 800.0)
+            UIGraphicsBeginImageContextWithOptions(imageSize, true, 1.0)
+            let sourceImage: UIImage?
+            let imagePath = NSTemporaryDirectory() + "frontCameraImage.jpg"
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: imagePath)), let image = UIImage(data: data) {
+                sourceImage = image
+            } else {
+                sourceImage = UIImage(bundleImageName: "Camera/SelfiePlaceholder")!
+            }
+            if let sourceImage {
+                sourceImage.draw(in: CGRect(origin: CGPoint(), size: imageSize))
+            }
+            let image = UIGraphicsGetImageFromCurrentImageContext()
+            UIGraphicsEndImageContext()
+            self.simulatedVideoTimer = Foundation.Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true, block: { [weak self] _ in
+                guard let self else {
+                    return
+                }
+                if #available(iOS 13.0, *) {
+                    if let image, let sampleBuffer = image.cmSampleBuffer {
+                        self.injectSampleBuffer(sampleBuffer, rotation: .up, completion: {})
+                    }
+                }
+            })
+            #else
             self.impl = OngoingCallThreadLocalContextVideoCapturer(deviceId: "", keepLandscape: keepLandscape)
+            #endif
         }
         let isActivePromise = self.isActivePromise
         self.impl.setOnIsActiveUpdated({ value in
             isActivePromise.set(value)
         })
+    }
+
+    deinit {
+        #if targetEnvironment(simulator)
+        self.simulatedVideoTimer?.invalidate()
+        #endif
     }
     
     public func switchVideoInput(isFront: Bool) {
@@ -510,21 +721,21 @@ public final class OngoingCallVideoCapturer {
         self.impl.setIsVideoEnabled(value)
     }
 
-    public func injectPixelBuffer(_ pixelBuffer: CVPixelBuffer, rotation: CGImagePropertyOrientation) {
+    public func injectSampleBuffer(_ sampleBuffer: CMSampleBuffer, rotation: CGImagePropertyOrientation, completion: @escaping () -> Void) {
         var videoRotation: OngoingCallVideoOrientation = .rotation0
         switch rotation {
-            case .up:
-                videoRotation = .rotation0
-            case .left:
-                videoRotation = .rotation90
-            case .right:
-                videoRotation = .rotation270
-            case .down:
-                videoRotation = .rotation180
-            default:
-                videoRotation = .rotation0
+        case .up:
+            videoRotation = .rotation0
+        case .left:
+            videoRotation = .rotation90
+        case .right:
+            videoRotation = .rotation270
+        case .down:
+            videoRotation = .rotation180
+        default:
+            videoRotation = .rotation0
         }
-        self.impl.submitPixelBuffer(pixelBuffer, rotation: videoRotation.orientation)
+        self.impl.submitSampleBuffer(sampleBuffer, rotation: videoRotation.orientation, completion: completion)
     }
 
     public func video() -> Signal<OngoingGroupCallContext.VideoFrameData, NoError> {
@@ -819,7 +1030,7 @@ public final class OngoingCallContext {
         }
         #endif
         
-        if debugUseLegacyVersionForReflectors {
+        if debugUseLegacyVersionForReflectors() {
             return [(OngoingCallThreadLocalContext.version(), true)]
         } else {
             var result: [(version: String, supportsVideo: Bool)] = [(OngoingCallThreadLocalContext.version(), false)]
@@ -860,9 +1071,9 @@ public final class OngoingCallContext {
                 var useModernImplementation = true
                 var version = version
                 var allowP2P = allowP2P
-                if debugUseLegacyVersionForReflectors {
+                if debugUseLegacyVersionForReflectors() {
                     useModernImplementation = true
-                    version = "5.0.0"
+                    version = "12.0.0"
                     allowP2P = false
                 } else {
                     useModernImplementation = version != OngoingCallThreadLocalContext.version()
@@ -879,7 +1090,23 @@ public final class OngoingCallContext {
                         }
                     }
                     
-                    let unfilteredConnections = [connections.primary] + connections.alternatives
+                    var unfilteredConnections: [CallSessionConnection]
+                    unfilteredConnections = [connections.primary] + connections.alternatives
+                    
+                    if version == "12.0.0" {
+                        for connection in unfilteredConnections {
+                            if case let .reflector(reflector) = connection {
+                                unfilteredConnections.append(.reflector(CallSessionConnection.Reflector(
+                                    id: 123456,
+                                    ip: "91.108.9.38",
+                                    ipv6: "",
+                                    isTcp: true,
+                                    port: 595,
+                                    peerTag: reflector.peerTag
+                                )))
+                            }
+                        }
+                    }
                     
                     var reflectorIdList: [Int64] = []
                     for connection in unfilteredConnections {
@@ -911,11 +1138,17 @@ public final class OngoingCallContext {
                         switch connection {
                         case let .reflector(reflector):
                             if reflector.isTcp {
-                                if signalingReflector == nil {
-                                    signalingReflector = OngoingCallConnectionDescriptionWebrtc(reflectorId: 0, hasStun: false, hasTurn: true, hasTcp: true, ip: reflector.ip, port: reflector.port, username: "reflector", password: hexString(reflector.peerTag))
+                                if version == "12.0.0" {
+                                    /*if signalingReflector == nil {
+                                        signalingReflector = OngoingCallConnectionDescriptionWebrtc(reflectorId: 0, hasStun: false, hasTurn: true, hasTcp: true, ip: reflector.ip, port: reflector.port, username: "reflector", password: hexString(reflector.peerTag))
+                                    }*/
+                                } else {
+                                    if signalingReflector == nil {
+                                        signalingReflector = OngoingCallConnectionDescriptionWebrtc(reflectorId: 0, hasStun: false, hasTurn: true, hasTcp: true, ip: reflector.ip, port: reflector.port, username: "reflector", password: hexString(reflector.peerTag))
+                                    }
+                                    
+                                    continue connectionsLoop
                                 }
-                                
-                                continue connectionsLoop
                             }
                         case .webRtcReflector:
                             break
@@ -962,21 +1195,36 @@ public final class OngoingCallContext {
                         directConnection = nil
                     }
                     
-                    #if DEBUG && false
+                    #if DEBUG && true
                     var customParameters = customParameters
                     if let initialCustomParameters = try? JSONSerialization.jsonObject(with: (customParameters ?? "{}").data(using: .utf8)!) as? [String: Any] {
                         var customParametersValue: [String: Any]
                         customParametersValue = initialCustomParameters
-                        customParametersValue["network_standalone_reflectors"] = true as NSNumber
-                        customParametersValue["network_use_mtproto"] = true as NSNumber
-                        customParametersValue["network_skip_initial_ping"] = true as NSNumber
-                        customParameters = String(data: try! JSONSerialization.data(withJSONObject: customParametersValue), encoding: .utf8)!
+                        if version == "12.0.0" {
+                            customParametersValue["network_use_tcponly"] = true as NSNumber
+                            customParameters = String(data: try! JSONSerialization.data(withJSONObject: customParametersValue), encoding: .utf8)!
+                        }
                         
-                        if let reflector = filteredConnections.first(where: { $0.username == "reflector" && $0.reflectorId == 1 }) {
-                            filteredConnections = [reflector]
+                        if let value = customParametersValue["network_use_tcponly"] as? Bool, value {
+                            filteredConnections = filteredConnections.filter { connection in
+                                if connection.hasTcp {
+                                    return true
+                                }
+                                return false
+                            }
+                            allowP2P = false
                         }
                     }
                     #endif
+                    
+                    /*#if DEBUG
+                    if let initialCustomParameters = try? JSONSerialization.jsonObject(with: (customParameters ?? "{}").data(using: .utf8)!) as? [String: Any] {
+                        var customParametersValue: [String: Any]
+                        customParametersValue = initialCustomParameters
+                        customParametersValue["network_kcp_experiment"] = true as NSNumber
+                        customParameters = String(data: try! JSONSerialization.data(withJSONObject: customParametersValue), encoding: .utf8)!
+                    }
+                    #endif*/
                     
                     let context = OngoingCallThreadLocalContextWebrtc(
                         version: version,

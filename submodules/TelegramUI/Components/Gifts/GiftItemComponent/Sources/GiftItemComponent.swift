@@ -26,6 +26,7 @@ public final class GiftItemComponent: Component {
         public enum Color: Equatable {
             case red
             case blue
+            case purple
             case custom(Int32, Int32)
             
             func colors(theme: PresentationTheme) -> [UIColor] {
@@ -54,6 +55,11 @@ public final class GiftItemComponent: Component {
                             UIColor(rgb: 0x6fd3ff)
                         ]
                     }
+                case .purple:
+                    return [
+                        UIColor(rgb: 0x747bf6),
+                        UIColor(rgb: 0xe367d8)
+                    ]
                 case let .custom(topColor, _):
                     return [
                         UIColor(rgb: UInt32(bitPattern: topColor)).withMultiplied(hue: 0.97, saturation: 1.45, brightness: 0.89),
@@ -80,6 +86,8 @@ public final class GiftItemComponent: Component {
         case generic
         case profile
         case thumbnail
+        case preview
+        case grid
     }
     
     let context: AccountContext
@@ -92,12 +100,13 @@ public final class GiftItemComponent: Component {
     let isLoading: Bool
     let isHidden: Bool
     let isSoldOut: Bool
+    let isSelected: Bool
     let mode: Mode
     
     public init(
         context: AccountContext,
         theme: PresentationTheme,
-        peer: GiftItemComponent.Peer?,
+        peer: GiftItemComponent.Peer? = nil,
         subject: GiftItemComponent.Subject,
         title: String? = nil,
         subtitle: String? = nil,
@@ -105,6 +114,7 @@ public final class GiftItemComponent: Component {
         isLoading: Bool = false,
         isHidden: Bool = false,
         isSoldOut: Bool = false,
+        isSelected: Bool = false,
         mode: Mode = .generic
     ) {
         self.context = context
@@ -117,6 +127,7 @@ public final class GiftItemComponent: Component {
         self.isLoading = isLoading
         self.isHidden = isHidden
         self.isSoldOut = isSoldOut
+        self.isSelected = isSelected
         self.mode = mode
     }
 
@@ -151,6 +162,9 @@ public final class GiftItemComponent: Component {
         if lhs.isSoldOut != rhs.isSoldOut {
             return false
         }
+        if lhs.isSelected != rhs.isSelected {
+            return false
+        }
         if lhs.mode != rhs.mode {
             return false
         }
@@ -174,6 +188,7 @@ public final class GiftItemComponent: Component {
         private let ribbonText = ComponentView<Empty>()
         
         private var animationLayer: InlineStickerItemLayer?
+        private var selectionLayer: SimpleShapeLayer?
         
         private var disposables = DisposableSet()
         private var fetchedFiles = Set<Int64>()
@@ -220,13 +235,21 @@ public final class GiftItemComponent: Component {
                 iconSize = CGSize(width: 88.0, height: 88.0)
                 cornerRadius = 10.0
             case .profile:
-                size = CGSize(width: availableSize.width, height: availableSize.width)
+                size = availableSize
                 iconSize = CGSize(width: 88.0, height: 88.0)
                 cornerRadius = 10.0
             case .thumbnail:
                 size = CGSize(width: availableSize.width, height: availableSize.width)
                 iconSize = CGSize(width: floor(size.width * 0.7), height: floor(size.width * 0.7))
                 cornerRadius = floor(availableSize.width * 0.2)
+            case .grid:
+                size = CGSize(width: availableSize.width, height: availableSize.width)
+                iconSize = CGSize(width: floor(size.width * 0.7), height: floor(size.width * 0.7))
+                cornerRadius = 10.0
+            case .preview:
+                size = availableSize
+                iconSize = CGSize(width: floor(size.width * 0.6), height: floor(size.width * 0.6))
+                cornerRadius = 4.0
             }
             
             self.backgroundLayer.cornerRadius = cornerRadius
@@ -268,6 +291,8 @@ public final class GiftItemComponent: Component {
             var patternFile: TelegramMediaFile?
             var files: [Int64: TelegramMediaFile] = [:]
             
+            var placeholderColor = component.theme.list.mediaPlaceholderColor
+            
             let emoji: ChatTextInputTextCustomEmojiAttribute?
             var animationOffset: CGFloat = 0.0
             switch component.subject {
@@ -303,6 +328,9 @@ public final class GiftItemComponent: Component {
                         backgroundColor = UIColor(rgb: UInt32(bitPattern: outerColorValue))
                         secondBackgroundColor = UIColor(rgb: UInt32(bitPattern: innerColorValue))
                         patternColor = UIColor(rgb: UInt32(bitPattern: patternColorValue))
+                        if let backgroundColor {
+                            placeholderColor = backgroundColor
+                        }
                     default:
                         break
                     }
@@ -329,7 +357,7 @@ public final class GiftItemComponent: Component {
                     cache: component.context.animationCache,
                     renderer: component.context.animationRenderer,
                     unique: false,
-                    placeholderColor: component.theme.list.mediaPlaceholderColor,
+                    placeholderColor: placeholderColor,
                     pointSize: CGSize(width: iconSize.width * 2.0, height: iconSize.height * 2.0),
                     loopCount: 1
                 )
@@ -431,10 +459,9 @@ public final class GiftItemComponent: Component {
                     }
                     price = priceValue
                 case .uniqueGift:
-                    //TODO:localize
                     buttonColor = UIColor.white
                     starsColor = UIColor.white
-                    price = "Unique"
+                    price = ""
                 }
                 
                 let buttonSize = self.button.update(
@@ -460,11 +487,17 @@ public final class GiftItemComponent: Component {
             }
             
             if let ribbon = component.ribbon {
+                let ribbonFontSize: CGFloat
+                if case .profile = component.mode {
+                    ribbonFontSize = 9.0
+                } else {
+                    ribbonFontSize = 10.0
+                }
                 let ribbonTextSize = self.ribbonText.update(
                     transition: transition,
                     component: AnyComponent(
                         MultilineTextComponent(
-                            text: .plain(NSAttributedString(string: ribbon.text, font: Font.semibold(10.0), textColor: .white)),
+                            text: .plain(NSAttributedString(string: ribbon.text, font: Font.semibold(ribbonFontSize), textColor: .white)),
                             horizontalAlignment: .center
                         )
                     ),
@@ -479,7 +512,7 @@ public final class GiftItemComponent: Component {
                     ribbonTextView.bounds = CGRect(origin: .zero, size: ribbonTextSize)
                     
                     if self.ribbon.image == nil || themeUpdated || previousComponent?.ribbon?.color != component.ribbon?.color {
-                        var direction: GradientImageDirection = .diagonal
+                        var direction: GradientImageDirection = .mirroredDiagonal
                         if case .custom = ribbon.color {
                             direction = .mirroredDiagonal
                         }
@@ -510,7 +543,7 @@ public final class GiftItemComponent: Component {
                 
                 switch peer {
                 case let .peer(peer):
-                    avatarNode.setPeerV2(context: component.context, theme: component.theme, peer: peer, displayDimensions: CGSize(width: 20.0, height: 20.0))
+                    avatarNode.setPeer(context: component.context, theme: component.theme, peer: peer, displayDimensions: CGSize(width: 20.0, height: 20.0))
                 case .anonymous:
                     avatarNode.setPeer(context: component.context, theme: component.theme, peer: nil, overrideImage: .anonymousSavedMessagesIcon(isColored: true))
                 }
@@ -568,6 +601,43 @@ public final class GiftItemComponent: Component {
                         hiddenIconBackground.removeFromSuperview()
                     })
                     hiddenIconBackground.layer.animateScale(from: 1.0, to: 0.01, duration: 0.2, removeOnCompletion: false)
+                }
+            }
+            
+            if case .grid = component.mode {
+                let lineWidth: CGFloat = 2.0
+                let selectionFrame = CGRect(origin: .zero, size: size).insetBy(dx: 3.0, dy: 3.0)
+                
+                if component.isSelected {
+                    let selectionLayer: SimpleShapeLayer
+                    if let current = self.selectionLayer {
+                        selectionLayer = current
+                    } else {
+                        selectionLayer = SimpleShapeLayer()
+                        self.selectionLayer = selectionLayer
+                        self.layer.addSublayer(selectionLayer)
+                        
+                        selectionLayer.fillColor = UIColor.clear.cgColor
+                        selectionLayer.strokeColor = UIColor.white.cgColor
+                        selectionLayer.lineWidth = lineWidth
+                        selectionLayer.frame = selectionFrame
+                        selectionLayer.path = CGPath(roundedRect: CGRect(origin: .zero, size: selectionFrame.size).insetBy(dx: lineWidth / 2.0, dy: lineWidth / 2.0), cornerWidth: 6.0, cornerHeight: 6.0, transform: nil)
+                        
+                        if !transition.animation.isImmediate {
+                            let initialPath = CGPath(roundedRect: CGRect(origin: .zero, size: selectionFrame.size).insetBy(dx: 0.0, dy: 0.0), cornerWidth: 6.0, cornerHeight: 6.0, transform: nil)
+                            selectionLayer.animate(from: initialPath, to: selectionLayer.path as AnyObject, keyPath: "path", timingFunction: CAMediaTimingFunctionName.easeInEaseOut.rawValue, duration: 0.2)
+                            selectionLayer.animateShapeLineWidth(from: 0.0, to: lineWidth, duration: 0.2)
+                        }
+                    }
+                    
+                } else if let selectionLayer = self.selectionLayer {
+                    self.selectionLayer = nil
+                    
+                    let targetPath = CGPath(roundedRect: CGRect(origin: .zero, size: selectionFrame.size).insetBy(dx: 0.0, dy: 0.0), cornerWidth: 6.0, cornerHeight: 6.0, transform: nil)
+                    selectionLayer.animate(from: selectionLayer.path, to: targetPath, keyPath: "path", timingFunction: CAMediaTimingFunctionName.easeInEaseOut.rawValue, duration: 0.2, removeOnCompletion: false)
+                    selectionLayer.animateShapeLineWidth(from: selectionLayer.lineWidth, to: 0.0, duration: 0.2, removeOnCompletion: false, completion: { _ in
+                        selectionLayer.removeFromSuperlayer()
+                    })
                 }
             }
             

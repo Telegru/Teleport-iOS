@@ -2165,6 +2165,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             var currentCredibilityIconContent: EmojiStatusComponent.Content?
             var currentVerifiedIconContent: EmojiStatusComponent.Content?
             var currentStatusIconContent: EmojiStatusComponent.Content?
+            var currentStatusIconParticleColor: UIColor?
             var currentSecretIconImage: UIImage?
             var currentForwardedIcon: UIImage?
             var currentStoryIcon: UIImage?
@@ -3138,6 +3139,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                                 currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
                             } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled, isPremiumStatusEnabled {
                                 currentStatusIconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
+                                if let color = emojiStatus.color {
+                                    currentStatusIconParticleColor = UIColor(rgb: UInt32(bitPattern: color))
+                                }
                             } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                                 currentCredibilityIconContent = .premium(color: item.presentationData.theme.list.itemAccentColor)
                             }
@@ -3168,6 +3172,9 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         currentCredibilityIconContent = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
                     } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled, isPremiumStatusEnabled {
                         currentStatusIconContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
+                        if let color = emojiStatus.color {
+                            currentStatusIconParticleColor = UIColor(rgb: UInt32(bitPattern: color))
+                        }
                     } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                         currentCredibilityIconContent = .premium(color: item.presentationData.theme.list.itemAccentColor)
                     }
@@ -3187,7 +3194,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             var titleLeftOffset: CGFloat = 0.0
             if let currentVerifiedIconContent {
                 if titleLeftOffset.isZero, case .animation = currentVerifiedIconContent {
-                    titleLeftOffset += 20.0
+                    titleLeftOffset += 19.0
                 }
                 
                 if titleIconsWidth.isZero {
@@ -3249,7 +3256,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             
             var actionButtonTitleNodeLayoutAndApply: (TextNodeLayout, () -> TextNode)?
             if case .none = badgeContent, case .none = mentionBadgeContent, case let .chat(itemPeer) = contentPeer, case let .user(user) = itemPeer.chatMainPeer, let botInfo = user.botInfo, botInfo.flags.contains(.hasWebApp) {
-                actionButtonTitleNodeLayoutAndApply = makeActionButtonTitleNodeLayout(TextNodeLayoutArguments(attributedString: NSAttributedString(string: item.presentationData.strings.ChatList_InlineButtonOpenApp, font: Font.semibold(15.0), textColor: theme.unreadBadgeActiveTextColor), backgroundColor: nil, maximumNumberOfLines: 1, truncationType: .end, constrainedSize: CGSize(width: rawContentWidth, height: CGFloat.greatestFiniteMagnitude), alignment: .natural, cutout: nil, insets: UIEdgeInsets()))
+                actionButtonTitleNodeLayoutAndApply = makeActionButtonTitleNodeLayout(TextNodeLayoutArguments(attributedString: NSAttributedString(string: item.presentationData.strings.ChatList_InlineButtonOpenApp, font: Font.semibold(floor(item.presentationData.fontSize.itemListBaseFontSize * 15.0 / 17.0)), textColor: theme.unreadBadgeActiveTextColor), backgroundColor: nil, maximumNumberOfLines: 1, truncationType: .end, constrainedSize: CGSize(width: rawContentWidth, height: CGFloat.greatestFiniteMagnitude), alignment: .natural, cutout: nil, insets: UIEdgeInsets()))
             }
             
             var badgeSize: CGFloat = 0.0
@@ -4085,8 +4092,13 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     
                     
                     if let (actionButtonTitleNodeLayout, apply) = actionButtonTitleNodeLayoutAndApply {
-                        let actionButtonSize = CGSize(width: actionButtonTitleNodeLayout.size.width + 12.0 * 2.0, height: actionButtonTitleNodeLayout.size.height + 5.0 + 4.0)
-                        let actionButtonFrame = CGRect(x: nextBadgeX - actionButtonSize.width, y: contentRect.maxY - actionButtonSize.height, width: actionButtonSize.width, height: actionButtonSize.height)
+                        let actionButtonSideInset = floor(item.presentationData.fontSize.itemListBaseFontSize * 12.0 / 17.0)
+                        let actionButtonTopInset = floor(item.presentationData.fontSize.itemListBaseFontSize * 5.0 / 17.0)
+                        let actionButtonBottomInset = floor(item.presentationData.fontSize.itemListBaseFontSize * 4.0 / 17.0)
+                        
+                        let actionButtonSize = CGSize(width: actionButtonTitleNodeLayout.size.width + actionButtonSideInset * 2.0, height: actionButtonTitleNodeLayout.size.height + actionButtonTopInset + actionButtonBottomInset)
+                        var actionButtonFrame = CGRect(x: nextBadgeX - actionButtonSize.width, y: contentRect.minY + floor((contentRect.height - actionButtonSize.height) * 0.5), width: actionButtonSize.width, height: actionButtonSize.height)
+                        actionButtonFrame.origin.y = max(actionButtonFrame.origin.y, dateFrame.maxY + floor(item.presentationData.fontSize.itemListBaseFontSize * 4.0 / 17.0))
                         
                         let actionButtonNode: HighlightableButtonNode
                         if let current = strongSelf.actionButtonNode {
@@ -4105,10 +4117,10 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                             actionButtonBackgroundView = UIImageView()
                             strongSelf.actionButtonBackgroundView = actionButtonBackgroundView
                             actionButtonNode.view.addSubview(actionButtonBackgroundView)
-                            
-                            if actionButtonBackgroundView.image?.size.height != actionButtonSize.height {
-                                actionButtonBackgroundView.image = generateStretchableFilledCircleImage(diameter: actionButtonSize.height, color: .white)?.withRenderingMode(.alwaysTemplate)
-                            }
+                        }
+                        
+                        if actionButtonBackgroundView.image?.size.height != actionButtonSize.height {
+                            actionButtonBackgroundView.image = generateStretchableFilledCircleImage(diameter: actionButtonSize.height, color: .white)?.withRenderingMode(.alwaysTemplate)
                         }
                         
                         actionButtonBackgroundView.tintColor = theme.unreadBadgeActiveBackgroundColor
@@ -4122,7 +4134,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         
                         actionButtonNode.frame = actionButtonFrame
                         actionButtonBackgroundView.frame = CGRect(origin: CGPoint(), size: actionButtonFrame.size)
-                        actionButtonTitleNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((actionButtonFrame.width - actionButtonTitleNodeLayout.size.width) * 0.5), y: 5.0), size: actionButtonTitleNodeLayout.size)
+                        actionButtonTitleNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((actionButtonFrame.width - actionButtonTitleNodeLayout.size.width) * 0.5), y: actionButtonTopInset), size: actionButtonTitleNodeLayout.size)
                         
                         nextBadgeX -= actionButtonSize.width + 6.0
                     } else {
@@ -4636,12 +4648,13 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                             strongSelf.statusIconView = statusIconView
                             strongSelf.mainContentContainerNode.view.addSubview(statusIconView)
                         }
-                                                
+                                                        
                         let statusIconComponent = EmojiStatusComponent(
                             context: item.context,
                             animationCache: item.interaction.animationCache,
                             animationRenderer: item.interaction.animationRenderer,
                             content: currentStatusIconContent,
+                            particleColor: currentStatusIconParticleColor,
                             isVisibleForAnimations: strongSelf.visibilityStatus && item.context.sharedContext.energyUsageSettings.loopEmoji,
                             action: nil
                         )
@@ -4683,7 +4696,12 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                         strongSelf.credibilityIconComponent = credibilityIconComponent
                         
                         let iconOrigin: CGFloat = nextTitleIconOrigin
-                        let containerSize = CGSize(width: 20.0, height: 20.0)
+                        let containerSize: CGSize
+                        if case .verified = currentCredibilityIconContent {
+                            containerSize = CGSize(width: 16.0, height: 16.0)
+                        } else {
+                            containerSize = CGSize(width: 20.0, height: 20.0)
+                        }
                         let iconSize = credibilityIconView.update(
                             transition: .immediate,
                             component: AnyComponent(credibilityIconComponent),

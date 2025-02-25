@@ -305,6 +305,7 @@ public enum PresentationResourceKey: Int32 {
     
     case storyViewListLikeIcon
     case navigationPostStoryIcon
+    case navigationSortIcon
     
     case chatReplyBackgroundTemplateIncomingImage
     case chatReplyBackgroundTemplateOutgoingDashedImage

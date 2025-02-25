@@ -274,7 +274,8 @@ final class StoryItemSetContainerSendMessage {
                 isGeneralThreadClosed: nil,
                 replyMessage: nil,
                 accountPeerColor: nil,
-                businessIntro: nil
+                businessIntro: nil,
+                starGiftsAvailable: false
             )
             
             let heightAndOverflow = inputMediaNode.updateLayout(width: availableSize.width, leftInset: 0.0, rightInset: 0.0, bottomInset: bottomInset, standardInputHeight: deviceMetrics.standardInputHeight(inLandscape: false), inputHeight: inputHeight < 100.0 ? inputHeight - bottomContainerInset : inputHeight, maximumHeight: availableSize.height, inputPanelHeight: 0.0, transition: .immediate, interfaceState: presentationInterfaceState, layoutMetrics: metrics, deviceMetrics: deviceMetrics, isVisible: true, isExpanded: false)
@@ -1034,7 +1035,7 @@ final class StoryItemSetContainerSendMessage {
             
             let shareController = ShareController(
                 context: component.context,
-                subject: .media(AnyMediaReference.standalone(media: TelegramMediaStory(storyId: StoryId(peerId: peerId, id: focusedItem.storyItem.id), isMention: false))),
+                subject: .media(AnyMediaReference.standalone(media: TelegramMediaStory(storyId: StoryId(peerId: peerId, id: focusedItem.storyItem.id), isMention: false)), nil),
                 preferredAction: preferredAction ?? .default,
                 externalShare: false,
                 immediateExternalShare: false,
@@ -2411,11 +2412,11 @@ final class StoryItemSetContainerSendMessage {
             
             let storeCapturedMedia = peer.id.namespace != Namespaces.Peer.SecretChat
             
-            presentedLegacyCamera(context: component.context, peer: peer._asPeer(), chatLocation: .peer(id: peer.id), cameraView: cameraView, menuController: nil, parentController: parentController, attachmentController: self.attachmentController, editingMedia: false, saveCapturedPhotos: storeCapturedMedia, mediaGrouping: true, initialCaption: inputText, hasSchedule: peer.id.namespace != Namespaces.Peer.SecretChat, enablePhoto: enablePhoto, enableVideo: enableVideo, sendMessagesWithSignals: { [weak self, weak view] signals, silentPosting, scheduleTime in
+            presentedLegacyCamera(context: component.context, peer: peer._asPeer(), chatLocation: .peer(id: peer.id), cameraView: cameraView, menuController: nil, parentController: parentController, attachmentController: self.attachmentController, editingMedia: false, saveCapturedPhotos: storeCapturedMedia, mediaGrouping: true, initialCaption: inputText, hasSchedule: peer.id.namespace != Namespaces.Peer.SecretChat, enablePhoto: enablePhoto, enableVideo: enableVideo, sendMessagesWithSignals: { [weak self, weak view] signals, silentPosting, scheduleTime, parameters in
                 guard let self, let view else {
                     return
                 }
-                self.enqueueMediaMessages(view: view, peer: peer, replyToMessageId: replyToMessageId, replyToStoryId: replyToStoryId, signals: signals, silentPosting: silentPosting, scheduleTime: scheduleTime > 0 ? scheduleTime : nil)
+                self.enqueueMediaMessages(view: view, peer: peer, replyToMessageId: replyToMessageId, replyToStoryId: replyToStoryId, signals: signals, silentPosting: silentPosting, scheduleTime: scheduleTime > 0 ? scheduleTime : nil, parameters: parameters)
                 if !inputText.string.isEmpty {
                     self.clearInputText(view: view)
                 }
@@ -2682,38 +2683,37 @@ final class StoryItemSetContainerSendMessage {
                     return
                 }
                 let context = component.context
-                controller.dismissWithoutTransitionOut(completion: {
-                    switch navigation {
-                    case let .chat(_, subject, peekData):
-                        if case let .channel(channel) = peerId, channel.flags.contains(.isForum) {
-                            context.sharedContext.navigateToForumChannel(context: context, peerId: peerId.id, navigationController: navigationController)
-                        } else {
-                            context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), subject: subject, keepStack: .always, peekData: peekData, pushController: { [weak navigationController] chatController, animated, completion in
-                                Queue.mainQueue().justDispatch {
-                                    navigationController?.pushViewController(chatController)
-                                }
-                            }))
-                        }
-                    case .info:
-                        let _ = (context.account.postbox.loadedPeerWithId(peerId.id)
-                        |> take(1)
-                        |> deliverOnMainQueue).start(next: { [weak navigationController] peer in
-                            if peer.restrictionText(platform: "ios", contentSettings: context.currentContentSettings.with { $0 }) == nil {
-                                if let infoController = context.sharedContext.makePeerInfoController(context: context, updatedPresentationData: nil, peer: peer, mode: .generic, avatarInitiallyExpanded: false, fromChat: false, requestsContext: nil) {
-                                    navigationController?.pushViewController(infoController)
-                                }
+                switch navigation {
+                case let .chat(_, subject, peekData):
+                    if case let .channel(channel) = peerId, channel.flags.contains(.isForum) {
+                        controller.dismissWithoutTransitionOut()
+                        context.sharedContext.navigateToForumChannel(context: context, peerId: peerId.id, navigationController: navigationController)
+                    } else {
+                        context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), subject: subject, keepStack: .always, peekData: peekData, pushController: { [weak navigationController] chatController, animated, completion in
+                            Queue.mainQueue().justDispatch {
+                                navigationController?.pushViewController(chatController)
                             }
-                        })
-                    case let .withBotStartPayload(startPayload):
-                        context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), botStart: startPayload, keepStack: .always))
-                    case let .withAttachBot(attachBotStart):
-                        context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), attachBotStart: attachBotStart))
-                    case let .withBotApp(botAppStart):
-                        context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), botAppStart: botAppStart))
-                    default:
-                        break
+                        }))
                     }
-                })
+                case .info:
+                    let _ = (context.account.postbox.loadedPeerWithId(peerId.id)
+                    |> take(1)
+                    |> deliverOnMainQueue).start(next: { [weak navigationController] peer in
+                        if peer.restrictionText(platform: "ios", contentSettings: context.currentContentSettings.with { $0 }) == nil {
+                            if let infoController = context.sharedContext.makePeerInfoController(context: context, updatedPresentationData: nil, peer: peer, mode: .generic, avatarInitiallyExpanded: false, fromChat: false, requestsContext: nil) {
+                                navigationController?.pushViewController(infoController)
+                            }
+                        }
+                    })
+                case let .withBotStartPayload(startPayload):
+                    context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), botStart: startPayload, keepStack: .always))
+                case let .withAttachBot(attachBotStart):
+                    context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), attachBotStart: attachBotStart))
+                case let .withBotApp(botAppStart):
+                    context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peerId), botAppStart: botAppStart))
+                default:
+                    break
+                }
             },
             sendFile: nil,
             sendSticker: nil,
@@ -3416,6 +3416,31 @@ final class StoryItemSetContainerSendMessage {
             }))
         case .weather:
             return
+        case let .starGift(_, slug):
+            useGesturePosition = true
+            let action = {
+                let _ = openUserGeneratedUrl(context: component.context, peerId: nil, url: "https://t.me/nft/\(slug)", concealed: false, skipUrlAuth: false, skipConcealedAlert: false, forceDark: true, present: { [weak controller] c in
+                    controller?.present(c, in: .window(.root))
+                }, openResolved: { [weak self, weak view] resolved in
+                    guard let self, let view else {
+                        return
+                    }
+                    self.openResolved(view: view, result: resolved, forceExternal: false, concealed: false)
+                }, alertDisplayUpdated: { [weak self, weak view] alertController in
+                    guard let self, let view else {
+                        return
+                    }
+                    self.statusController = alertController
+                    view.updateIsProgressPaused()
+                })
+            }
+            if immediate {
+                action()
+                return
+            }
+            actions.append(ContextMenuAction(content: .textWithIcon(title: updatedPresentationData.initial.strings.Story_ViewGift, icon: generateTintedImage(image: UIImage(bundleImageName: "Settings/TextArrowRight"), color: .white)), action: {
+                action()
+            }))
         }
         
         self.selectedMediaArea =  mediaArea

@@ -597,11 +597,15 @@ public final class StoryPeerListComponent: Component {
             let isPremiumStatusEnabled = component.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
             if let peerStatus = component.titlePeerStatus, isPremiumStatusEnabled {
                 let statusContent: EmojiStatusComponent.Content
+                var particleColor: UIColor?
                 switch peerStatus {
                 case .premium:
                     statusContent = .premium(color: component.theme.list.itemAccentColor)
                 case let .emoji(emoji):
                     statusContent = .animation(content: .customEmoji(fileId: emoji.fileId), size: CGSize(width: 44.0, height: 44.0), placeholderColor: component.theme.list.mediaPlaceholderColor, themeColor: component.theme.list.itemAccentColor, loopMode: .count(2))
+                    if let color = emoji.color {
+                        particleColor = UIColor(rgb: UInt32(bitPattern: color))
+                    }
                 }
                 
                 var animateStatusTransition = false
@@ -629,6 +633,7 @@ public final class StoryPeerListComponent: Component {
                         animationCache: component.context.animationCache,
                         animationRenderer: component.context.animationRenderer,
                         content: statusContent,
+                        particleColor: particleColor,
                         isVisibleForAnimations: true,
                         action: { [weak self] in
                             guard let self, let component = self.component, let titleIconView = self.titleIconView?.view else {
