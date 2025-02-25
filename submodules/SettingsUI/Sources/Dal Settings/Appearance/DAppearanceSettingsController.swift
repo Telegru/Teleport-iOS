@@ -1,0 +1,299 @@
+import Foundation
+import UIKit
+import Display
+import SwiftSignalKit
+import Postbox
+import TelegramCore
+import TelegramPresentationData
+import TelegramUIPreferences
+import ItemListUI
+import AccountContext
+import AppBundle
+import PresentationDataUtils
+
+import TPUI
+import TPStrings
+
+private final class DAppearanceSettingsArguments {
+    let context: AccountContext
+    let updateChatsListViewType: (ListViewType) -> Void
+    let openSettingsItemsConfiguration: () -> Void
+    let openTabBarSettings: () -> Void
+    
+    init(
+        context: AccountContext,
+        updateChatsListViewType: @escaping (ListViewType) -> Void,
+        openSettingsItemsConfiguration: @escaping () -> Void,
+        openTabBarSettings: @escaping () -> Void
+    ) {
+        self.context = context
+        self.updateChatsListViewType = updateChatsListViewType
+        self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
+        self.openTabBarSettings = openTabBarSettings
+    }
+}
+
+private enum DAppearanceSettingsSection: Int32 {
+    case listViewType
+    case menuItems
+    case tabBar
+}
+
+private enum DAppearanceSettingsEntry: ItemListNodeEntry {
+    case listViewTypeHeader(title: String)
+    case listViewTypeOption(title: String, type: ListViewType, isSelected: Bool)
+    case menuItemsHeader(title: String)
+    case menuItems(title: String, detail: String)
+    case tabBar(title: String, detail: String)
+    
+    var section: ItemListSectionId {
+        switch self {
+        case .listViewTypeHeader, .listViewTypeOption:
+            return DAppearanceSettingsSection.listViewType.rawValue
+            
+        case .menuItemsHeader, .menuItems:
+            return DAppearanceSettingsSection.menuItems.rawValue
+            
+        case .tabBar:
+            return DAppearanceSettingsSection.tabBar.rawValue
+        }
+    }
+    
+    var stableId: Int32 {
+        switch self {
+        case .listViewTypeHeader:
+            return 0
+        case let .listViewTypeOption(_, type, _):
+            return Int32(type.rawValue + 100)
+        case .menuItemsHeader:
+            return 1000
+        case .menuItems:
+            return 1001
+        case .tabBar:
+            return 1002
+        }
+    }
+    
+    static func == (lhs: DAppearanceSettingsEntry, rhs: DAppearanceSettingsEntry) -> Bool {
+        switch lhs {
+        case let .listViewTypeHeader(lhsTitle):
+            if case let .listViewTypeHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+            
+        case let .listViewTypeOption(lhsText, lhsType, lhsSelected):
+            if case let .listViewTypeOption(rhsText, rhsType, rhsSelected) = rhs {
+                return lhsText == rhsText && lhsType == rhsType && lhsSelected == rhsSelected
+            }
+            return false
+            
+        case let .menuItemsHeader(lhsTitle):
+            if case let .menuItemsHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+            
+        case let .menuItems(lhsTitle, lhsDetail):
+            if case let .menuItems(rhsTitle, rhsDetail) = rhs {
+                return lhsTitle == rhsTitle && lhsDetail == rhsDetail
+            }
+            return false
+            
+        case let .tabBar(lhsTitle, lhsDetail):
+            if case let .tabBar(rhsTitle, rhsDetail) = rhs {
+                return lhsTitle == rhsTitle && lhsDetail == rhsDetail
+            }
+            return false
+        }
+    }
+    
+    static func <(lhs: DAppearanceSettingsEntry, rhs: DAppearanceSettingsEntry) -> Bool {
+        return lhs.stableId < rhs.stableId
+    }
+    
+    func item(presentationData: ItemListPresentationData, arguments: Any) -> ListViewItem {
+        let arguments = arguments as! DAppearanceSettingsArguments
+        switch self {
+        case let .listViewTypeHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .listViewTypeOption(title, type, isSelected):
+            return ItemListCheckboxItem(
+                presentationData: presentationData,
+                title: title,
+                style: .right,
+                textColor: .primary,
+                checked: isSelected,
+                zeroSeparatorInsets: false,
+                sectionId: self.section,
+                action: {
+                    arguments.updateChatsListViewType(type)
+                }
+            )
+            
+        case let .menuItemsHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .menuItems(title, detail):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: title,
+                label: detail,
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openSettingsItemsConfiguration()
+                }
+            )
+            
+        case let .tabBar(title, detail):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: title,
+                label: detail,
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openTabBarSettings()
+                }
+            )
+        }
+    }
+}
+
+func dAppearanceSettingsController(
+    context: AccountContext
+) -> ViewController {
+    var openSettingsItemsConfiguration: (() -> Void)?
+    var openTabBarSettings: (() -> Void)?
+    
+    let arguments = DAppearanceSettingsArguments(
+        context: context,
+        updateChatsListViewType: { selectedType in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.chatsListViewType = selectedType
+                return updatedSettings
+            }
+            .start()
+        },
+        openSettingsItemsConfiguration: {
+            openSettingsItemsConfiguration?()
+        },
+        openTabBarSettings: {
+            openTabBarSettings?()
+        }
+    )
+    
+    let dahlSettingsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> DalSettings in
+        return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+    } |> distinctUntilChanged
+    
+    let signal = combineLatest(
+        context.sharedContext.presentationData,
+        dahlSettingsSignal
+    ) |> map { presentationData, dahlSettings -> (ItemListControllerState, (ItemListNodeState, Any)) in
+        
+        let lang = presentationData.strings.baseLanguageCode
+        let controllerState = ItemListControllerState(
+            presentationData: ItemListPresentationData(presentationData),
+            title: .text("DahlSettings.Appearance.Title".tp_loc(lang: lang)),
+            leftNavigationButton: nil,
+            rightNavigationButton: nil,
+            backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back)
+        )
+        
+        var entries: [DAppearanceSettingsEntry] = []
+        
+        entries.append(
+            .listViewTypeHeader(title: "DahlSettings.Appearance.ChatsList.Header".tp_loc(lang: lang).uppercased())
+        )
+        
+        let options: [(String, ListViewType)] = [
+            ("DahlSettings.ChatsList.SingleLine".tp_loc(lang: lang), .singleLine),
+            ("DahlSettings.ChatsList.DoubleLine".tp_loc(lang: lang), .doubleLine),
+            ("DahlSettings.ChatsList.TripleLine".tp_loc(lang: lang), .tripleLine)
+        ]
+    
+        
+        for (title, type) in options {
+            entries.append(
+                .listViewTypeOption(
+                    title: title,
+                    type: type,
+                    isSelected: type == dahlSettings.chatsListViewType
+                )
+            )
+        }
+        
+        entries.append(
+            .menuItemsHeader(title: "DahlSettings.Appearance.MenuItems.Header".tp_loc(lang: lang).uppercased())
+        )
+        
+        entries.append(
+            .menuItems(
+                title: "DahlSettings.Appearance.MenuItems".tp_loc(lang: lang),
+                detail: "\(dahlSettings.menuItemsSettings.activeItemsCount)"
+            )
+        )
+        
+        entries.append(
+            .tabBar(
+                title: "DahlSettings.TabBarSettings.Title".tp_loc(lang: lang),
+                detail: "\(dahlSettings.tabBarSettings.activeTabs.count)"
+            )
+        )
+        
+        let listState = ItemListNodeState(
+            presentationData: ItemListPresentationData(presentationData),
+            entries: entries,
+            style: .blocks,
+            animateChanges: true
+        )
+        return (controllerState, (listState, arguments))
+    }
+    
+    let controller = ItemListController(context: context, state: signal)
+    
+    openTabBarSettings = { [weak controller] in
+        let tabBarSettings = dTabBarSettingsController(context: context)
+        controller?.push(tabBarSettings)
+    }
+    
+    openSettingsItemsConfiguration = { [weak controller] in
+        let menuItemSettings = dMenuItemsSettingsController(context: context)
+        controller?.push(menuItemSettings)
+    }
+    
+    return controller
+}
+
+private extension MenuItemsSettings {
+    
+    var activeItemsCount: Int {
+        var count = 0
+        if myProfile { count += 1 }
+        if wallet { count += 1 }
+        if savedMessages { count += 1 }
+        if recentCalls { count += 1 }
+        if devices { count += 1 }
+        if chatFolders { count += 1 }
+        if myStars { count += 1 }
+        if business { count += 1 }
+        if sendGift { count += 1 }
+        if support { count += 1 }
+        if faq { count += 1 }
+        if tips { count += 1 }
+        return count
+    }
+}

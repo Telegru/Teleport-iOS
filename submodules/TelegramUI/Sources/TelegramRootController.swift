@@ -329,7 +329,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             sharedContext.switchingData = (nil, nil, nil)
         }
         
-        let dahlSettingsController = dalsettingsController(
+        let dahlSettingsController = dSettingsController(
             context: self.context,
             mode: .tab
         )
