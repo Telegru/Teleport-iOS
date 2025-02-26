@@ -24,6 +24,8 @@
 "Intro.StartMessaging" = "Начать общение";
 "Intro.Continue" = "Continue in English";
 
+"Settings.AppVersion.Footer" = "Даль — мессенджер для iOS v.%@\nОснован на Telegram v.%@";
+
 
 // Settings
 "Dahl.TabTitle" = "Даль";

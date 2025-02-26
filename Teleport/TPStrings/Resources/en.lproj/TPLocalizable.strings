@@ -24,6 +24,7 @@
 "Intro.StartMessaging" = "Start Messaging";
 "Intro.Continue" = "Продолжить на русском";
 
+"Settings.AppVersion.Footer" = "Dahl Messenger for iOS v.%@\nBased on Telegram v.%@";
 
 // Settings
 "Dahl.TabTitle" = "Dahl";
