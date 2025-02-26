@@ -60,7 +60,7 @@ public struct DalSettings: Codable, Equatable {
             sendAudioConfirmation: false,
             callConfirmation: false,
             videoMessageCamera: CameraType.front,
-            chatsFoldersAtBottom: true,
+            chatsFoldersAtBottom: false,
             hideAllChatsFolder: false,
             infiniteScrolling: false,
             showRecentChats: nil,

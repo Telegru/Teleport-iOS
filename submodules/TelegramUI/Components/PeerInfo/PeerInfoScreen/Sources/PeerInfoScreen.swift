@@ -116,6 +116,7 @@ import VerifyAlertController
 import TPSettings
 import TPStrings
 import TPUI
+import DSettings
 
 public enum PeerInfoAvatarEditingMode {
     case generic
@@ -2786,6 +2787,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
     let scrollNode: ASScrollNode
     
     let headerNode: PeerInfoHeaderNode
+    let bottomNode: PeerInfoAppVersionNode
     private var regularSections: [AnyHashable: PeerInfoScreenItemSectionContainerNode] = [:]
     private var editingSections: [AnyHashable: PeerInfoScreenItemSectionContainerNode] = [:]
     private let paneContainerNode: PeerInfoPaneContainerNode
@@ -2920,6 +2922,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
             forumTopicThreadId = message.threadId
         }
         self.headerNode = PeerInfoHeaderNode(context: context, controller: controller, avatarInitiallyExpanded: avatarInitiallyExpanded, isOpenedFromChat: isOpenedFromChat, isMediaOnly: self.isMediaOnly, isSettings: isSettings, isMyProfile: isMyProfile, forumTopicThreadId: forumTopicThreadId, chatLocation: self.chatLocation)
+        self.bottomNode = PeerInfoAppVersionNode()
         self.paneContainerNode = PeerInfoPaneContainerNode(context: context, updatedPresentationData: controller.updatedPresentationData, peerId: peerId, chatLocation: chatLocation, chatLocationContextHolder: chatLocationContextHolder, isMediaOnly: self.isMediaOnly, initialPaneKey: initialPaneKey)
         
         super.init()
@@ -3756,6 +3759,8 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
         self.scrollNode.view.delegate = self.wrappedScrollViewDelegate
         self.addSubnode(self.scrollNode)
         self.scrollNode.addSubnode(self.paneContainerNode)
+        
+        self.scrollNode.addSubnode(self.bottomNode)
         
         self.addSubnode(self.headerNode)
         self.scrollNode.view.isScrollEnabled = !self.isMediaOnly
@@ -10378,7 +10383,15 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                 push(self.context.sharedContext.makeStarsTransactionsScreen(context: self.context, starsContext: starsContext))
             }
         case .dal:
-            push(dalsettingsController(context: self.context))
+            push(
+                DSettingsScreen(
+                    context: self.context,
+                    updatedPresentationData: (
+                        initial: self.context.sharedContext.currentPresentationData.with { $0 },
+                        signal: self.context.sharedContext.presentationData
+                    )
+                )
+            )
         }
     }
     
@@ -11744,6 +11757,33 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                     contentHeight += sectionSpacing
                 }
             }
+            
+            if self.isSettings && !self.state.isEditing {
+                transition.updateAlpha(node: self.bottomNode, alpha: 1)
+                let sectionWidth = layout.size.width
+                let bottomHeight = bottomNode.update(
+                    width: sectionWidth,
+                    safeInset: insets.left,
+                    presentationData: self.presentationData,
+                    transition: transition
+                )
+                
+                let bottomFrame = CGRect(
+                    origin: CGPoint(x: 0, y: contentHeight),
+                    size: CGSize(width: sectionWidth, height: bottomHeight)
+                )
+                if additive {
+                    transition.updateFrameAdditive(node: self.bottomNode, frame: bottomFrame)
+                } else {
+                    transition.updateFrame(node: self.bottomNode, frame: bottomFrame)
+                }
+                
+                contentHeight += bottomHeight
+                contentHeight += sectionSpacing
+            } else {
+                transition.updateAlpha(node: bottomNode, alpha: 0)
+            }
+            
             var removeRegularSections: [AnyHashable] = []
             for (sectionId, _) in self.regularSections {
                 if !validRegularSections.contains(sectionId) {

@@ -460,7 +460,7 @@ final class ChannelAppearanceScreenComponent: Component {
                 return
             }
             
-            let requiredLevel = requiredBoostSubject.requiredLevel(group: self.isGroup, context: component.context, configuration: premiumConfiguration)
+            let requiredLevel = requiredBoostSubject.requiredLevel(group: self.isGroup,  context: component.context, configuration: premiumConfiguration)
             if let boostLevel = self.boostLevel, requiredLevel > boostLevel {
                 self.displayBoostLevels(subject: requiredBoostSubject)
                 return

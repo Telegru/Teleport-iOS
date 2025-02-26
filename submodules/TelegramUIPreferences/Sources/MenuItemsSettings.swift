@@ -16,7 +16,7 @@ public struct MenuItemsSettings: Codable, Equatable {
     public var faq: Bool
     public var tips: Bool
     
-   public init(myProfile: Bool, wallet: Bool, savedMessages: Bool, recentCalls: Bool, devices: Bool, chatFolders: Bool, premium: Bool, myStars: Bool, business: Bool, sendGift: Bool, support: Bool, faq: Bool, tips: Bool) {
+    public init(myProfile: Bool, wallet: Bool, savedMessages: Bool, recentCalls: Bool, devices: Bool, chatFolders: Bool, premium: Bool, myStars: Bool, business: Bool, sendGift: Bool, support: Bool, faq: Bool, tips: Bool) {
         self.myProfile = myProfile
         self.wallet = wallet
         self.savedMessages = savedMessages

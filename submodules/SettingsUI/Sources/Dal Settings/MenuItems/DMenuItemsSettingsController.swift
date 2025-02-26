@@ -425,7 +425,6 @@ private func menuItemsSettingsEntries(from settings: MenuItemsSettings, presenta
         .recentCalls(data.theme, data.strings.CallSettings_RecentCalls, settings.recentCalls),
         .devices(data.theme, data.strings.Settings_Devices, settings.devices),
         .chatFolders(data.theme, data.strings.Settings_ChatFolders, settings.chatFolders),
-        .premium(data.theme, data.strings.Settings_Premium, settings.premium),
         .myStars(data.theme, data.strings.Settings_Stars, settings.myStars),
         .business(data.theme, data.strings.Settings_Business, settings.business),
         .sendGift(data.theme, data.strings.Settings_SendGift, settings.sendGift),
