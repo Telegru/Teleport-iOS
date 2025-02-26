@@ -11758,7 +11758,7 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                 }
             }
             
-            if (self.isSettings || self.isMyProfile) && !self.state.isEditing {
+            if self.isSettings && !self.state.isEditing {
                 transition.updateAlpha(node: self.bottomNode, alpha: 1)
                 let sectionWidth = layout.size.width
                 let bottomHeight = bottomNode.update(

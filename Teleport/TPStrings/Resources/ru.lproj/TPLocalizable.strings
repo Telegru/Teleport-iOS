@@ -75,7 +75,7 @@
 "DahlSettings.General.Premium.Stories.Header" = "Истории";
 "DahlSettings.General.Premium.Stories.HideStories" = "Не показывать";
 "DahlSettings.General.Premium.Stories.HideStoriesPublishButton" = "Скрыть кнопку создания";
-"DahlSettings.General.Premium.Stories.HideSeenStories" = "Скрывать просмотренное";
+"DahlSettings.General.Premium.Stories.HideViewedStories" = "Скрывать просмотренное";
 
 "DahlSettings.Appearance.Title" = "Оформление";
 
