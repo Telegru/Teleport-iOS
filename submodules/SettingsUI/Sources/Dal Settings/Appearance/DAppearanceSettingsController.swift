@@ -170,7 +170,7 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     }
 }
 
-func dAppearanceSettingsController(
+public func dAppearanceSettingsController(
     context: AccountContext
 ) -> ViewController {
     var openSettingsItemsConfiguration: (() -> Void)?

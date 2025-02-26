@@ -116,6 +116,7 @@ import VerifyAlertController
 import TPSettings
 import TPStrings
 import TPUI
+import DSettings
 
 public enum PeerInfoAvatarEditingMode {
     case generic
@@ -10378,7 +10379,15 @@ final class PeerInfoScreenNode: ViewControllerTracingNode, PeerInfoScreenNodePro
                 push(self.context.sharedContext.makeStarsTransactionsScreen(context: self.context, starsContext: starsContext))
             }
         case .dal:
-            push(dalsettingsController(context: self.context))
+            push(
+                DSettingsScreen(
+                    context: self.context,
+                    updatedPresentationData: (
+                        initial: self.context.sharedContext.currentPresentationData.with { $0 },
+                        signal: self.context.sharedContext.presentationData
+                    )
+                )
+            )
         }
     }
     

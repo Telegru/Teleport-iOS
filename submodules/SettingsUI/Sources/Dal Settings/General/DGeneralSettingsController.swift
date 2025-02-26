@@ -350,7 +350,7 @@ private func dGeneralSettingsEntries(
     return entries
 }
 
-func dGeneralSettingsController(
+public func dGeneralSettingsController(
     context: AccountContext
 ) -> ViewController {
     let baseAppBundleId = Bundle.main.bundleIdentifier!
