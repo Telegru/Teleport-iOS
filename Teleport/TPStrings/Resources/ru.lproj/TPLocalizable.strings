@@ -100,3 +100,23 @@
 "Chat.ClearHistory" = "Очистить историю";
 "Chat.ClearHistoryConfirmation" = "Вы точно хотите очистить историю недавних чатов? Данные чатов сохранятся";
 "Chat.Clear" = "Очистить";
+
+// App icon
+
+"Settings.AppIcon.Default" = "Основная";
+"Settings.AppIcon.Classic" = "Классика";
+"Settings.AppIcon.Black" = "Черная";
+"Settings.AppIcon.Metallic" = "Металл";
+"Settings.AppIcon.Silver" = "Серебро";
+"Settings.AppIcon.Inverted" = "Инверсия";
+"Settings.AppIcon.White" = "Белый";
+"Settings.AppIcon.Outline" = "Контур";
+"Settings.AppIcon.Night" = "Ночь";
+"Settings.AppIcon.Sparkling" = "Игристое";
+"Settings.AppIcon.Winter" = "Зима";
+"Settings.AppIcon.Unicorn" = "Единорог";
+"Settings.AppIcon.Titanium" = "Титан";
+"Settings.AppIcon.Triangle" = "Треугольник";
+"Settings.AppIcon.Tatarstan" = "Татарстан";
+"Settings.AppIcon.Russia" = "Россия";
+"Settings.AppIcon.Birch" = "Береза";

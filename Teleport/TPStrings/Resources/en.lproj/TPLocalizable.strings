@@ -100,3 +100,23 @@
 "Chat.ClearHistory" = "Clear History";
 "Chat.ClearHistoryConfirmation" = "Are you sure you want to clear the recent chats history? The chats data will be saved.";
 "Chat.Clear" = "Clear";
+
+// App icon
+
+"Settings.AppIcon.Default" = "Default";
+"Settings.AppIcon.Classic" = "Classic";
+"Settings.AppIcon.Black" = "Black";
+"Settings.AppIcon.Metallic" = "Metallic";
+"Settings.AppIcon.Silver" = "Silver";
+"Settings.AppIcon.Inverted" = "Inverted";
+"Settings.AppIcon.White" = "White";
+"Settings.AppIcon.Outline" = "Outline";
+"Settings.AppIcon.Night" = "Night";
+"Settings.AppIcon.Sparkling" = "Sparkling";
+"Settings.AppIcon.Winter" = "Winter";
+"Settings.AppIcon.Unicorn" = "Unicorn";
+"Settings.AppIcon.Titanium" = "Titanium";
+"Settings.AppIcon.Triangle" = "Triangle";
+"Settings.AppIcon.Tatarstan" = "Tatarstan";
+"Settings.AppIcon.Russia" = "Russia";
+"Settings.AppIcon.Birch" = "Birch";
