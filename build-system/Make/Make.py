@@ -109,8 +109,8 @@ class BazelCommandLine:
             '--swiftcopt=-num-threads', '--swiftcopt=1',
 
             # Strip unsused code.
-            # '--features=dead_strip',
-            # '--objc_enable_binary_stripping',
+            '--features=dead_strip',
+            '--objc_enable_binary_stripping',
         ]
 
     def add_remote_cache(self, host):
@@ -225,7 +225,8 @@ class BazelCommandLine:
     def get_define_arguments(self):
         return [
             '--define=buildNumber={}'.format(self.build_number),
-            '--define=telegramVersion={}'.format(self.build_environment.app_version)
+            '--define=appVersion={}'.format(self.build_environment.app_version),
+            '--define=tgAppVersion={}'.format(self.build_environment.original_app_version)
         ]
 
     def get_project_generation_arguments(self):
