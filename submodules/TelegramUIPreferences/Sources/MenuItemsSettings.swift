@@ -91,17 +91,17 @@ extension MenuItemsSettings{
         return MenuItemsSettings(
             myProfile: true,
             wallet: true,
-            savedMessages: false,
+            savedMessages: true,
             recentCalls: true,
-            devices: false,
-            chatFolders: false,
-            premium: false,
-            myStars: false,
-            business: false,
-            sendGift: false,
-            support: false,
-            faq: false,
-            tips: false
+            devices: true,
+            chatFolders: true,
+            premium: true,
+            myStars: true,
+            business: true,
+            sendGift: true,
+            support: true,
+            faq: true,
+            tips: true
         )
     }
 }
