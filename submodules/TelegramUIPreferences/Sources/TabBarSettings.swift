@@ -47,11 +47,7 @@ extension TabBarSettings {
     public static var `default`: TabBarSettings {
         TabBarSettings(currentTabs: [
             .contacts,
-            .calls,
-//            .apps,
-//            .wallet,
             .chats,
-            .dahlSettings,
             .settings
         ])
     }
