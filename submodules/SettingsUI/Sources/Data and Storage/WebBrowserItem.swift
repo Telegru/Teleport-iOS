@@ -148,7 +148,7 @@ private final class WebBrowserItemNode: ListViewItemNode {
                 case .none:
                     let icons = item.context.sharedContext.applicationBindings.getAvailableAlternateIcons()
                     let current = item.context.sharedContext.applicationBindings.getAlternateIconName()
-                    let currentIcon = icons.first(where: { $0.name == current })?.imageName ?? "BlueIcon"
+                    let currentIcon = icons.first(where: { $0.name == current })?.imageName ?? "Default"
                     if let image = UIImage(named: currentIcon, in: getAppBundle(), compatibleWith: nil) {
                         updatedIconSignal = openInAppIcon(engine: item.context.engine, appIcon: .image(image: image))
                     }

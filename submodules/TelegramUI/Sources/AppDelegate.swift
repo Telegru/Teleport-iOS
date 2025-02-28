@@ -870,19 +870,25 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
             self.window?.rootViewController?.dismiss(animated: true, completion: nil)
         }, getAvailableAlternateIcons: {
             if #available(iOS 10.3, *) {
-//                var icons = [
-                    // PresentationAppIcon(name: "BlueIcon", imageName: "BlueIcon", isDefault: buildConfig.isAppStoreBuild),
-                    // PresentationAppIcon(name: "New2", imageName: "New2"),
-                    // PresentationAppIcon(name: "New1", imageName: "New1"),
-                    // PresentationAppIcon(name: "BlackIcon", imageName: "BlackIcon"),
-                    // PresentationAppIcon(name: "BlueFilledIcon", imageName: "BlueFilledIcon"),
-                    // PresentationAppIcon(name: "BlackFilledIcon", imageName: "BlackFilledIcon")
-//                ]
-                // if buildConfig.isInternalBuild {
-                //     icons.append(PresentationAppIcon(name: "WhiteFilledIcon", imageName: "WhiteFilledIcon"))
-                // }
-                
-                return []
+                return [
+                    PresentationAppIcon(name: "Default", imageName: "Default", isDefault: buildConfig.isAppStoreBuild),
+                    PresentationAppIcon(name: "Classic", imageName: "Classic"),
+                    PresentationAppIcon(name: "Black", imageName: "Black"),
+                    PresentationAppIcon(name: "Metallic", imageName: "Metallic"),
+                    PresentationAppIcon(name: "Silver", imageName: "Silver"),
+                    PresentationAppIcon(name: "Inverted", imageName: "Inverted"),
+                    PresentationAppIcon(name: "White", imageName: "White"),
+                    PresentationAppIcon(name: "Outline", imageName: "Outline"),
+                    PresentationAppIcon(name: "Night", imageName: "Night"),
+                    PresentationAppIcon(name: "Sparkling", imageName: "Sparkling"),
+                    PresentationAppIcon(name: "Winter", imageName: "Winter"),
+                    PresentationAppIcon(name: "Unicorn", imageName: "Unicorn"),
+                    PresentationAppIcon(name: "Titanium", imageName: "Titanium"),
+                    PresentationAppIcon(name: "Triangle", imageName: "Triangle"),
+                    PresentationAppIcon(name: "Tatarstan", imageName: "Tatarstan"),
+                    PresentationAppIcon(name: "Russia", imageName: "Russia"),
+                    PresentationAppIcon(name: "Birch", imageName: "Birch"),
+                ]
             } else {
                 return []
             }

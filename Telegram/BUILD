@@ -323,13 +323,23 @@ filegroup(
 )
 
 alternate_icon_folders = [
-    # "BlackIcon",
-    # "BlackFilledIcon",
-    "BlueIcon",
-    # "BlueFilledIcon",
-    # "WhiteFilledIcon",
-    # "New1",
-    # "New2",
+    "Default",
+    "Classic",
+    "Black",
+    "Metallic",
+    "Silver",
+    "Inverted",
+    "White",
+    "Outline",
+    "Night",
+    "Sparkling",
+    "Winter",
+    "Unicorn",
+    "Titanium",
+    "Triangle",
+    "Tatarstan",
+    "Russia",
+    "Birch",
 ]
 
 [
