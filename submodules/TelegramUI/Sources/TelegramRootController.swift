@@ -39,6 +39,7 @@ import WebUI
 import PresentationDataUtils
 import LocalizedPeerData
 import DWallpaper
+import DSettings
 
 private class DetailsChatPlaceholderNode: ASDisplayNode, NavigationDetailsPlaceholderNode {
     private var presentationData: PresentationData
@@ -329,10 +330,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             sharedContext.switchingData = (nil, nil, nil)
         }
         
-        let dahlSettingsController = dalsettingsController(
-            context: self.context,
-            mode: .tab
-        )
+        let dahlSettingsController = DSettingsScreen(context: self.context, mode: .tab, updatedPresentationData: (initial: self.context.sharedContext.currentPresentationData.with { $0 }, signal: self.context.sharedContext.presentationData))
         
         let accountSettingsController = PeerInfoScreenImpl(context: self.context, updatedPresentationData: nil, peerId: self.context.account.peerId, avatarInitiallyExpanded: false, isOpenedFromChat: false, nearbyPeerDistance: nil, reactionSourceMessageId: nil, callMessages: [], isSettings: true)
         accountSettingsController.tabBarItemDebugTapAction = { [weak self] in

@@ -154,6 +154,10 @@ class BuildEnvironmentVersions:
                 raise Exception('Missing app version in {}'.format(configuration_path))
             else:
                 self.app_version = configuration_dict['app']
+            if configuration_dict['original_app'] is None:
+                raise Exception('Missing original app version in {}'.format(configuration_path))
+            else:
+                self.original_app_version = configuration_dict['original_app']
             if configuration_dict['bazel'] is None:
                 raise Exception('Missing bazel version in {}'.format(configuration_path))
             else:
@@ -208,3 +212,4 @@ class BuildEnvironment:
         self.xcode_version = versions.xcode_version
         self.bazel_version = versions.bazel_version
         self.macos_version = versions.macos_version
+        self.original_app_version = versions.original_app_version

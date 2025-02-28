@@ -24,6 +24,8 @@
 "Intro.StartMessaging" = "Начать общение";
 "Intro.Continue" = "Continue in English";
 
+"Settings.AppVersion.Footer" = "Даль — мессенджер для iOS v.%@\nОснован на Telegram v.%@";
+
 
 // Settings
 "Dahl.TabTitle" = "Даль";
@@ -44,7 +46,62 @@
 "DahlSettings.Camera" = "Камера";
 "DahlSettings.TabBarSettings" = "Нижнее меню";
 "DahlSettings.Proxy" = "Прокси Даль";
-"DahlSettings.MenuItems" = "Пункты меню";
+"DahlSettings.MenuItems" = "Меню настроек";
+
+"DahlSettings.Header.Title" = "Даль %@";
+"DahlSettings.Header.Subtitle" = "Мессенджер, созданный с пониманием потребностей российской аудитории.";
+
+"DahlSettings.Categories.Header" = "Категории";
+
+"DahlSettings.General.Title" = "Основные";
+
+"DahlSettings.General.Network.Header" = "Тип соединения";
+"DahlSettings.General.Network.Footer" = "Включайте при сбоях в соединении.";
+"DahlSettings.General.Network.Proxy" = "Прокси Даль";
+
+"DahlSettings.General.Profile.Header" = "Профиль";
+"DahlSettings.General.Profile.Footer" = "Номер будет скрыт только из меню Настроек.";
+"DahlSettings.General.Profile.HidePhone" = "Скрыть номер телефона";
+
+"DahlSettings.General.Premium" = "Premium функции";
+"DahlSettings.General.Premium.Footer" = "Настройте Premium функции под себя.";
+
+"DahlSettings.General.Premium.PremiumInSettings.Header" = "Блок Premium";
+"DahlSettings.General.Premium.PremiumInSettings" = "Показывать в настройках";
+"DahlSettings.General.Premium.PremiumInSettings.Footer" = "Настройка Premium функций будет отображаться в общем разделе “Настройки”.";
+
+"DahlSettings.General.Premium.General.Header" = "Основные";
+"DahlSettings.General.Premium.General.Footer" = "Оставьте включенными только нужные вам Premium функции.";
+
+"DahlSettings.General.Premium.Stories.Header" = "Истории";
+"DahlSettings.General.Premium.Stories.HideStories" = "Не показывать";
+"DahlSettings.General.Premium.Stories.HideStoriesPublishButton" = "Скрыть кнопку создания";
+"DahlSettings.General.Premium.Stories.HideViewedStories" = "Скрывать просмотренное";
+
+"DahlSettings.Appearance.Title" = "Оформление";
+
+"DahlSettings.Appearance.ChatsList.Header" = "Вид списка чатов";
+
+"DahlSettings.Appearance.MenuItems.Header" = "Меню настроек Telegram";
+"DahlSettings.Appearance.MenuItems" = "Пункты меню";
+
+"DahlSettings.Chats.Title" = "Чаты";
+"DahlSettings.Chats.Confirmation.Header" = "Подтверждение";
+"DahlSettings.Chats.Confirmation.Call" = "Звонок";
+"DahlSettings.Chats.Confirmation.AudioMessage" = "Отправка аудиосообщения";
+"DahlSettings.Chats.Confirmation.VideoMessage" = "Камера видеосообщения";
+"DahlSettings.Chats.RecentChats.Header" = "Недавние чаты";
+"DahlSettings.Chats.RecentChats" = "Включить панель";
+"DahlSettings.Chats.RecentChats.Footer" = "Над списком чатов появится панель быстрого перехода к недавно посещенным чатам. ";
+"DahlSettings.Chats.Folders.Header" = "Папки";
+"DahlSettings.Chats.Folders.BottomFolders" = "Переместить вниз";
+"DahlSettings.Chats.Folders.InfiniteScroll" = "Листать по кругу";
+"DahlSettings.Chats.Folders.HideAllChats" = "Скрыть папку “Все чаты”";
+
+"DahlSettings.Support.Title" = "Поддержка";
+"DahlSettings.Support.Alert.Title" = "Пожалуйста, обратите внимание, что в поддержке Даль отвечают волонтеры. Мы постараемся помочь, как можно скорее, но ожидание может занять время.";
+"DahlSettings.Support.Alert.Ok" = "Хорошо";
+"DahlSettings.Support.Alert.Cancel" = "Отмена";
 
 "DahlSettings.ActionConfirmationHeader" = "Подтверждение действий";
 "DahlSettings.ConfirmCallToggle" = "Подтверждать звонок";
