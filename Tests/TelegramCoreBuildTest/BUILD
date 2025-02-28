@@ -49,7 +49,9 @@ plist_fragment(
     template =
     """
     <key>CFBundleShortVersionString</key>
-    <string>{telegramVersion}</string>
+    <string>{appVersion}</string>
+    <key>TGAppVersion</key>
+    <string>{tgAppVersion}</string>
     """
 )
 
