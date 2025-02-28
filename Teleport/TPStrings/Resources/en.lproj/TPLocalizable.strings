@@ -45,7 +45,7 @@
 "DahlSettings.Camera" = "Camera";
 "DahlSettings.TabBarSettings" = "Tab bar";
 "DahlSettings.Proxy" = "Dahl proxy";
-"DahlSettings.MenuItems" = "Menu items";
+"DahlSettings.MenuItems" = "Settings menu";
 
 "DahlSettings.Header.Title" = "Dahl %@";
 "DahlSettings.Header.Subtitle" = "A messenger created with an understanding \nof the needs of the Russian audience.";

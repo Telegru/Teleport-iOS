@@ -46,6 +46,7 @@
 "DahlSettings.Camera" = "Камера";
 "DahlSettings.TabBarSettings" = "Нижнее меню";
 "DahlSettings.Proxy" = "Прокси Даль";
+"DahlSettings.MenuItems" = "Меню настроек";
 
 "DahlSettings.Header.Title" = "Даль %@";
 "DahlSettings.Header.Subtitle" = "Мессенджер, созданный с пониманием потребностей российской аудитории.";

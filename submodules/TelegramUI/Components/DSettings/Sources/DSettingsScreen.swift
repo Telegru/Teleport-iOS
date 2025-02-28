@@ -191,6 +191,11 @@ final class DSettingsScreenComponent: Component {
             let text = "DahlSettings.Support.Alert.Title".tp_loc(lang: lang)
             let actions: [TextAlertAction] = [
                 TextAlertAction(
+                    type: .genericAction,
+                    title: "DahlSettings.Support.Alert.Cancel".tp_loc(lang: lang),
+                    action: {}
+                ),
+                TextAlertAction(
                     type: .defaultAction,
                     title: "DahlSettings.Support.Alert.Ok".tp_loc(lang: lang)) { [weak self] in
                         guard let self else { return }
@@ -217,12 +222,7 @@ final class DSettingsScreenComponent: Component {
                                 context.sharedContext.navigateToChatController(NavigateToChatControllerParams(navigationController: navigationController, context: context, chatLocation: .peer(peer)))
                             }
                         })
-                    },
-                TextAlertAction(
-                    type: .genericAction,
-                    title: "DahlSettings.Support.Alert.Cancel".tp_loc(lang: lang),
-                    action: {}
-                )
+                    }
             ]
             
             let alert = textAlertController(

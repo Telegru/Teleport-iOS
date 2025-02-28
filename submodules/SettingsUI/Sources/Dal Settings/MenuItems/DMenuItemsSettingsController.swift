@@ -86,6 +86,7 @@ private enum DMenuItemsSettingsEntrytag: ItemListItemTag{
 
 private enum DMenuItemsSettingsEntry: ItemListNodeEntry {
   
+    case header(title: String)
     case myProfile(PresentationTheme, String, Bool)
     case wallet(PresentationTheme, String, Bool)
     case savedMessages(PresentationTheme, String, Bool)
@@ -106,37 +107,39 @@ private enum DMenuItemsSettingsEntry: ItemListNodeEntry {
     
     var stableId: Int32 {
         switch self {
-        case .myProfile:
+        case .header:
             return 0
-        case .wallet:
+        case .myProfile:
             return 1
-        case .savedMessages:
+        case .wallet:
             return 2
-        case .recentCalls:
+        case .savedMessages:
             return 3
-        case .devices:
+        case .recentCalls:
             return 4
-        case .chatFolders:
+        case .devices:
             return 5
-        case .premium:
+        case .chatFolders:
             return 6
-        case .myStars:
+        case .premium:
             return 7
-        case .business:
+        case .myStars:
             return 8
-        case .sendGift:
+        case .business:
             return 9
-        case .support:
+        case .sendGift:
             return 10
-        case .faq:
+        case .support:
             return 11
-        case .tips:
+        case .faq:
             return 12
+        case .tips:
+            return 13
         }
     }
     
     var tag: ItemListItemTag? {
-        switch self{
+        switch self {
         case .myProfile:
             return DMenuItemsSettingsEntrytag.myProfile
         case .wallet:
@@ -163,11 +166,18 @@ private enum DMenuItemsSettingsEntry: ItemListNodeEntry {
             return DMenuItemsSettingsEntrytag.faq
         case .tips:
             return DMenuItemsSettingsEntrytag.tips
+        case .header:
+            return nil
         }
     }
     
     static func ==(lhs: DMenuItemsSettingsEntry, rhs: DMenuItemsSettingsEntry) -> Bool {
         switch lhs {
+        case let .header(lhsTitle):
+            if case let .header(rhsTitle) = rhs, lhsTitle == rhsTitle {
+                return true
+            }
+            return false
         case let .myProfile(lhsTheme, lhsText, lhsValue):
             if case let .myProfile(rhsTheme, rhsText, rhsValue) = rhs, lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue {
                 return true
@@ -257,6 +267,12 @@ private enum DMenuItemsSettingsEntry: ItemListNodeEntry {
         let arguments = arguments as! DMenuItemsSettingsArguments
        
         switch self {
+        case let .header(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: section
+            )
         case let .myProfile(_, text, value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
@@ -419,6 +435,7 @@ private enum DMenuItemsSettingsEntry: ItemListNodeEntry {
 
 private func menuItemsSettingsEntries(from settings: MenuItemsSettings, presentationData data: PresentationData) -> [DMenuItemsSettingsEntry] {
     [
+        .header(title: "DahlSettings.Appearance.MenuItems".tp_loc(lang: data.strings.baseLanguageCode).uppercased()),
         .myProfile(data.theme, data.strings.Settings_MyProfile, settings.myProfile),
         .wallet(data.theme, "Wallet.TabTitle".tp_loc(lang: data.strings.baseLanguageCode), settings.wallet),
         .savedMessages(data.theme, data.strings.Settings_SavedMessages, settings.savedMessages),
