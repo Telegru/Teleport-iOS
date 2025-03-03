@@ -157,6 +157,7 @@ public final class DWallController: TelegramBaseController {
     }
     
     @objc private func reloadPressed() {
+        (controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
         controllerNode.wallContent.reloadData()
     }
 }
