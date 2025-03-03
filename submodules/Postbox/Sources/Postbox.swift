@@ -3490,6 +3490,167 @@ final class PostboxImpl {
         }
     }
     
+    fileprivate func syncAroundAggregatedMessageHistoryViewForPeerIds(
+        subscriber: Subscriber<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>,
+        peerIds: [PeerId],
+        from: [PeerId: MessageIndex]?,
+        ignoreMessagesInTimestampRange: ClosedRange<Int32>?,
+        ignoreMessageIds: Set<MessageId>,
+        count: Int,
+        clipHoles: Bool,
+        anchor: HistoryViewInputAnchor,
+        fixedCombinedReadStates: MessageHistoryViewReadState?,
+        topTaggedMessageIdNamespaces: Set<MessageId.Namespace>,
+        tag: HistoryViewInputTag?,
+        appendMessagesFromTheSameGroup: Bool,
+        namespaces: MessageIdNamespaces,
+        orderStatistics: MessageHistoryViewOrderStatistics,
+        additionalData: [AdditionalMessageHistoryViewData]
+    ) -> Disposable {
+        if peerIds.isEmpty {
+            subscriber.putNext((MessageHistoryView(tag: tag, namespaces: namespaces, entries: [], holeEarlier: false, holeLater: false, isLoading: false), .Generic, nil))
+            subscriber.putCompletion()
+            return EmptyDisposable
+        }
+        
+        var indices: [MessageIndex] = []
+        for peerId in peerIds {
+            if let fromIndices = from, let index = fromIndices[peerId] {
+                indices.append(index)
+            } else {
+                assertionFailure()
+            }
+        }
+        
+        let externalInput = MessageHistoryViewExternalInput(
+            content: .messages(indices: indices, holes: [:], userId: nil),
+            maxReadIncomingMessageId: nil,
+            maxReadOutgoingMessageId: nil
+        )
+        
+        let viewInput = MessageHistoryViewInput.external(externalInput)
+        
+        let topTaggedMessages: [MessageId.Namespace: MessageHistoryTopTaggedMessage?] = [:]
+        
+        var additionalDataEntries: [AdditionalMessageHistoryViewDataEntry] = []
+        for data in additionalData {
+            switch data {
+            case let .cachedPeerData(peerId):
+                additionalDataEntries.append(.cachedPeerData(peerId, self.cachedPeerDataTable.get(peerId)))
+            case let .cachedPeerDataMessages(peerId):
+                var messages: [MessageId: Message] = [:]
+                if let messageIds = self.cachedPeerDataTable.get(peerId)?.messageIds {
+                    for id in messageIds {
+                        if let message = self.getMessage(id) {
+                            messages[id] = message
+                        }
+                    }
+                }
+                additionalDataEntries.append(.cachedPeerDataMessages(peerId, messages))
+            case let .message(id):
+                let messages = self.getMessageGroup(at: id)
+                additionalDataEntries.append(.message(id, messages ?? []))
+            case let .peerChatState(peerId):
+                additionalDataEntries.append(.peerChatState(peerId, self.peerChatStateTable.get(peerId)?.getLegacy() as? PeerChatState))
+            case .totalUnreadState:
+                additionalDataEntries.append(.totalUnreadState(self.messageHistoryMetadataTable.getTotalUnreadState(groupId: .root)))
+            case let .peerNotificationSettings(peerId):
+                additionalDataEntries.append(.peerNotificationSettings(self.peerNotificationSettingsTable.getEffective(peerId)))
+            case let .cacheEntry(entryId):
+                additionalDataEntries.append(.cacheEntry(entryId, self.retrieveItemCacheEntry(id: entryId)))
+            case let .preferencesEntry(key):
+                additionalDataEntries.append(.preferencesEntry(key, self.preferencesTable.get(key: key)))
+            case let .peerIsContact(peerId):
+                let value: Bool
+                if let contactPeer = self.peerTable.get(peerId), let associatedPeerId = contactPeer.associatedPeerId {
+                    value = self.contactsTable.isContact(peerId: associatedPeerId)
+                } else {
+                    value = self.contactsTable.isContact(peerId: peerId)
+                }
+                additionalDataEntries.append(.peerIsContact(peerId, value))
+            case let .peer(peerId):
+                additionalDataEntries.append(.peer(peerId, self.peerTable.get(peerId)))
+            }
+        }
+        
+        var readStates: MessageHistoryViewReadState?
+        var transientReadStates: MessageHistoryViewReadState?
+        
+        if fixedCombinedReadStates != nil {
+            readStates = fixedCombinedReadStates
+        } else {
+            var peerReadStates: [PeerId: CombinedPeerReadState] = [:]
+            for peerId in peerIds {
+                if let readState = self.readStateTable.getCombinedState(peerId) {
+                    peerReadStates[peerId] = readState
+                }
+            }
+            
+            if !peerReadStates.isEmpty {
+                readStates = .peer(peerReadStates)
+                transientReadStates = .peer(peerReadStates)
+            }
+        }
+        
+        let mutableView = MutableMessageHistoryView(
+            postbox: self,
+            orderStatistics: orderStatistics,
+            clipHoles: clipHoles,
+            trackHoles: true,
+            peerIds: viewInput,
+            ignoreMessagesInTimestampRange: ignoreMessagesInTimestampRange,
+            ignoreMessageIds: ignoreMessageIds,
+            anchor: anchor,
+            combinedReadStates: readStates,
+            transientReadStates: transientReadStates,
+            tag: tag,
+            appendMessagesFromTheSameGroup: appendMessagesFromTheSameGroup,
+            namespaces: namespaces,
+            count: count,
+            topTaggedMessages: topTaggedMessages,
+            additionalDatas: additionalDataEntries
+        )
+        
+        let initialUpdateType: ViewUpdateType = .Initial
+        let (index, signal) = self.viewTracker.addMessageHistoryView(mutableView)
+        
+        let initialData: InitialMessageHistoryData?
+        if let firstPeerId = peerIds.first {
+            initialData = self.initialMessageHistoryData(peerId: firstPeerId, threadId: nil)
+        } else {
+            initialData = nil
+        }
+        
+        subscriber.putNext((MessageHistoryView(mutableView), initialUpdateType, initialData))
+        
+        let disposable = signal.start(next: { next in
+            subscriber.putNext((next.0, next.1, nil))
+        })
+        
+        final class MessageHistoryViewDisposable: Disposable {
+            let disposable: Disposable
+            weak var postbox: PostboxImpl?
+            let index: Int
+            
+            init(disposable: Disposable, postbox: PostboxImpl, index: Int) {
+                self.disposable = disposable
+                self.postbox = postbox
+                self.index = index
+            }
+            
+            func dispose() {
+                self.disposable.dispose()
+                if let postbox = self.postbox {
+                    postbox.queue.async {
+                        postbox.viewTracker.removeMessageHistoryView(index: self.index)
+                    }
+                }
+            }
+        }
+        
+        return MessageHistoryViewDisposable(disposable: disposable, postbox: self, index: index)
+    }
+    
     private func initialMessageHistoryData(peerId: PeerId, threadId: Int64?) -> InitialMessageHistoryData {
         if let threadId = threadId {
             let chatInterfaceState = self.peerChatThreadInterfaceStateTable.get(PeerChatThreadId(peerId: peerId, threadId: threadId))
@@ -4633,27 +4794,120 @@ public class Postbox {
         }
     }
     
-    public func aggregatedGlobalMessagesHistoryViewForPeerIds(
-            peerIds: [PeerId],
-            from: [PeerId: MessageIndex],
-            count: Int,
-            clipHoles: Bool,
-            namespaces: MessageId.Namespace) -> Signal<MessageHistoryView, NoError> {
+    public func aroundAggregatedMessageHistoryViewForPeerIds(
+        peerIds: [PeerId],
+        from: [PeerId: MessageIndex]? = nil,
+        count: Int,
+        clipHoles: Bool = true,
+        namespaces: MessageIdNamespaces = .just(Set([0])),
+        orderStatistics: MessageHistoryViewOrderStatistics = MessageHistoryViewOrderStatistics(),
+        additionalData: [AdditionalMessageHistoryViewData] = []
+    ) -> Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError> {
         return Signal { subscriber in
-            let disposable = MetaDisposable()
-
-            self.impl.with { impl in
-                disposable.set(impl.aggregatedGlobalMessagesHistoryViewForPeerIds(
-                    peerIds: peerIds,
-                    from: from,
-                    count: count,
-                    clipHoles: clipHoles,
-                    namespaces: namespaces
-                ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            if peerIds.isEmpty {
+                subscriber.putNext((MessageHistoryView(tag: nil, namespaces: namespaces, entries: [], holeEarlier: false, holeLater: false, isLoading: false), .Generic, nil))
+                subscriber.putCompletion()
+                return EmptyDisposable
             }
-            return disposable.strict()
+
+            let peerSignals: [Signal<(PeerId, MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>] = peerIds.map { peerId in
+                let anchor: HistoryViewInputAnchor = from?[peerId] != nil ? .index(from![peerId]!) : .unread
+
+                return self.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), anchor: anchor, ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), count: count * 2, fixedCombinedReadStates: nil, topTaggedMessageIdNamespaces: Set(), tag: nil, appendMessagesFromTheSameGroup: true, namespaces: namespaces, orderStatistics: orderStatistics)
+                |> map { viewData -> (PeerId, MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?) in
+                    return (peerId, viewData.0, viewData.1, viewData.2)
+                }
+            }
+
+            let combinedSignal = combineLatest(peerSignals)
+            |> map { peerResults -> (MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?) in
+                var allEntries: [MessageHistoryEntry] = []
+                var viewType: ViewUpdateType = .Generic
+                var initialData: InitialMessageHistoryData? = nil
+                
+                for (peerId, view, updateType, data) in peerResults {
+                    var entries = view.entries
+                    
+                    if let fromIndices = from, let fromIndex = fromIndices[peerId] {
+                        let passedGroupingKeys = Set(entries
+                            .filter { $0.index >= fromIndex }
+                            .compactMap { entry in
+                                if let groupingKey = entry.message.groupingKey {
+                                    return groupingKey
+                                }
+                                return nil
+                            })
+
+                        entries = entries.filter { entry in
+                            if entry.index >= fromIndex {
+                                return true
+                            }
+                            if let groupingKey = entry.message.groupingKey,
+                               passedGroupingKeys.contains(groupingKey) {
+                                return true
+                            }
+                            return false
+                        }
+                    }
+                    
+                    allEntries.append(contentsOf: entries)
+                    
+                    if updateType == .Initial {
+                        viewType = .Initial
+                    } else if updateType == .FillHole && viewType != .Initial {
+                        viewType = .FillHole
+                    }
+                    
+                    if initialData == nil {
+                        initialData = data
+                    }
+                }
+                
+                allEntries.sort { $0.index < $1.index }
+                
+                if allEntries.count > count {
+                    allEntries = Array(allEntries.prefix(count))
+                }
+                
+                let namespaceSet = Set(allEntries.map { $0.index.id.namespace })
+                let aggregatedView = MessageHistoryView(
+                    tag: nil,
+                    namespaces: .just(namespaceSet),
+                    entries: allEntries,
+                    holeEarlier: false,
+                    holeLater: false,
+                    isLoading: false
+                )
+                
+                return (aggregatedView, viewType, initialData)
+            }
+            
+            let disposable = combinedSignal.start(next: subscriber.putNext, completed: subscriber.putCompletion)
+            return disposable
         }
     }
+    
+//    public func aggregatedGlobalMessagesHistoryViewForPeerIds(
+//            peerIds: [PeerId],
+//            from: [PeerId: MessageIndex],
+//            count: Int,
+//            clipHoles: Bool,
+//            namespaces: MessageId.Namespace) -> Signal<MessageHistoryView, NoError> {
+//        return Signal { subscriber in
+//            let disposable = MetaDisposable()
+//
+//            self.impl.with { impl in
+//                disposable.set(impl.aggregatedGlobalMessagesHistoryViewForPeerIds(
+//                    peerIds: peerIds,
+//                    from: from,
+//                    count: count,
+//                    clipHoles: clipHoles,
+//                    namespaces: namespaces
+//                ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+//            }
+//            return disposable.strict()
+//        }
+//    }
     
     public func oldestUnreadMessagesForPeerIds(
             peerIds: [PeerId],
