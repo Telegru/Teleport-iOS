@@ -53,7 +53,7 @@ public func dateFillNeedsBlur(theme: PresentationTheme, wallpaper: TelegramWallp
 }
 
 public let defaultServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
-public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
+public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false, squareStyle: false)
 public let defaultDayAccentColor = UIColor(rgb: 0x3D4052)
 
 public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
@@ -385,11 +385,12 @@ public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, ti
         contextMenu: theme.contextMenu,
         inAppNotification: theme.inAppNotification,
         chart: theme.chart,
-        preview: theme.preview
+        preview: theme.preview,
+        squareStyle: theme.squareStyle
     )
 }
 
-public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool) -> PresentationTheme {
+public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool, squareStyle: Bool) -> PresentationTheme {
     var serviceBackgroundColor = serviceBackgroundColor ?? defaultServiceBackgroundColor
 
     if !day {
@@ -440,8 +441,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         selectedTextColor: defaultDayAccentColor,
         badgeBackgroundColor: UIColor(rgb: 0xff3b30),
         badgeStrokeColor: UIColor(rgb: 0xff3b30),
-        badgeTextColor: UIColor(rgb: 0xffffff),
-        useSquareStyle: true
+        badgeTextColor: UIColor(rgb: 0xffffff)
     )
     
     let navigationSearchBar = PresentationThemeNavigationSearchBar(
@@ -1016,8 +1016,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation,
-        isRectangleCountMessageBadge: true
+        historyNavigation: historyNavigation
     )
     
     let actionSheet = PresentationThemeActionSheet(
@@ -1101,7 +1100,8 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: preview
+        preview: preview,
+        squareStyle: squareStyle
     )
 }
 

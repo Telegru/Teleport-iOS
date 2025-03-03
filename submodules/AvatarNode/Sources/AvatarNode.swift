@@ -15,6 +15,7 @@ import ComponentFlow
 import AvatarStoryIndicatorComponent
 import DirectMediaImageCache
 import TPUI
+import TelegramUIPreferences
 
 private let deletedIcon = UIImage(bundleImageName: "Avatar/DeletedIcon")?.precomposed()
 private let phoneIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/PhoneIcon"), color: .white)
@@ -528,12 +529,16 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .rect,
+            clipStyle: AvatarNodeClipStyle = .round,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false,
             cutoutRect: CGRect? = nil
         ) {
+            var clipStyle = clipStyle
+            if clipStyle == .round && theme.squareStyle {
+                clipStyle = .rect
+            }
             var synchronousLoad = synchronousLoad
             var representation: TelegramMediaImageRepresentation?
             var icon = AvatarNodeIcon.none
@@ -654,11 +659,15 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .rect,
+            clipStyle: AvatarNodeClipStyle = .round,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false
         ) {
+            var clipStyle = clipStyle
+            if clipStyle == .round && theme.squareStyle {
+                clipStyle = .rect
+            }
             let smallProfileImage = peer?.smallProfileImage
             let params = Params(
                 peerId: peer?.id,
@@ -710,12 +719,16 @@ public final class AvatarNode: ASDisplayNode {
             authorOfMessage: MessageReference? = nil,
             overrideImage: AvatarNodeImageOverride? = nil,
             emptyColor: UIColor? = nil,
-            clipStyle: AvatarNodeClipStyle = .rect,
+            clipStyle: AvatarNodeClipStyle = .round,
             synchronousLoad: Bool = false,
             displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
             storeUnrounded: Bool = false,
             cutoutRect: CGRect? = nil
         ) {
+            var clipStyle = clipStyle
+            if clipStyle == .round && theme.squareStyle {
+                clipStyle = .rect
+            }
             var synchronousLoad = synchronousLoad
             var representation: TelegramMediaImageRepresentation?
             var icon = AvatarNodeIcon.none
@@ -1198,11 +1211,15 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .rect,
+        clipStyle: AvatarNodeClipStyle = .round,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false
     ) {
+        var clipStyle = clipStyle
+        if clipStyle == .round && theme.squareStyle {
+            clipStyle = .rect
+        }
         self.contentNode.setPeer(
             accountPeerId: accountPeerId,
             postbox: postbox,
@@ -1227,11 +1244,15 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .rect,
+        clipStyle: AvatarNodeClipStyle = .round,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false
     ) {
+        var clipStyle = clipStyle
+        if clipStyle == .round && theme.squareStyle {
+            clipStyle = .rect
+        }
         self.contentNode.setPeerV2(
             context: genericContext,
             theme: theme,
@@ -1254,12 +1275,16 @@ public final class AvatarNode: ASDisplayNode {
         authorOfMessage: MessageReference? = nil,
         overrideImage: AvatarNodeImageOverride? = nil,
         emptyColor: UIColor? = nil,
-        clipStyle: AvatarNodeClipStyle = .rect,
+        clipStyle: AvatarNodeClipStyle = .round,
         synchronousLoad: Bool = false,
         displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0),
         storeUnrounded: Bool = false,
         cutoutRect: CGRect? = nil
     ) {
+        var clipStyle = clipStyle
+        if clipStyle == .round && theme.squareStyle {
+            clipStyle = .rect
+        }
         self.contentNode.setPeer(
             context: context,
             account: account,
@@ -1382,7 +1407,7 @@ public final class AvatarNode: ASDisplayNode {
                     ),
                     progress: mappedProgress,
                     isRoundedRect: self.contentNode.clipStyle == .roundedRect || storyPresentationParams.forceRoundedRect,
-                    isRectSimple: true
+                    isRectSimple: self.contentNode.clipStyle == .rect
                 )),
                 environment: {},
                 containerSize: indicatorSize

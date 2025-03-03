@@ -5,7 +5,7 @@ import TelegramUIPreferences
 import Postbox
 
 private let defaultDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
-public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false)
+public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false)
 
 private extension PresentationThemeBaseColor {
     var colorWallpaper: (BuiltinWallpaperData, Int32, [UInt32])? {
@@ -505,11 +505,12 @@ public func customizeDefaultDarkTintedPresentationTheme(theme: PresentationTheme
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: theme.preview
+        preview: theme.preview,
+        squareStyle: theme.squareStyle
     )
 }
 
-public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool) -> PresentationTheme {
+public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool) -> PresentationTheme {
     let accentColor = defaultDarkTintedAccentColor
     
     let secondaryBadgeTextColor: UIColor
@@ -554,8 +555,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         selectedTextColor: accentColor,
         badgeBackgroundColor: UIColor(rgb: 0xef5b5b),
         badgeStrokeColor: UIColor(rgb: 0xef5b5b),
-        badgeTextColor: UIColor(rgb: 0xffffff),
-        useSquareStyle: true
+        badgeTextColor: UIColor(rgb: 0xffffff)
     )
 
     let rootNavigationBar = PresentationThemeRootNavigationBar(
@@ -945,8 +945,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation,
-        isRectangleCountMessageBadge: true
+        historyNavigation: historyNavigation
     )
 
     let actionSheet = PresentationThemeActionSheet(
@@ -1030,6 +1029,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: preview
+        preview: preview,
+        squareStyle: squareStyle
     )
 }

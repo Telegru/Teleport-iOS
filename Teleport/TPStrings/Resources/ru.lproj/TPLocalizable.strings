@@ -85,6 +85,9 @@
 "DahlSettings.Appearance.MenuItems.Header" = "Меню настроек Telegram";
 "DahlSettings.Appearance.MenuItems" = "Пункты меню";
 
+"DahlSettings.Appearance.ViewRounding.Header" = "Закругление элементов (аватары и кнопки)";
+"DahlSettings.Appearance.ViewRounding" = "Квадратные";
+
 "DahlSettings.Chats.Title" = "Чаты";
 "DahlSettings.Chats.Confirmation.Header" = "Подтверждение";
 "DahlSettings.Chats.Confirmation.Call" = "Звонок";

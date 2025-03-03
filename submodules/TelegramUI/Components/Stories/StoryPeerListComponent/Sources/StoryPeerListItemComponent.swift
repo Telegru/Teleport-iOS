@@ -694,7 +694,7 @@ public final class StoryPeerListItemComponent: Component {
                 context: component.context,
                 theme: component.theme,
                 peer: component.peer,
-                clipStyle: component.theme.useSquareStyle ? .round : .round // TODO: Добавить круглые сторис
+                clipStyle: component.theme.squareStyle ? .round : .round // TODO: Добавить круглые сторис
             )
             avatarNode.updateSize(size: avatarSize)
             

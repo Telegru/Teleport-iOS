@@ -475,7 +475,7 @@ func openChatTheme(context: AccountContext, message: Message, pushController: @e
                             }
                         }
                     } else if let settings = settings {
-                        if let theme = makePresentationTheme(settings: settings, title: content.title) {
+                        if let theme = makePresentationTheme(settings: settings, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle, title: content.title) {
                             let controller = ThemePreviewController(context: context, previewTheme: theme, source: .themeSettings(slug, settings))
                             pushController(controller)
                         } else {

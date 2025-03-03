@@ -391,7 +391,7 @@ final class WallpaperGalleryItemNode: GalleryItemNode {
                 if let themeSpecificWallpaper = themeSpecificWallpaper {
                     lightWallpaper = themeSpecificWallpaper
                 } else {
-                    let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true) ?? defaultPresentationTheme
+                    let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true, squareStyle: darkTheme.squareStyle) ?? defaultPresentationTheme
                     lightWallpaper = theme.chat.defaultWallpaper
                 }
                 
@@ -400,7 +400,7 @@ final class WallpaperGalleryItemNode: GalleryItemNode {
                     preferredBaseTheme = baseTheme
                 }
                 
-                lightTheme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, baseTheme: preferredBaseTheme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+                lightTheme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, baseTheme: preferredBaseTheme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: darkTheme.squareStyle) ?? defaultPresentationTheme
             } else {
                 lightTheme = presentationData.theme
                 lightWallpaper = presentationData.chatWallpaper
@@ -416,7 +416,7 @@ final class WallpaperGalleryItemNode: GalleryItemNode {
                     preferredBaseTheme = .night
                 }
                 
-                darkTheme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+                darkTheme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: lightTheme.squareStyle) ?? defaultPresentationTheme
                 
                 if let themeSpecificWallpaper = themeSpecificWallpaper {
                     darkWallpaper = themeSpecificWallpaper

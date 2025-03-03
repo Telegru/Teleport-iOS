@@ -219,7 +219,7 @@ private final class ThemeGridThemeItemIconNode : ASDisplayNode {
                 let color = item.themeSpecificAccentColors[themeReference.index]
                 let wallpaper = item.themeSpecificChatWallpapers[themeReference.index]
                 
-                self.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: color, wallpaper: wallpaper ?? item.wallpaper, nightMode: item.nightMode, emoticon: true, large: true))
+                self.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: color, wallpaper: wallpaper ?? item.wallpaper, nightMode: item.nightMode, emoticon: true, large: true, squareStyle: item.theme.squareStyle))
                 self.imageNode.backgroundColor = nil
             }
         }

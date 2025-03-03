@@ -410,7 +410,7 @@ private final class ThemeSettingsThemeItemIconNode : ListViewItemNode {
                         
                     if updatedThemeReference || updatedWallpaper || updatedNightMode {
                         if let themeReference = item.themeReference {
-                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: nil, wallpaper: item.wallpaper, nightMode: item.nightMode, emoticon: true))
+                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: nil, wallpaper: item.wallpaper, nightMode: item.nightMode, emoticon: true, squareStyle: item.theme.squareStyle))
                             strongSelf.imageNode.backgroundColor = nil
                         }
                     }

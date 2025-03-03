@@ -397,8 +397,7 @@ extension PresentationThemeRootTabBar: Codable {
                   selectedTextColor: try decodeColor(values, .selectedText),
                   badgeBackgroundColor: try decodeColor(values, .badgeBackground),
                   badgeStrokeColor: try decodeColor(values, .badgeStroke),
-                  badgeTextColor: try decodeColor(values, .badgeText),
-                  useSquareStyle: true)
+                  badgeTextColor: try decodeColor(values, .badgeText))
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -1838,7 +1837,7 @@ extension PresentationThemeChat: Codable {
                   inputPanel: try values.decode(PresentationThemeChatInputPanel.self, forKey: .inputPanel),
                   inputMediaPanel: try values.decode(PresentationThemeInputMediaPanel.self, forKey: .inputMediaPanel),
                   inputButtonPanel: try values.decode(PresentationThemeInputButtonPanel.self, forKey: .inputButtonPanel),
-                  historyNavigation: try values.decode(PresentationThemeChatHistoryNavigation.self, forKey: .historyNav), isRectangleCountMessageBadge: true)
+                  historyNavigation: try values.decode(PresentationThemeChatHistoryNavigation.self, forKey: .historyNav))
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -2084,6 +2083,8 @@ extension PresentationTheme: Codable {
         case contextMenu
         case notification
         case chart
+        
+        case squareStyle
     }
     
     public convenience init(from decoder: Decoder) throws {
@@ -2095,10 +2096,12 @@ extension PresentationTheme: Codable {
             referenceTheme = .dayClassic
         }
         
+        let squareStyle = try values.decode(Bool.self, forKey: .squareStyle)
+        
         let index: Int64
         if let decoder = decoder as? PresentationThemeDecoding {
             let serviceBackgroundColor = decoder.serviceBackgroundColor ?? defaultServiceBackgroundColor
-            decoder.referenceTheme = makeDefaultPresentationTheme(reference: referenceTheme, serviceBackgroundColor: serviceBackgroundColor)
+            decoder.referenceTheme = makeDefaultPresentationTheme(reference: referenceTheme, serviceBackgroundColor: serviceBackgroundColor, squareStyle: squareStyle)
             index = decoder.reference?.index ?? Int64.random(in: Int64.min ... Int64.max)
         } else {
             index = Int64.random(in: Int64.min ... Int64.max)
@@ -2117,7 +2120,8 @@ extension PresentationTheme: Codable {
                   actionSheet: try values.decode(PresentationThemeActionSheet.self, forKey: .actionSheet),
                   contextMenu: try values.decode(PresentationThemeContextMenu.self, forKey: .contextMenu),
                   inAppNotification: try values.decode(PresentationThemeInAppNotification.self, forKey: .notification),
-                  chart: try values.decode(PresentationThemeChart.self, forKey: .chart)
+                  chart: try values.decode(PresentationThemeChart.self, forKey: .chart),
+                  squareStyle: squareStyle
         )
     }
     
@@ -2136,5 +2140,6 @@ extension PresentationTheme: Codable {
         try container.encode(self.contextMenu, forKey: .contextMenu)
         try container.encode(self.inAppNotification, forKey: .notification)
         try container.encode(self.chart, forKey: .chart)
+        try container.encode(self.squareStyle, forKey: .squareStyle)
     }
 }

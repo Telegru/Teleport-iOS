@@ -450,7 +450,7 @@ private final class ThemeSettingsThemeItemIconNode : ListViewItemNode {
                         
                     if updatedThemeReference || updatedWallpaper || updatedNightMode {
                         if let themeReference = item.themeReference {
-                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: nil, wallpaper: item.wallpaper, nightMode: item.nightMode, emoticon: true, qr: !item.message, message: item.message))
+                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: nil, wallpaper: item.wallpaper, nightMode: item.nightMode, emoticon: true, qr: !item.message, message: item.message, squareStyle: item.theme.squareStyle))
                             strongSelf.imageNode.backgroundColor = nil
                         }
                     }
@@ -1065,7 +1065,7 @@ private class ChatQrCodeScreenNode: ViewControllerTracingNode, ASScrollViewDeleg
             
             let defaultWallpaper: TelegramWallpaper?
             if isDarkAppearance {
-                let dayTheme = makeDefaultPresentationTheme(reference: .dayClassic, serviceBackgroundColor: nil)
+                let dayTheme = makeDefaultPresentationTheme(reference: .dayClassic, serviceBackgroundColor: nil, squareStyle: presentationData.theme.squareStyle)
                 defaultWallpaper = dayTheme.chat.defaultWallpaper.withUpdatedSettings(WallpaperSettings(blur: false, motion: false, colors: [0x00b3dd, 0x3b59f2, 0x358be2, 0xa434cf], intensity: -55, rotation: nil))
             } else {
                 defaultWallpaper = nil
@@ -1081,14 +1081,14 @@ private class ChatQrCodeScreenNode: ViewControllerTracingNode, ASScrollViewDeleg
             let wallpaper: TelegramWallpaper
             let previewTheme: PresentationTheme
             if selectedEmoticon == defaultEmoticon {
-                let presentationTheme = makeDefaultPresentationTheme(reference: isDarkAppearance ? .night : .dayClassic, serviceBackgroundColor: nil)
+                let presentationTheme = makeDefaultPresentationTheme(reference: isDarkAppearance ? .night : .dayClassic, serviceBackgroundColor: nil, squareStyle: presentationData.theme.squareStyle)
                 if isDarkAppearance {
                     wallpaper = entries.first?.wallpaper ?? .color(0x000000)
                 } else {
                     wallpaper = presentationTheme.chat.defaultWallpaper
                 }
                 previewTheme = presentationTheme
-            } else if let theme = themes.first(where: { $0.emoticon == selectedEmoticon }), let presentationTheme = makePresentationTheme(cloudTheme: theme, dark: isDarkAppearance) {
+            } else if let theme = themes.first(where: { $0.emoticon == selectedEmoticon }), let presentationTheme = makePresentationTheme(cloudTheme: theme, squareStyle: strongSelf.presentationData.theme.squareStyle, dark: isDarkAppearance) {
                 wallpaper = presentationTheme.chat.defaultWallpaper
                 previewTheme = presentationTheme
             } else {
@@ -1102,9 +1102,9 @@ private class ChatQrCodeScreenNode: ViewControllerTracingNode, ASScrollViewDeleg
                     
                     var presentationTheme: PresentationTheme?
                     if emoticon == defaultEmoticon {
-                        presentationTheme = makeDefaultPresentationTheme(reference: isDarkAppearance ? .night : .dayClassic, serviceBackgroundColor: nil)
+                        presentationTheme = makeDefaultPresentationTheme(reference: isDarkAppearance ? .night : .dayClassic, serviceBackgroundColor: nil, squareStyle: strongSelf.presentationData.theme.squareStyle)
                     } else if let theme = themes.first(where: { $0.emoticon == emoticon }) {
-                        if let theme = makePresentationTheme(cloudTheme: theme, dark: isDarkAppearance) {
+                        if let theme = makePresentationTheme(cloudTheme: theme, squareStyle: strongSelf.presentationData.theme.squareStyle, dark: isDarkAppearance) {
                             presentationTheme = theme
                         }
                     }
@@ -1313,9 +1313,9 @@ private class ChatQrCodeScreenNode: ViewControllerTracingNode, ASScrollViewDeleg
         
         var presentationTheme: PresentationTheme?
         if self.selectedEmoticon == defaultEmoticon {
-            presentationTheme = makeDefaultPresentationTheme(reference: isDarkAppearance ? .night : .dayClassic, serviceBackgroundColor: nil)
+            presentationTheme = makeDefaultPresentationTheme(reference: isDarkAppearance ? .night : .dayClassic, serviceBackgroundColor: nil, squareStyle: self.presentationData.theme.squareStyle)
         } else if let theme = self.themes.first(where: { $0.emoticon == self.selectedEmoticon }) {
-            if let theme = makePresentationTheme(cloudTheme: theme, dark: isDarkAppearance) {
+            if let theme = makePresentationTheme(cloudTheme: theme, squareStyle: self.presentationData.theme.squareStyle, dark: isDarkAppearance) {
                 presentationTheme = theme
             }
         }

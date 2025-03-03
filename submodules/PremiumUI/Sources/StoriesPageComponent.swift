@@ -86,7 +86,7 @@ private final class AvatarComponent: Component {
                         activeLineWidth: 3.0,
                         inactiveLineWidth: 3.0,
                         counters: AvatarStoryIndicatorComponent.Counters(totalCount: 8, unseenCount: 8),
-                        isRectSimple: true
+                        isRectSimple: component.theme.squareStyle
                     )
                 ),
                 environment: {},

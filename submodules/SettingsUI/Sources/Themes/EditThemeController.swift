@@ -319,7 +319,7 @@ public func editThemeController(context: AccountContext, mode: EditThemeControll
                 settingsPromise.set(.single(settings))
                 hasSettings = settings != nil
             } else if let settings = settings {
-                theme = makePresentationTheme(settings: settings) ?? presentationData.theme
+                theme = makePresentationTheme(settings: settings, squareStyle: presentationData.theme.squareStyle) ?? presentationData.theme
                 wallpaper = theme.chat.defaultWallpaper
                 settingsPromise.set(.single(settings))
                 hasSettings = true
@@ -457,12 +457,12 @@ public func editThemeController(context: AccountContext, mode: EditThemeControll
                 if updatedTheme.referenceTheme == .night {
                     updatedTheme = updatedTheme.withUpdated(referenceTheme: .nightAccent)
                     updatedSettings = TelegramThemeSettings(baseTheme: .tinted, accentColor: themeSettings.accentColor, outgoingAccentColor: themeSettings.outgoingAccentColor, messageColors: themeSettings.messageColors, animateMessageColors: themeSettings.animateMessageColors, wallpaper: themeSettings.wallpaper)
-                    if let settings = updatedSettings, let theme = makePresentationTheme(settings: settings) {
+                    if let settings = updatedSettings, let theme = makePresentationTheme(settings: settings, squareStyle: presentationData.theme.squareStyle) {
                         updatedTheme = theme
                     }
                 } else if updatedTheme.referenceTheme == .nightAccent {
                     updatedSettings = TelegramThemeSettings(baseTheme: .night, accentColor: themeSettings.accentColor, outgoingAccentColor: themeSettings.outgoingAccentColor, messageColors: themeSettings.messageColors, animateMessageColors: themeSettings.animateMessageColors, wallpaper: themeSettings.wallpaper)
-                    if let settings = updatedSettings, let theme = makePresentationTheme(settings: settings) {
+                    if let settings = updatedSettings, let theme = makePresentationTheme(settings: settings, squareStyle: theme.squareStyle) {
                         updatedTheme = theme
                     }
                 }

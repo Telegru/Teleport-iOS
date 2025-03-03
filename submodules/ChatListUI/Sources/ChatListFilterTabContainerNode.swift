@@ -223,10 +223,10 @@ private final class ItemNode: ASDisplayNode {
         var themeUpdated = false
         if self.theme !== presentationData.theme {
             self.theme = presentationData.theme
-            let useSquareStyle = theme?.chat.isRectangleCountMessageBadge == true
-            self.badgeBackgroundActiveNode.image = useSquareStyle ? generateStretchableFilledRectImage(size: CGSize(width: 18.0, height: 18.0), cornerRadius: 4, color: presentationData.theme.chatList.unreadBadgeActiveBackgroundColor, backgroundColor: nil): generateStretchableFilledCircleImage(diameter: 18.0, color: presentationData.theme.chatList.unreadBadgeActiveBackgroundColor)
+            let squareStyle = theme?.squareStyle ?? false
+            self.badgeBackgroundActiveNode.image = squareStyle ? generateStretchableFilledRectImage(size: CGSize(width: 18.0, height: 18.0), cornerRadius: 4, color: presentationData.theme.chatList.unreadBadgeActiveBackgroundColor, backgroundColor: nil): generateStretchableFilledCircleImage(diameter: 18.0, color: presentationData.theme.chatList.unreadBadgeActiveBackgroundColor)
             
-            self.badgeBackgroundInactiveNode.image = useSquareStyle ? generateStretchableFilledRectImage(size: CGSize(width: 18.0, height: 18.0), cornerRadius: 4, color: presentationData.theme.chatList.unreadBadgeInactiveBackgroundColor, backgroundColor: nil): generateStretchableFilledCircleImage(diameter: 18.0, color: presentationData.theme.chatList.unreadBadgeInactiveBackgroundColor)
+            self.badgeBackgroundInactiveNode.image = squareStyle ? generateStretchableFilledRectImage(size: CGSize(width: 18.0, height: 18.0), cornerRadius: 4, color: presentationData.theme.chatList.unreadBadgeInactiveBackgroundColor, backgroundColor: nil): generateStretchableFilledCircleImage(diameter: 18.0, color: presentationData.theme.chatList.unreadBadgeInactiveBackgroundColor)
             
             self.selectionIndicatorNode.image = generateImage(CGSize(width: 5.0, height: 3.0), rotatedContext: { size, context in
                 context.clear(CGRect(origin: CGPoint(), size: size))
