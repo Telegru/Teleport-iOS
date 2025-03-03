@@ -1576,9 +1576,10 @@ public final class PresentationTheme: Equatable {
     public var forceSync: Bool = false
 
     public let resourceCache: PresentationsResourceCache = PresentationsResourceCache()
-    public var squareStyle: Bool
+    public let squareStyle: Bool
+    public let vkIcons: Bool
 
-    public init(name: PresentationThemeName, index: Int64, referenceTheme: PresentationBuiltinThemeReference, overallDarkAppearance: Bool, intro: PresentationThemeIntro, passcode: PresentationThemePasscode, rootController: PresentationThemeRootController, list: PresentationThemeList, chatList: PresentationThemeChatList, chat: PresentationThemeChat, actionSheet: PresentationThemeActionSheet, contextMenu: PresentationThemeContextMenu, inAppNotification: PresentationThemeInAppNotification, chart: PresentationThemeChart, preview: Bool = false, squareStyle: Bool) {
+    public init(name: PresentationThemeName, index: Int64, referenceTheme: PresentationBuiltinThemeReference, overallDarkAppearance: Bool, intro: PresentationThemeIntro, passcode: PresentationThemePasscode, rootController: PresentationThemeRootController, list: PresentationThemeList, chatList: PresentationThemeChatList, chat: PresentationThemeChat, actionSheet: PresentationThemeActionSheet, contextMenu: PresentationThemeContextMenu, inAppNotification: PresentationThemeInAppNotification, chart: PresentationThemeChart, preview: Bool = false, squareStyle: Bool, vkIcons: Bool) {
         var overallDarkAppearance = overallDarkAppearance
         if [.night, .tinted].contains(referenceTheme.baseTheme) {
             overallDarkAppearance = true
@@ -1600,6 +1601,7 @@ public final class PresentationTheme: Equatable {
         self.chart = chart
         self.preview = preview
         self.squareStyle = squareStyle
+        self.vkIcons = vkIcons
     }
     
     public func image(_ key: Int32, _ generate: (PresentationTheme) -> UIImage?) -> UIImage? {
@@ -1632,21 +1634,21 @@ public final class PresentationTheme: Equatable {
                     break
             }
         }
-        return PresentationTheme(name: name.flatMap(PresentationThemeName.custom) ?? .custom(self.name.string), index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat.withUpdated(defaultWallpaper: defaultWallpaper), actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle)
+        return PresentationTheme(name: name.flatMap(PresentationThemeName.custom) ?? .custom(self.name.string), index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat.withUpdated(defaultWallpaper: defaultWallpaper), actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle, vkIcons: self.vkIcons)
     }
     
     public func withUpdated(referenceTheme: PresentationBuiltinThemeReference) -> PresentationTheme {
-        return PresentationTheme(name: self.name, index: self.index, referenceTheme: referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle)
+        return PresentationTheme(name: self.name, index: self.index, referenceTheme: referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle, vkIcons: self.vkIcons)
     }
     
     public func withUpdated(preview: Bool) -> PresentationTheme {
-        return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: preview, squareStyle: self.squareStyle)
+        return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: preview, squareStyle: self.squareStyle, vkIcons: self.vkIcons)
     }
     
     public func withModalBlocksBackground() -> PresentationTheme {
         if self.list.blocksBackgroundColor.rgb == self.list.plainBackgroundColor.rgb {
             let list = self.list.withUpdated(blocksBackgroundColor: self.list.modalBlocksBackgroundColor, itemBlocksBackgroundColor: self.list.itemModalBlocksBackgroundColor)
-            return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle)
+            return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle, vkIcons: self.vkIcons)
         } else {
             return self
         }

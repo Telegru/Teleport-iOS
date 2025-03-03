@@ -75,22 +75,22 @@ private func renderIcon(iconRef: IconRef, scaleFactor: CGFloat = 1.0, background
 public struct PresentationResourcesSettings {
     public static let editProfile = renderIcon(iconRef: .name(name: "Settings/Menu/EditProfile"))
     public static let proxy = renderIcon(iconRef: .name(name: "Settings/Menu/Proxy"))
-    public static let savedMessages = renderIcon(iconRef: .iconType(iconType: .savedMessages))
-    public static let recentCalls = renderIcon(iconRef: .iconType(iconType: .recentCalls))
-    public static let devices = renderIcon(iconRef: .iconType(iconType: .sessions))
-    public static let chatFolders = renderIcon(iconRef: .iconType(iconType: .chatListFilters))
+    public static var savedMessages: UIImage? { renderIcon(iconRef: .iconType(iconType: .savedMessages)) }
+    public static var recentCalls: UIImage? { renderIcon(iconRef: .iconType(iconType: .recentCalls)) }
+    public static var devices: UIImage? { renderIcon(iconRef: .iconType(iconType: .sessions)) }
+    public static var chatFolders: UIImage? { renderIcon(iconRef: .iconType(iconType: .chatListFilters)) }
     public static let stickers = renderIcon(iconRef: .name(name: "Settings/Menu/Stickers"))
-    public static let notifications = renderIcon(iconRef: .iconType(iconType: .notifications))
-    public static let security = renderIcon(iconRef: .iconType(iconType: .security))
-    public static let dataAndStorage = renderIcon(iconRef: .iconType(iconType: .dataAndStorage))
-    public static let appearance = renderIcon(iconRef: .iconType(iconType: .appearance))
-    public static let language = renderIcon(iconRef: .iconType(iconType: .language))
+    public static var notifications: UIImage? { renderIcon(iconRef: .iconType(iconType: .notifications)) }
+    public static var security: UIImage? { renderIcon(iconRef: .iconType(iconType: .security)) }
+    public static var dataAndStorage: UIImage? { renderIcon(iconRef: .iconType(iconType: .dataAndStorage)) }
+    public static var appearance: UIImage? { renderIcon(iconRef: .iconType(iconType: .appearance)) }
+    public static var language: UIImage? { renderIcon(iconRef: .iconType(iconType: .language)) }
     public static let deleteAccount = renderIcon(iconRef: .name(name: "Chat/Info/GroupRemovedIcon"))
-    public static let powerSaving = renderIcon(iconRef: .iconType(iconType: .powerSaving))
+    public static var powerSaving: UIImage? { renderIcon(iconRef: .iconType(iconType: .powerSaving)) }
     public static let stories = renderIcon(iconRef: .name(name: "Premium/Perk/Stories"), scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x5856D6)])
     public static let premiumGift = renderIcon(iconRef: .name(name: "Settings/Menu/Gift"))
     public static let business = renderIcon(iconRef: .name(name: "Settings/Menu/Business"), backgroundColors: [UIColor(rgb: 0xA95CE3), UIColor(rgb: 0xF16B80)])
-    public static let myProfile = renderIcon(iconRef: .iconType(iconType: .profile))
+    public static var myProfile: UIImage? { renderIcon(iconRef: .iconType(iconType: .profile)) }
     public static let reactions = renderIcon(iconRef: .name(name: "Settings/Menu/Reactions"))
     public static let balance = renderIcon(iconRef: .name(name: "Settings/Menu/Balance"), scaleFactor: 0.97, backgroundColors: [UIColor(rgb: 0x34c759)])
     public static let affiliateProgram = renderIcon(iconRef: .name(name: "Settings/Menu/AffiliateProgram"))

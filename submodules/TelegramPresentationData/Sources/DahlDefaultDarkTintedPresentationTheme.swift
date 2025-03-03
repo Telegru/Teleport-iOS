@@ -6,7 +6,7 @@ import Postbox
 import DWallpaper
 
 private let defaultDahlDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
-public let defaultDahlDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false)
+public let defaultDahlDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false, vkIcons: false)
 
 private extension PresentationThemeBaseColor {
     var colorWallpaper: (BuiltinWallpaperData, Int32, [UInt32])? {
@@ -507,11 +507,12 @@ public func customizeDefaultDahlDarkTintedPresentationTheme(theme: PresentationT
         inAppNotification: inAppNotification,
         chart: chart,
         preview: theme.preview,
-        squareStyle: theme.squareStyle
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
-public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool) -> PresentationTheme {
+public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     let accentColor = defaultDahlDarkTintedAccentColor
     
     let secondaryBadgeTextColor: UIColor
@@ -1031,6 +1032,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         inAppNotification: inAppNotification,
         chart: chart,
         preview: preview,
-        squareStyle: squareStyle
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }

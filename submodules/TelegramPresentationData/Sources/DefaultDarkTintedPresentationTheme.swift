@@ -5,7 +5,7 @@ import TelegramUIPreferences
 import Postbox
 
 private let defaultDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
-public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false)
+public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false, vkIcons: false)
 
 private extension PresentationThemeBaseColor {
     var colorWallpaper: (BuiltinWallpaperData, Int32, [UInt32])? {
@@ -506,11 +506,12 @@ public func customizeDefaultDarkTintedPresentationTheme(theme: PresentationTheme
         inAppNotification: inAppNotification,
         chart: chart,
         preview: theme.preview,
-        squareStyle: theme.squareStyle
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
-public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool) -> PresentationTheme {
+public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     let accentColor = defaultDarkTintedAccentColor
     
     let secondaryBadgeTextColor: UIColor
@@ -1030,6 +1031,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         inAppNotification: inAppNotification,
         chart: chart,
         preview: preview,
-        squareStyle: squareStyle
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }

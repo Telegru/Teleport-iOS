@@ -4,17 +4,17 @@ import Postbox
 import TelegramUIPreferences
 import TelegramCore
 
-public func makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference, extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, preview: Bool = false, squareStyle: Bool) -> PresentationTheme {
+public func makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference, extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, preview: Bool = false, squareStyle: Bool, vkIcons: Bool = false) -> PresentationTheme {
     let theme: PresentationTheme
     switch reference {
         case .dayClassic:
-        theme = makeDefaultDahlDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: false, preview: preview, squareStyle: squareStyle)
+        theme = makeDefaultDahlDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: false, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
         case .day:
-        theme = makeDefaultDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: true, preview: preview, squareStyle: squareStyle)
+        theme = makeDefaultDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: true, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
         case .night:
-        theme = makeDefaultDarkPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle)
+        theme = makeDefaultDarkPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
         case .nightAccent:
-        theme = makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle)
+        theme = makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
 
     }
     return theme
@@ -34,12 +34,12 @@ public func customizePresentationTheme(_ theme: PresentationTheme, editing: Bool
     }
 }
 
-public func makePresentationTheme(settings: TelegramThemeSettings, squareStyle: Bool, title: String? = nil, serviceBackgroundColor: UIColor? = nil) -> PresentationTheme? {
-    let defaultTheme = makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference(baseTheme: settings.baseTheme), extendingThemeReference: nil, serviceBackgroundColor: serviceBackgroundColor, preview: false, squareStyle: squareStyle)
+public func makePresentationTheme(settings: TelegramThemeSettings, squareStyle: Bool, title: String? = nil, serviceBackgroundColor: UIColor? = nil, vkIcons: Bool = false) -> PresentationTheme? {
+    let defaultTheme = makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference(baseTheme: settings.baseTheme), extendingThemeReference: nil, serviceBackgroundColor: serviceBackgroundColor, preview: false, squareStyle: squareStyle, vkIcons: vkIcons)
     return customizePresentationTheme(defaultTheme, editing: true, title: title, accentColor: UIColor(argb: settings.accentColor), outgoingAccentColor: settings.outgoingAccentColor.flatMap { UIColor(argb: $0) }, backgroundColors: [], bubbleColors: settings.messageColors, animateBubbleColors: settings.animateMessageColors, wallpaper: settings.wallpaper)
 }
 
-public func makePresentationTheme(cloudTheme: TelegramTheme, squareStyle: Bool, dark: Bool = false) -> PresentationTheme? {
+public func makePresentationTheme(cloudTheme: TelegramTheme, squareStyle: Bool, dark: Bool = false, vkIcons: Bool = false) -> PresentationTheme? {
     let settings: TelegramThemeSettings?
     if let exactSettings = cloudTheme.settings?.first(where: { dark ? ($0.baseTheme == .night || $0.baseTheme == .tinted) : ($0.baseTheme == .classic || $0.baseTheme == .day) }) {
         settings = exactSettings
@@ -51,7 +51,7 @@ public func makePresentationTheme(cloudTheme: TelegramTheme, squareStyle: Bool, 
     guard let settings = settings else {
         return nil
     }
-    let defaultTheme = makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference(baseTheme: settings.baseTheme), extendingThemeReference: .cloud(PresentationCloudTheme(theme: cloudTheme, resolvedWallpaper: nil, creatorAccountId: nil)), serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle)
+    let defaultTheme = makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference(baseTheme: settings.baseTheme), extendingThemeReference: .cloud(PresentationCloudTheme(theme: cloudTheme, resolvedWallpaper: nil, creatorAccountId: nil)), serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle, vkIcons: vkIcons)
     return customizePresentationTheme(defaultTheme, editing: true, accentColor: UIColor(argb: settings.accentColor), outgoingAccentColor: settings.outgoingAccentColor.flatMap { UIColor(argb: $0) }, backgroundColors: [], bubbleColors: settings.messageColors, animateBubbleColors: settings.animateMessageColors, wallpaper: settings.wallpaper)
 }
 
@@ -71,7 +71,7 @@ public func makePresentationTheme(cloudTheme: TelegramTheme, squareStyle: Bool, 
     return customizePresentationTheme(defaultTheme, editing: true, accentColor: UIColor(argb: settings.accentColor), outgoingAccentColor: settings.outgoingAccentColor.flatMap { UIColor(argb: $0) }, backgroundColors: [], bubbleColors: settings.messageColors, animateBubbleColors: settings.animateMessageColors, wallpaper: settings.wallpaper)
 }
 
-public func makePresentationTheme(mediaBox: MediaBox, themeReference: PresentationThemeReference, baseTheme: TelegramBaseTheme? = nil, extendingThemeReference: PresentationThemeReference? = nil, accentColor: UIColor? = nil, outgoingAccentColor: UIColor? = nil, backgroundColors: [UInt32] = [], bubbleColors: [UInt32] = [], animateBubbleColors: Bool? = nil, wallpaper: TelegramWallpaper? = nil, baseColor: PresentationThemeBaseColor? = nil, serviceBackgroundColor: UIColor? = nil, preview: Bool = false, squareStyle: Bool) -> PresentationTheme? {
+public func makePresentationTheme(mediaBox: MediaBox, themeReference: PresentationThemeReference, baseTheme: TelegramBaseTheme? = nil, extendingThemeReference: PresentationThemeReference? = nil, accentColor: UIColor? = nil, outgoingAccentColor: UIColor? = nil, backgroundColors: [UInt32] = [], bubbleColors: [UInt32] = [], animateBubbleColors: Bool? = nil, wallpaper: TelegramWallpaper? = nil, baseColor: PresentationThemeBaseColor? = nil, serviceBackgroundColor: UIColor? = nil, preview: Bool = false, squareStyle: Bool, vkIcons: Bool = false) -> PresentationTheme? {
     var accentColor = accentColor
     if accentColor == .clear {
         accentColor = nil
@@ -79,7 +79,7 @@ public func makePresentationTheme(mediaBox: MediaBox, themeReference: Presentati
     let theme: PresentationTheme
     switch themeReference {
     case let .builtin(reference):
-        let defaultTheme = makeDefaultPresentationTheme(reference: reference, extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, preview: preview, squareStyle: squareStyle)
+        let defaultTheme = makeDefaultPresentationTheme(reference: reference, extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
             theme = customizePresentationTheme(defaultTheme, editing: true, accentColor: accentColor, outgoingAccentColor: outgoingAccentColor, backgroundColors: backgroundColors, bubbleColors: bubbleColors, animateBubbleColors: animateBubbleColors, wallpaper: wallpaper, baseColor: baseColor)
         case let .local(info):
             if let path = mediaBox.completedResourcePath(info.resource), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: .mappedRead), let loadedTheme = makePresentationTheme(data: data, themeReference: themeReference, resolvedWallpaper: info.resolvedWallpaper) {
@@ -97,7 +97,7 @@ public func makePresentationTheme(mediaBox: MediaBox, themeReference: Presentati
                 settings = nil
             }
             if let settings = settings {
-                if let loadedTheme = makePresentationTheme(mediaBox: mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), extendingThemeReference: themeReference, accentColor: accentColor ?? UIColor(argb: settings.accentColor), outgoingAccentColor: outgoingAccentColor ?? settings.outgoingAccentColor.flatMap { UIColor(argb: $0) }, backgroundColors: [], bubbleColors: bubbleColors.isEmpty ? settings.messageColors : bubbleColors, animateBubbleColors: animateBubbleColors ?? settings.animateMessageColors, wallpaper: wallpaper ?? settings.wallpaper, serviceBackgroundColor: serviceBackgroundColor, preview: preview, squareStyle: squareStyle) {
+                if let loadedTheme = makePresentationTheme(mediaBox: mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), extendingThemeReference: themeReference, accentColor: accentColor ?? UIColor(argb: settings.accentColor), outgoingAccentColor: outgoingAccentColor ?? settings.outgoingAccentColor.flatMap { UIColor(argb: $0) }, backgroundColors: [], bubbleColors: bubbleColors.isEmpty ? settings.messageColors : bubbleColors, animateBubbleColors: animateBubbleColors ?? settings.animateMessageColors, wallpaper: wallpaper ?? settings.wallpaper, serviceBackgroundColor: serviceBackgroundColor, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons) {
                     theme = loadedTheme
                 } else {
                     return nil

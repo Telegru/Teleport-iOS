@@ -1257,7 +1257,7 @@ public func themeImage(account: Account, accountManager: AccountManager<Telegram
                 }
             }
         case let .settings(settings):
-            theme = .single((makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle), nil))
+        theme = .single((makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle, vkIcons: false), nil))
     }
 
     enum WallpaperImage {
@@ -1442,7 +1442,7 @@ public func themeIconImage(account: Account, accountManager: AccountManager<Tele
 
     let themeSignal: Signal<PresentationTheme?, NoError>
     if case let .cloud(theme) = theme, theme.theme.settings != nil, let nightMode = nightMode {
-        themeSignal = .single(makePresentationTheme(cloudTheme: theme.theme, squareStyle: squareStyle, dark: nightMode))
+        themeSignal = .single(makePresentationTheme(cloudTheme: theme.theme, squareStyle: squareStyle, dark: nightMode, vkIcons: false))
     } else if case let .builtin(theme) = theme {
         var defaultTheme = makeDefaultPresentationTheme(reference: theme, serviceBackgroundColor: nil, squareStyle: squareStyle)
         if let color = color {
@@ -1455,7 +1455,7 @@ public func themeIconImage(account: Account, accountManager: AccountManager<Tele
         themeSignal = .single(defaultTheme)
     } else if case let .cloud(theme) = theme, let settings = theme.theme.settings?.first {
         themeSignal = Signal { subscriber in
-            let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle)
+            let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle, vkIcons: false)
             subscriber.putNext(theme)
             subscriber.putCompletion()
             

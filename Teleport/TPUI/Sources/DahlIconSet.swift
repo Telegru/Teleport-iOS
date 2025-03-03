@@ -1,8 +1,10 @@
 import UIKit
 
-struct DahlIconSet: IconSet {
+public struct DahlIconSet: IconSet {
     
-    func icon(_ type: IconType) -> UIImage {
+    public init() {}
+    
+    public func icon(_ type: IconType) -> UIImage? {
         switch type {
         case .addStory:
             return UIImage(bundleImageName: "TPChat List/AddStoryIcon")!
@@ -82,5 +84,4 @@ struct DahlIconSet: IconSet {
             return UIImage(bundleImageName: "Context Menu/Eye")!
         }
     }
-
 }
