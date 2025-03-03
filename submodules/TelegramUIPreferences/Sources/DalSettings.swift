@@ -64,7 +64,7 @@ public struct DalSettings: Codable, Equatable {
             hideAllChatsFolder: false,
             infiniteScrolling: false,
             showRecentChats: nil,
-            chatsListViewType: .doubleLine
+            chatsListViewType: .tripleLine
         )
     }
     
