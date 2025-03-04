@@ -47,6 +47,9 @@
 "DahlSettings.Proxy" = "Dahl proxy";
 "DahlSettings.MenuItems" = "Settings menu";
 
+"DahlSettings.Common.RestartRequired" = "Restart required";
+"DahlSettings.Common.RestartNow" = "Restart Now";
+
 "DahlSettings.Header.Title" = "Dahl %@";
 "DahlSettings.Header.Subtitle" = "A messenger created with an understanding \nof the needs of the Russian audience.";
 
@@ -86,6 +89,10 @@
 
 "DahlSettings.Appearance.ViewRounding.Header" = "Rounding out elements (avatars and buttons)";
 "DahlSettings.Appearance.ViewRounding" = "Square";
+
+"DahlSettings.Appearance.AvatarFont.Header" = "Font in Avatars";
+"DahlSettings.Appearance.AvatarFont" = "Nizhegorodskiy";
+"DahlSettings.Appearance.AvatarFont.Footer" = "Font author: Alexander Shimanov";
 
 "DahlSettings.Appearance.Icons.Header" = "Icons";
 "DahlSettings.Appearance.Icons.VKUI" = "“VK UI” icons pack";

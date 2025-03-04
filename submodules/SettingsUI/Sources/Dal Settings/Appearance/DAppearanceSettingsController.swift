@@ -10,6 +10,7 @@ import ItemListUI
 import AccountContext
 import AppBundle
 import PresentationDataUtils
+import UndoUI
 
 import TPUI
 import TPStrings
@@ -21,6 +22,7 @@ private final class DAppearanceSettingsArguments {
     let openTabBarSettings: () -> Void
     let updateViewRounding: (Bool) -> Void
     let updateVKIcons: (Bool) -> Void
+    let updateAlternativeFontInAvatars: (Bool) -> Void
     
     init(
         context: AccountContext,
@@ -28,7 +30,8 @@ private final class DAppearanceSettingsArguments {
         openSettingsItemsConfiguration: @escaping () -> Void,
         openTabBarSettings: @escaping () -> Void,
         updateViewRounding: @escaping (Bool) -> Void,
-        updateVKIcons: @escaping (Bool) -> Void
+        updateVKIcons: @escaping (Bool) -> Void,
+        updateAlternativeFontInAvatars: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.updateChatsListViewType = updateChatsListViewType
@@ -36,6 +39,7 @@ private final class DAppearanceSettingsArguments {
         self.openTabBarSettings = openTabBarSettings
         self.updateViewRounding = updateViewRounding
         self.updateVKIcons = updateVKIcons
+        self.updateAlternativeFontInAvatars = updateAlternativeFontInAvatars
     }
 }
 
@@ -44,6 +48,7 @@ private enum DAppearanceSettingsSection: Int32 {
     case menuItems
     case tabBar
     case viewRounding
+    case avatarFont
     case icons
 }
 
@@ -56,6 +61,10 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     case viewRoundingHeader(title: String)
     case viewRounding(title: String, isActive: Bool)
+    
+    case avatarFontHeader(title: String)
+    case avatarFont(title: String, isActive: Bool)
+    case avatarFontFooter(text: NSAttributedString)
     
     case iconsHeader(title: String)
     case vkIcons(title: String, isActive: Bool)
@@ -74,6 +83,9 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             
         case .viewRoundingHeader, .viewRounding:
             return DAppearanceSettingsSection.viewRounding.rawValue
+            
+        case .avatarFontHeader, .avatarFont, .avatarFontFooter:
+            return DAppearanceSettingsSection.avatarFont.rawValue
             
         case .iconsHeader, .vkIcons, .iconsPreview:
             return DAppearanceSettingsSection.icons.rawValue
@@ -96,12 +108,18 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 1003
         case .viewRounding:
             return 1004
-        case .iconsHeader:
+        case .avatarFontHeader:
             return 1005
-        case .vkIcons:
+        case .avatarFont:
             return 1006
-        case .iconsPreview:
+        case .avatarFontFooter:
             return 1007
+        case .iconsHeader:
+            return 1008
+        case .vkIcons:
+            return 1009
+        case .iconsPreview:
+            return 1010
         }
     }
     
@@ -146,6 +164,24 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case let .viewRounding(lhsTitle, lhsIsActive):
             if case let .viewRounding(rhsTitle, rhsIsActive) = rhs {
                 return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+            
+        case let .avatarFontHeader(lhsTitle):
+            if case let .avatarFontHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+            
+        case let .avatarFont(lhsTitle, lhsIsActive):
+            if case let .avatarFont(rhsTitle, rhsIsActive) = rhs {
+                return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+
+        case let .avatarFontFooter(lhsTitle):
+            if case let .avatarFontFooter(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
             }
             return false
             
@@ -245,6 +281,32 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                     arguments.updateViewRounding(value)
                 }
             
+        case let .avatarFontHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .avatarFont(title, isActive):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: isActive,
+                sectionId: section,
+                style: .blocks) { value in
+                    arguments.updateAlternativeFontInAvatars(value)
+                }
+            
+        case let .avatarFontFooter(text):
+            return ItemListTextItem(
+                presentationData: presentationData,
+                text: .custom(context: arguments.context, string: text),
+                sectionId: self.section,
+                style: .blocks,
+                additionalInsets: UIEdgeInsets(top: -12.0, left: 0.0, bottom: 0.0, right: 0.0)
+            )
+            
         case let .iconsHeader(title):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
@@ -276,6 +338,7 @@ public func dAppearanceSettingsController(
 ) -> ViewController {
     var openSettingsItemsConfiguration: (() -> Void)?
     var openTabBarSettings: (() -> Void)?
+    var showRestartToast: (() -> Void)?
     
     let arguments = DAppearanceSettingsArguments(
         context: context,
@@ -308,6 +371,18 @@ public func dAppearanceSettingsController(
                 return updatedSettings
             }
             .start()
+        },
+        updateAlternativeFontInAvatars: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.appearanceSettings.alternativeAvatarFont = value
+                return updatedSettings
+            }
+            .start()
+            
+            if DFontManager.shared.isAlternativeFontEnabled != value {
+                showRestartToast?()
+            }
         }
     )
     
@@ -341,7 +416,7 @@ public func dAppearanceSettingsController(
             ("DahlSettings.ChatsList.DoubleLine".tp_loc(lang: lang), .doubleLine),
             ("DahlSettings.ChatsList.TripleLine".tp_loc(lang: lang), .tripleLine)
         ]
-    
+        
         
         for (title, type) in options {
             entries.append(
@@ -385,6 +460,35 @@ public func dAppearanceSettingsController(
         )
         
         entries.append(
+            .avatarFontHeader(
+                title: "DahlSettings.Appearance.AvatarFont.Header".tp_loc(lang: lang).uppercased()
+            )
+        )
+        
+        entries.append(
+            .avatarFont(
+                title: "DahlSettings.Appearance.AvatarFont".tp_loc(lang: lang),
+                isActive: dahlSettings.appearanceSettings.alternativeAvatarFont
+            )
+        )
+        
+        let tableFont = Font.regular(13.0)
+        let presentationData = arguments.context.sharedContext.currentPresentationData.with { $0 }
+        let footerTextColor = presentationData.theme.list.sectionHeaderTextColor
+        let footerHighlightColor = presentationData.theme.list.itemPrimaryTextColor
+        let avatarFontString = NSMutableAttributedString(string: "DahlSettings.Appearance.AvatarFont.Footer".tp_loc(lang: lang), font: tableFont, paragraphAlignment: .left)
+        var highlightStartPosition: Int = 0
+        if let highlightIndex = avatarFontString.string.firstIndex(of: ":") {
+            highlightStartPosition = avatarFontString.string.distance(from: avatarFontString.string.startIndex, to: highlightIndex) + 1
+        }
+        avatarFontString.addAttribute(.foregroundColor, value: footerTextColor, range: NSRange(location: 0, length: highlightStartPosition))
+        avatarFontString.addAttribute(.foregroundColor, value: footerHighlightColor, range: NSRange(location: highlightStartPosition, length: avatarFontString.length - highlightStartPosition - 1))
+        
+        entries.append(
+            .avatarFontFooter(text: avatarFontString)
+        )
+        
+        entries.append(
             .iconsHeader(
                 title: "DahlSettings.Appearance.Icons.Header".tp_loc(lang: lang).uppercased()
             )
@@ -418,6 +522,24 @@ public func dAppearanceSettingsController(
     openSettingsItemsConfiguration = { [weak controller] in
         let menuItemSettings = dMenuItemsSettingsController(context: context)
         controller?.push(menuItemSettings)
+    }
+    
+    showRestartToast = { [weak controller] in
+        guard let controller else { return }
+        let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+        let lang = presentationData.strings.baseLanguageCode
+        let presenting = UndoOverlayController(
+            presentationData: presentationData,
+            content: .info(
+                title: nil,
+                text: "DahlSettings.Common.RestartRequired".tp_loc(lang: lang),
+                timeout: nil,
+                customUndoText: "DahlSettings.Common.RestartNow".tp_loc(lang: lang)
+            ),
+            elevatedLayout: false,
+            action: { action in if action == .undo { exit(0) }; return true }
+        )
+        controller.present(presenting, in: .window(.root))
     }
     
     return controller
