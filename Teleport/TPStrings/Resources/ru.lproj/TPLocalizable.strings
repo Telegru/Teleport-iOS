@@ -48,6 +48,9 @@
 "DahlSettings.Proxy" = "Прокси Даль";
 "DahlSettings.MenuItems" = "Меню настроек";
 
+"DahlSettings.Common.RestartRequired" = "Требуется перезапуск";
+"DahlSettings.Common.RestartNow" = "Перезапустить";
+
 "DahlSettings.Header.Title" = "Даль %@";
 "DahlSettings.Header.Subtitle" = "Мессенджер, созданный с пониманием потребностей российской аудитории.";
 
@@ -87,6 +90,10 @@
 
 "DahlSettings.Appearance.ViewRounding.Header" = "Закругление элементов (аватары и кнопки)";
 "DahlSettings.Appearance.ViewRounding" = "Квадратные";
+
+"DahlSettings.Appearance.AvatarFont.Header" = "Шрифт в Аватарах";
+"DahlSettings.Appearance.AvatarFont" = "Нижегородский";
+"DahlSettings.Appearance.AvatarFont.Footer" = "Автор шрифта: Александр Шиманов";
 
 "DahlSettings.Appearance.Icons.Header" = "Иконки";
 "DahlSettings.Appearance.Icons.VKUI" = "Использовать набор “VK UI”";

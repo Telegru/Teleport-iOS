@@ -1278,6 +1278,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                         print("Application: context took \(readyTime) to become ready")
                     }
                     print("Launch to ready took \((CFAbsoluteTimeGetCurrent() - launchStartTime) * 1000.0) ms")
+                    
+                    DFontManager.shared.isAlternativeFontEnabled = context.context.currentDahlSettings.with { $0 }.appearanceSettings.alternativeAvatarFont
 
                     self.mainWindow.debugAction = nil
                     self.mainWindow.viewController = context.rootController
