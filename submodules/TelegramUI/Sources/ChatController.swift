@@ -5551,7 +5551,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 } else {
                                     imageOverride = nil
                                 }
-                                (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.setPeer(context: strongSelf.context, theme: strongSelf.presentationData.theme, peer: EnginePeer(peer), overrideImage: imageOverride, clipStyle: strongSelf.presentationData.theme.chat.isRectangleCountMessageBadge ? .rect : .round)
+                                (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.setPeer(context: strongSelf.context, theme: strongSelf.presentationData.theme, peer: EnginePeer(peer), overrideImage: imageOverride, clipStyle: strongSelf.presentationData.theme.squareStyle ? .rect : .round)
                                 if case .standard(.previewing) = strongSelf.mode {
                                     (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.contextActionIsEnabled = false
                                 } else {
@@ -7011,7 +7011,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         if let darkAppearancePreview = darkAppearancePreview {
                             useDarkAppearance = darkAppearancePreview
                         }
-                        if let theme = makePresentationTheme(cloudTheme: theme, dark: useDarkAppearance) {
+                        if let theme = makePresentationTheme(cloudTheme: theme, squareStyle: presentationData.theme.squareStyle, dark: useDarkAppearance) {
                             theme.forceSync = true
                             presentationData = presentationData.withUpdated(theme: theme).withUpdated(chatWallpaper: theme.chat.defaultWallpaper)
                             
@@ -7041,7 +7041,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                             if let themeSpecificWallpaper = themeSpecificWallpaper {
                                 lightWallpaper = themeSpecificWallpaper
                             } else {
-                                let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true) ?? defaultPresentationTheme
+                                let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
                                 lightWallpaper = theme.chat.defaultWallpaper
                             }
                             
@@ -7050,7 +7050,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 preferredBaseTheme = baseTheme
                             }
                             
-                            lightTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, baseTheme: preferredBaseTheme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+                            lightTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, baseTheme: preferredBaseTheme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
                         } else {
                             lightTheme = presentationData.theme
                             lightWallpaper = presentationData.chatWallpaper
@@ -7066,7 +7066,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 preferredBaseTheme = .night
                             }
                             
-                            darkTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+                            darkTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
                             
                             if let themeSpecificWallpaper = themeSpecificWallpaper {
                                 darkWallpaper = themeSpecificWallpaper

@@ -297,7 +297,7 @@ private final class ThemeSettingsThemeItemIconNode : ListViewItemNode {
                         strongSelf.containerNode.isGestureEnabled = false
                     } else {
                         if updatedThemeReference || updatedAccentColor || updatedWallpaper {
-                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: item.themeReference, color: item.accentColor, wallpaper: item.wallpaper))
+                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: item.themeReference, color: item.accentColor, wallpaper: item.wallpaper, squareStyle: item.theme.squareStyle))
                         }
                         strongSelf.containerNode.isGestureEnabled = true
                     }

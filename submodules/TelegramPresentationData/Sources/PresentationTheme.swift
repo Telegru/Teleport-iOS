@@ -72,9 +72,8 @@ public final class PresentationThemeRootTabBar {
     public let badgeBackgroundColor: UIColor
     public let badgeStrokeColor: UIColor
     public let badgeTextColor: UIColor
-    public let useSquareStyle: Bool
     
-    public init(backgroundColor: UIColor, separatorColor: UIColor, iconColor: UIColor, selectedIconColor: UIColor, textColor: UIColor, selectedTextColor: UIColor, badgeBackgroundColor: UIColor, badgeStrokeColor: UIColor, badgeTextColor: UIColor, useSquareStyle: Bool) {
+    public init(backgroundColor: UIColor, separatorColor: UIColor, iconColor: UIColor, selectedIconColor: UIColor, textColor: UIColor, selectedTextColor: UIColor, badgeBackgroundColor: UIColor, badgeStrokeColor: UIColor, badgeTextColor: UIColor) {
         self.backgroundColor = backgroundColor
         self.separatorColor = separatorColor
         self.iconColor = iconColor
@@ -84,11 +83,10 @@ public final class PresentationThemeRootTabBar {
         self.badgeBackgroundColor = badgeBackgroundColor
         self.badgeStrokeColor = badgeStrokeColor
         self.badgeTextColor = badgeTextColor
-        self.useSquareStyle = useSquareStyle
     }
     
-    public func withUpdated(backgroundColor: UIColor? = nil, separatorColor: UIColor? = nil, iconColor: UIColor? = nil, selectedIconColor: UIColor? = nil, textColor: UIColor? = nil, selectedTextColor: UIColor? = nil, badgeBackgroundColor: UIColor? = nil, badgeStrokeColor: UIColor? = nil, badgeTextColor: UIColor? = nil, useSquareStyle: Bool? = nil) -> PresentationThemeRootTabBar {
-        return PresentationThemeRootTabBar(backgroundColor: backgroundColor ?? self.backgroundColor, separatorColor: separatorColor ?? self.separatorColor, iconColor: iconColor ?? self.iconColor, selectedIconColor: selectedIconColor ?? self.selectedIconColor, textColor: textColor ?? self.textColor, selectedTextColor: selectedTextColor ?? self.selectedTextColor, badgeBackgroundColor: badgeBackgroundColor ?? self.badgeBackgroundColor, badgeStrokeColor: badgeStrokeColor ?? self.badgeStrokeColor, badgeTextColor: badgeTextColor ?? self.badgeTextColor, useSquareStyle: useSquareStyle ?? self.useSquareStyle)
+    public func withUpdated(backgroundColor: UIColor? = nil, separatorColor: UIColor? = nil, iconColor: UIColor? = nil, selectedIconColor: UIColor? = nil, textColor: UIColor? = nil, selectedTextColor: UIColor? = nil, badgeBackgroundColor: UIColor? = nil, badgeStrokeColor: UIColor? = nil, badgeTextColor: UIColor? = nil) -> PresentationThemeRootTabBar {
+        return PresentationThemeRootTabBar(backgroundColor: backgroundColor ?? self.backgroundColor, separatorColor: separatorColor ?? self.separatorColor, iconColor: iconColor ?? self.iconColor, selectedIconColor: selectedIconColor ?? self.selectedIconColor, textColor: textColor ?? self.textColor, selectedTextColor: selectedTextColor ?? self.selectedTextColor, badgeBackgroundColor: badgeBackgroundColor ?? self.badgeBackgroundColor, badgeStrokeColor: badgeStrokeColor ?? self.badgeStrokeColor, badgeTextColor: badgeTextColor ?? self.badgeTextColor)
     }
 }
 
@@ -1378,9 +1376,8 @@ public final class PresentationThemeChat {
     public let inputMediaPanel: PresentationThemeInputMediaPanel
     public let inputButtonPanel: PresentationThemeInputButtonPanel
     public let historyNavigation: PresentationThemeChatHistoryNavigation
-    public let isRectangleCountMessageBadge: Bool
 
-    public init(defaultWallpaper: TelegramWallpaper, animateMessageColors: Bool, message: PresentationThemeChatMessage, serviceMessage: PresentationThemeServiceMessage, inputPanel: PresentationThemeChatInputPanel, inputMediaPanel: PresentationThemeInputMediaPanel, inputButtonPanel: PresentationThemeInputButtonPanel, historyNavigation: PresentationThemeChatHistoryNavigation, isRectangleCountMessageBadge: Bool) {
+    public init(defaultWallpaper: TelegramWallpaper, animateMessageColors: Bool, message: PresentationThemeChatMessage, serviceMessage: PresentationThemeServiceMessage, inputPanel: PresentationThemeChatInputPanel, inputMediaPanel: PresentationThemeInputMediaPanel, inputButtonPanel: PresentationThemeInputButtonPanel, historyNavigation: PresentationThemeChatHistoryNavigation) {
         self.defaultWallpaper = defaultWallpaper
         self.animateMessageColors = animateMessageColors
         self.message = message
@@ -1389,11 +1386,10 @@ public final class PresentationThemeChat {
         self.inputMediaPanel = inputMediaPanel
         self.inputButtonPanel = inputButtonPanel
         self.historyNavigation = historyNavigation
-        self.isRectangleCountMessageBadge = isRectangleCountMessageBadge
     }
     
-    public func withUpdated(defaultWallpaper: TelegramWallpaper? = nil, animateMessageColors: Bool? = nil, message: PresentationThemeChatMessage? = nil, serviceMessage: PresentationThemeServiceMessage? = nil, inputPanel: PresentationThemeChatInputPanel? = nil, inputMediaPanel: PresentationThemeInputMediaPanel? = nil, inputButtonPanel: PresentationThemeInputButtonPanel? = nil, historyNavigation: PresentationThemeChatHistoryNavigation? = nil, isRectangleCountMessageBadge: Bool? = nil) -> PresentationThemeChat {
-        return PresentationThemeChat(defaultWallpaper: defaultWallpaper ?? self.defaultWallpaper, animateMessageColors: animateMessageColors ?? self.animateMessageColors, message: message ?? self.message, serviceMessage: serviceMessage ?? self.serviceMessage, inputPanel: inputPanel ?? self.inputPanel, inputMediaPanel: inputMediaPanel ?? self.inputMediaPanel, inputButtonPanel: inputButtonPanel ?? self.inputButtonPanel, historyNavigation: historyNavigation ?? self.historyNavigation, isRectangleCountMessageBadge: isRectangleCountMessageBadge ?? self.isRectangleCountMessageBadge)
+    public func withUpdated(defaultWallpaper: TelegramWallpaper? = nil, animateMessageColors: Bool? = nil, message: PresentationThemeChatMessage? = nil, serviceMessage: PresentationThemeServiceMessage? = nil, inputPanel: PresentationThemeChatInputPanel? = nil, inputMediaPanel: PresentationThemeInputMediaPanel? = nil, inputButtonPanel: PresentationThemeInputButtonPanel? = nil, historyNavigation: PresentationThemeChatHistoryNavigation? = nil) -> PresentationThemeChat {
+        return PresentationThemeChat(defaultWallpaper: defaultWallpaper ?? self.defaultWallpaper, animateMessageColors: animateMessageColors ?? self.animateMessageColors, message: message ?? self.message, serviceMessage: serviceMessage ?? self.serviceMessage, inputPanel: inputPanel ?? self.inputPanel, inputMediaPanel: inputMediaPanel ?? self.inputMediaPanel, inputButtonPanel: inputButtonPanel ?? self.inputButtonPanel, historyNavigation: historyNavigation ?? self.historyNavigation)
     }
 }
 
@@ -1580,9 +1576,9 @@ public final class PresentationTheme: Equatable {
     public var forceSync: Bool = false
 
     public let resourceCache: PresentationsResourceCache = PresentationsResourceCache()
-    public var useSquareStyle: Bool = false
+    public var squareStyle: Bool
 
-    public init(name: PresentationThemeName, index: Int64, referenceTheme: PresentationBuiltinThemeReference, overallDarkAppearance: Bool, intro: PresentationThemeIntro, passcode: PresentationThemePasscode, rootController: PresentationThemeRootController, list: PresentationThemeList, chatList: PresentationThemeChatList, chat: PresentationThemeChat, actionSheet: PresentationThemeActionSheet, contextMenu: PresentationThemeContextMenu, inAppNotification: PresentationThemeInAppNotification, chart: PresentationThemeChart, preview: Bool = false, useSquareStyle: Bool = true) {
+    public init(name: PresentationThemeName, index: Int64, referenceTheme: PresentationBuiltinThemeReference, overallDarkAppearance: Bool, intro: PresentationThemeIntro, passcode: PresentationThemePasscode, rootController: PresentationThemeRootController, list: PresentationThemeList, chatList: PresentationThemeChatList, chat: PresentationThemeChat, actionSheet: PresentationThemeActionSheet, contextMenu: PresentationThemeContextMenu, inAppNotification: PresentationThemeInAppNotification, chart: PresentationThemeChart, preview: Bool = false, squareStyle: Bool) {
         var overallDarkAppearance = overallDarkAppearance
         if [.night, .tinted].contains(referenceTheme.baseTheme) {
             overallDarkAppearance = true
@@ -1603,7 +1599,7 @@ public final class PresentationTheme: Equatable {
         self.inAppNotification = inAppNotification
         self.chart = chart
         self.preview = preview
-        self.useSquareStyle = useSquareStyle
+        self.squareStyle = squareStyle
     }
     
     public func image(_ key: Int32, _ generate: (PresentationTheme) -> UIImage?) -> UIImage? {
@@ -1636,21 +1632,21 @@ public final class PresentationTheme: Equatable {
                     break
             }
         }
-        return PresentationTheme(name: name.flatMap(PresentationThemeName.custom) ?? .custom(self.name.string), index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat.withUpdated(defaultWallpaper: defaultWallpaper), actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview)
+        return PresentationTheme(name: name.flatMap(PresentationThemeName.custom) ?? .custom(self.name.string), index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat.withUpdated(defaultWallpaper: defaultWallpaper), actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle)
     }
     
     public func withUpdated(referenceTheme: PresentationBuiltinThemeReference) -> PresentationTheme {
-        return PresentationTheme(name: self.name, index: self.index, referenceTheme: referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview)
+        return PresentationTheme(name: self.name, index: self.index, referenceTheme: referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle)
     }
     
     public func withUpdated(preview: Bool) -> PresentationTheme {
-        return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: preview)
+        return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: self.list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: preview, squareStyle: self.squareStyle)
     }
     
     public func withModalBlocksBackground() -> PresentationTheme {
         if self.list.blocksBackgroundColor.rgb == self.list.plainBackgroundColor.rgb {
             let list = self.list.withUpdated(blocksBackgroundColor: self.list.modalBlocksBackgroundColor, itemBlocksBackgroundColor: self.list.itemModalBlocksBackgroundColor)
-            return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview)
+            return PresentationTheme(name: self.name, index: self.index, referenceTheme: self.referenceTheme, overallDarkAppearance: self.overallDarkAppearance, intro: self.intro, passcode: self.passcode, rootController: self.rootController, list: list, chatList: self.chatList, chat: self.chat, actionSheet: self.actionSheet, contextMenu: self.contextMenu, inAppNotification: self.inAppNotification, chart: self.chart, preview: self.preview, squareStyle: self.squareStyle)
         } else {
             return self
         }

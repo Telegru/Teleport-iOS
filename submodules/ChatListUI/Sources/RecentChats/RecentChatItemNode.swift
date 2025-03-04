@@ -89,8 +89,8 @@ fileprivate final class RecentChatAvatarNode: ASDisplayNode {
             peer: mainPeer,
             overrideImage: overrideImage,
             emptyColor: .white,
-            clipStyle:  .rect,
-            synchronousLoad: synchronousLoad)
+            synchronousLoad: synchronousLoad
+        )
         
         self.setNeedsLayout()
     }

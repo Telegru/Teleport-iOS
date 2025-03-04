@@ -251,6 +251,7 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
         var experimentalUISettings: PreferencesEntry?
         var contactSynchronizationSettings: PreferencesEntry?
         var stickerSettings: PreferencesEntry?
+        var dahlSettings: PreferencesEntry?
         
         init(
             localizationSettings: PreferencesEntry?,
@@ -263,7 +264,8 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
             mediaDisplaySettings: PreferencesEntry?,
             experimentalUISettings: PreferencesEntry?,
             contactSynchronizationSettings: PreferencesEntry?,
-            stickerSettings: PreferencesEntry?
+            stickerSettings: PreferencesEntry?,
+            dahlSettings: PreferencesEntry?
         ) {
             self.localizationSettings = localizationSettings
             self.presentationThemeSettings = presentationThemeSettings
@@ -276,6 +278,7 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
             self.experimentalUISettings = experimentalUISettings
             self.contactSynchronizationSettings = contactSynchronizationSettings
             self.stickerSettings = stickerSettings
+            self.dahlSettings = dahlSettings
         }
     }
     
@@ -291,6 +294,7 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
         let experimentalUISettings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.experimentalUISettings)
         let contactSynchronizationSettings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.contactSynchronizationSettings)
         let stickerSettings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.stickerSettings)
+        let dahlSettings = transaction.getSharedData(ApplicationSpecificSharedDataKeys.dalSettings)
         
         return InternalData(
             localizationSettings: localizationSettings,
@@ -303,7 +307,8 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
             mediaDisplaySettings: mediaDisplaySettings,
             experimentalUISettings: experimentalUISettings,
             contactSynchronizationSettings: contactSynchronizationSettings,
-            stickerSettings: stickerSettings
+            stickerSettings: stickerSettings,
+            dahlSettings: dahlSettings
         )
     }
     |> deliverOn(Queue(name: "PresentationData-Load", qos: .userInteractive))
@@ -375,6 +380,9 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
         
         let contactSettings: ContactSynchronizationSettings = internalData.contactSynchronizationSettings?.get(ContactSynchronizationSettings.self) ?? ContactSynchronizationSettings.defaultSettings
         
+        let dahlSettings = internalData.dahlSettings?.get(DalSettings.self) ?? .defaultSettings
+        let squareStyle = dahlSettings.appearanceSettings.squareStyle
+        
         let effectiveTheme: PresentationThemeReference
         var preferredBaseTheme: TelegramBaseTheme?
         let parameters = AutomaticThemeSwitchParameters(settings: themeSettings.automaticThemeSwitchSetting)
@@ -398,7 +406,7 @@ public func currentPresentationDataAndSettings(accountManager: AccountManager<Te
         }
         
         let effectiveColors = themeSettings.themeSpecificAccentColors[effectiveTheme.index]
-        let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: effectiveTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.colorFor(baseTheme: preferredBaseTheme ?? .day), bubbleColors: effectiveColors?.customBubbleColors ?? [], baseColor: effectiveColors?.baseColor) ?? defaultPresentationTheme
+        let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: effectiveTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.colorFor(baseTheme: preferredBaseTheme ?? .day), bubbleColors: effectiveColors?.customBubbleColors ?? [], baseColor: effectiveColors?.baseColor, squareStyle: squareStyle) ?? defaultPresentationTheme
         
         var effectiveChatWallpaper: TelegramWallpaper = (themeSettings.themeSpecificChatWallpapers[coloredThemeIndex(reference: effectiveTheme, accentColor: effectiveColors)] ?? themeSettings.themeSpecificChatWallpapers[effectiveTheme.index]) ?? theme.chat.defaultWallpaper
         if case .builtin = effectiveChatWallpaper {
@@ -724,8 +732,18 @@ public func chatServiceBackgroundColor(wallpaper: TelegramWallpaper, mediaBox: M
 }
 
 public func updatedPresentationData(accountManager: AccountManager<TelegramAccountManagerTypes>, applicationInForeground: Signal<Bool, NoError>, systemUserInterfaceStyle: Signal<WindowUserInterfaceStyle, NoError>) -> Signal<PresentationData, NoError> {
-    return combineLatest(accountManager.sharedData(keys: [SharedDataKeys.localizationSettings, ApplicationSpecificSharedDataKeys.presentationThemeSettings, ApplicationSpecificSharedDataKeys.contactSynchronizationSettings]), systemUserInterfaceStyle)
-    |> mapToSignal { sharedData, systemUserInterfaceStyle -> Signal<PresentationData, NoError> in
+    let squareStyleSignal = accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> DalSettings in
+        return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+    }
+    |> map { $0.appearanceSettings.squareStyle }
+    |> distinctUntilChanged
+    return combineLatest(
+        accountManager.sharedData(keys: [SharedDataKeys.localizationSettings, ApplicationSpecificSharedDataKeys.presentationThemeSettings, ApplicationSpecificSharedDataKeys.contactSynchronizationSettings]),
+        systemUserInterfaceStyle,
+        squareStyleSignal
+    )
+    |> mapToSignal { sharedData, systemUserInterfaceStyle, squareStyle -> Signal<PresentationData, NoError> in
         let themeSettings: PresentationThemeSettings
         if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.presentationThemeSettings]?.get(PresentationThemeSettings.self) {
             themeSettings = current
@@ -745,7 +763,7 @@ public func updatedPresentationData(accountManager: AccountManager<TelegramAccou
         if let themeSpecificWallpaper = themeSpecificWallpaper {
             currentWallpaper = themeSpecificWallpaper
         } else {
-            let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor) ?? defaultPresentationTheme
+            let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, squareStyle: squareStyle) ?? defaultPresentationTheme
             currentWallpaper = theme.chat.defaultWallpaper
         }
         
@@ -799,7 +817,7 @@ public func updatedPresentationData(accountManager: AccountManager<TelegramAccou
                             effectiveColors = nil
                         }
                         
-                        let themeValue = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: effectiveTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.colorFor(baseTheme: preferredBaseTheme ?? .day), bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: serviceBackgroundColor) ?? defaultPresentationTheme
+                        let themeValue = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: effectiveTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.colorFor(baseTheme: preferredBaseTheme ?? .day), bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: serviceBackgroundColor, squareStyle: squareStyle) ?? defaultPresentationTheme
                         
                         if autoNightModeTriggered && !switchedToNightModeWallpaper {
                             switch effectiveChatWallpaper {

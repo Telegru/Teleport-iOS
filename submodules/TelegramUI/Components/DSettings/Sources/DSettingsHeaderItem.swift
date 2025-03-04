@@ -143,9 +143,8 @@ final class DSettingsHeaderItemNode: ListViewItemNode {
         
         self.imageNode = ImageNode()
         self.imageNode.isLayerBacked = true
-        
         self.imageNode.clipsToBounds = true
-        self.imageNode.cornerRadius = 12.0
+        
         
         super.init(layerBacked: false, dynamicBounce: false)
         
@@ -278,6 +277,8 @@ final class DSettingsHeaderItemNode: ListViewItemNode {
                         height: iconSize
                     )
                 )
+                
+                self.imageNode.cornerRadius = iconSize * (item.theme.squareStyle ? 0.125 : 0.5)
                 
                 if let backgroundView = self.background.view {
                     if backgroundView.superview == nil {

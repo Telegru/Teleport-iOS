@@ -917,11 +917,11 @@ final class ChannelAppearanceScreenComponent: Component {
                 var presentationTheme: PresentationTheme?
                 switch currentTheme {
                 case .builtin:
-                    presentationTheme = makePresentationTheme(mediaBox: component.context.sharedContext.accountManager.mediaBox, themeReference: .builtin(environment.theme.overallDarkAppearance ? .night : .dayClassic))
+                    presentationTheme = makePresentationTheme(mediaBox: component.context.sharedContext.accountManager.mediaBox, themeReference: .builtin(environment.theme.overallDarkAppearance ? .night : .dayClassic), squareStyle: environment.theme.squareStyle)
                 case let .cloud(cloudTheme):
-                    presentationTheme = makePresentationTheme(cloudTheme: cloudTheme.theme, dark: environment.theme.overallDarkAppearance)
+                    presentationTheme = makePresentationTheme(cloudTheme: cloudTheme.theme, squareStyle: environment.theme.squareStyle, dark: environment.theme.overallDarkAppearance)
                 default:
-                    presentationTheme = makePresentationTheme(mediaBox: component.context.sharedContext.accountManager.mediaBox, themeReference: currentTheme)
+                    presentationTheme = makePresentationTheme(mediaBox: component.context.sharedContext.accountManager.mediaBox, themeReference: currentTheme, squareStyle: environment.theme.squareStyle)
                 }
                 if let presentationTheme {
                     let resolvedWallpaper: Signal<TelegramWallpaper?, NoError>

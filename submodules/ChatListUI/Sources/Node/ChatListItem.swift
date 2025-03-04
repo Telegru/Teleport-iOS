@@ -1753,7 +1753,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 }
             }
             
-            var avatarDiameter = item.presentationData.theme.useSquareStyle ? min(48.0, floor(item.presentationData.fontSize.baseDisplaySize * 48.0 / 17.0)) : min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
+            var avatarDiameter = item.presentationData.theme.squareStyle ? min(48.0, floor(item.presentationData.fontSize.baseDisplaySize * 48.0 / 17.0)) : min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * 60.0 / 17.0))
 
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {
                 avatarDiameter = 40.0
@@ -1765,7 +1765,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                     self.avatarNode.font = avatarPlaceholderFont(size: avatarFontSize)
                 }
             }
-            self.avatarNode.setPeer(context: item.context, theme: item.presentationData.theme, peer: peer, overrideImage: overrideImage, emptyColor: item.presentationData.theme.list.mediaPlaceholderColor, clipStyle: isForumAvatar ? .roundedRect : .rect, synchronousLoad: synchronousLoads, displayDimensions: CGSize(width: 60.0, height: 60.0))
+            self.avatarNode.setPeer(context: item.context, theme: item.presentationData.theme, peer: peer, overrideImage: overrideImage, emptyColor: item.presentationData.theme.list.mediaPlaceholderColor, clipStyle: isForumAvatar ? .roundedRect : item.presentationData.theme.squareStyle ? .rect : .round, synchronousLoad: synchronousLoads, displayDimensions: CGSize(width: 60.0, height: 60.0))
             
             if peer.isPremium && peer.id != item.context.account.peerId {
                 let context = item.context
@@ -2230,7 +2230,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             }
             
             // if changed, adjust setupItem accordingly
-            var avatarDiameter = item.presentationData.theme.useSquareStyle ? min(48.0, floor(item.presentationData.fontSize.baseDisplaySize * (48.0 - avatarDecreaseParam) / 17.0)) : min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * (60.0 - avatarDecreaseParam) / 17.0))
+            var avatarDiameter = item.presentationData.theme.squareStyle ? min(48.0, floor(item.presentationData.fontSize.baseDisplaySize * (48.0 - avatarDecreaseParam) / 17.0)) : min(60.0, floor(item.presentationData.fontSize.baseDisplaySize * (60.0 - avatarDecreaseParam) / 17.0))
             let avatarLeftInset: CGFloat
             
             if case let .peer(peerData) = item.content, let customMessageListData = peerData.customMessageListData, customMessageListData.commandPrefix != nil {

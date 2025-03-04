@@ -81,7 +81,7 @@ final class StoryIconNode: ASDisplayNode {
                     unseenCount: 1
                 ),
                 progress: nil,
-                isRectSimple: true
+                isRectSimple: theme.squareStyle
             )),
             environment: {},
             containerSize: indicatorSize

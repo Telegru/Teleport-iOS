@@ -84,6 +84,9 @@
 "DahlSettings.Appearance.MenuItems.Header" = "Telegram Settings Menu";
 "DahlSettings.Appearance.MenuItems" = "Menu items";
 
+"DahlSettings.Appearance.ViewRounding.Header" = "Rounding out elements (avatars and buttons)";
+"DahlSettings.Appearance.ViewRounding" = "Square";
+
 "DahlSettings.Chats.Title" = "Chats";
 "DahlSettings.Chats.Confirmation.Header" = "Confirmation";
 "DahlSettings.Chats.Confirmation.Call" = "Call";

@@ -533,7 +533,7 @@ public func themeAutoNightSettingsController(context: AccountContext) -> ViewCon
             }
         }))
     }, updateTheme: { theme in
-        guard let presentationTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: theme) else {
+        guard let presentationTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: theme, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle) else {
             return
         }
         

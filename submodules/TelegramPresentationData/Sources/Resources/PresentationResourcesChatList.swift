@@ -40,7 +40,7 @@ private func generateBadgeBackgroundImage(theme: PresentationTheme, diameter: CG
             }
         }
         
-        if theme.chat.isRectangleCountMessageBadge {
+        if theme.squareStyle {
             let rect = CGRect(origin: .zero, size: size)
             let cornerRadius: CGFloat = diameter * 0.2
             let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)

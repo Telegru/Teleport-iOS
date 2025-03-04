@@ -408,7 +408,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
         if accentColor == nil, case .builtin(.night) = themeReference {
             accentColor = themeSpecificColor?.colorFor(baseTheme: .night)
         }
-        if let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, baseTheme: nightMode ? .night : .classic, accentColor: accentColor, bubbleColors: themeSpecificColor?.bubbleColors ?? []) {
+        if let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, baseTheme: nightMode ? .night : .classic, accentColor: accentColor, bubbleColors: themeSpecificColor?.bubbleColors ?? [], squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle) {
             let controller = ThemePreviewController(context: context, previewTheme: theme, source: .settings(themeReference, nil, false))
             if custom {
                 controller.customApply = {
@@ -512,7 +512,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
             if let wallpaper = wallpaper {
                 effectiveWallpaper = wallpaper
             } else {
-                let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: reference, accentColor: accentColor?.color, bubbleColors: accentColor?.customBubbleColors ?? [], wallpaper: accentColor?.wallpaper)
+                let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: reference, accentColor: accentColor?.color, bubbleColors: accentColor?.customBubbleColors ?? [], wallpaper: accentColor?.wallpaper, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle)
                 effectiveWallpaper = theme?.chat.defaultWallpaper ?? .builtin(WallpaperSettings())
             }
             return (accentColor, effectiveWallpaper)
@@ -541,7 +541,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
                 if reference == .builtin(.night), effectiveAccentColor == nil {
                     effectiveAccentColor = UIColor(rgb: 0x3e88f7)
                 }
-                return (makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: reference, accentColor: effectiveAccentColor, bubbleColors: accentColor?.customBubbleColors ?? [], serviceBackgroundColor: serviceBackgroundColor), wallpaper)
+                return (makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: reference, accentColor: effectiveAccentColor, bubbleColors: accentColor?.customBubbleColors ?? [], serviceBackgroundColor: serviceBackgroundColor, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle), wallpaper)
             }
         }
         |> deliverOnMainQueue).start(next: { theme, wallpaper in
@@ -574,7 +574,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
                     })))
                 } else {
                     items.append(.action(ContextMenuActionItem(text: strings.Theme_Context_ChangeColors, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/ApplyTheme"), color: theme.contextMenu.primaryColor) }, action: { c, f in
-                        guard let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: reference, preview: false) else {
+                        guard let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: reference, preview: false, squareStyle: presentationData.theme.squareStyle) else {
                             return
                         }
                         
@@ -732,7 +732,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
             } else {
                 let theme: PresentationTheme?
                 if let accentColor = accentColor, case let .theme(themeReference) = accentColor {
-                    theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference)
+                    theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle)
                 } else {
                     var baseColor: PresentationThemeBaseColor?
                     switch accentColor {
@@ -741,7 +741,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
                     default:
                         break
                     }
-                    theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: generalThemeReference, accentColor: accentColor?.accentColor, bubbleColors: accentColor?.customBubbleColors ?? [], wallpaper: accentColor?.wallpaper, baseColor: baseColor)
+                    theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: generalThemeReference, accentColor: accentColor?.accentColor, bubbleColors: accentColor?.customBubbleColors ?? [], wallpaper: accentColor?.wallpaper, baseColor: baseColor, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle)
                 }
                 effectiveWallpaper = theme?.chat.defaultWallpaper ?? .builtin(WallpaperSettings())
             }
@@ -765,9 +765,9 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
             }
             |> map { wallpaper, serviceBackgroundColor -> (PresentationTheme?, PresentationThemeReference, TelegramWallpaper) in
                 if let accentColor = accentColor, case let .theme(themeReference) = accentColor {
-                    return (makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, serviceBackgroundColor: serviceBackgroundColor), effectiveThemeReference, wallpaper)
+                    return (makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, serviceBackgroundColor: serviceBackgroundColor, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle), effectiveThemeReference, wallpaper)
                 } else {
-                    return (makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: generalThemeReference, accentColor: accentColor?.accentColor, bubbleColors: accentColor?.customBubbleColors ?? [], serviceBackgroundColor: serviceBackgroundColor), effectiveThemeReference, wallpaper)
+                    return (makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: generalThemeReference, accentColor: accentColor?.accentColor, bubbleColors: accentColor?.customBubbleColors ?? [], serviceBackgroundColor: serviceBackgroundColor, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle), effectiveThemeReference, wallpaper)
                 }
             }
             |> mapToSignal { theme, reference, wallpaper in
@@ -822,7 +822,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
                         })))
                     } else {
                         items.append(.action(ContextMenuActionItem(text: strings.Theme_Context_ChangeColors, icon: { theme in generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/ApplyTheme"), color: theme.contextMenu.primaryColor) }, action: { c, f in
-                            guard let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: effectiveThemeReference, preview: false) else {
+                            guard let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: effectiveThemeReference, preview: false, squareStyle: presentationData.theme.squareStyle) else {
                                 return
                             }
                             
@@ -962,7 +962,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
             }
             let themeSpecificWallpaper = (settings.themeSpecificChatWallpapers[coloredThemeIndex(reference: automaticTheme, accentColor: effectiveColors)] ?? settings.themeSpecificChatWallpapers[automaticTheme.index])
             
-            let darkTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+            let darkTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
             var darkWallpaper = presentationData.chatWallpaper
             if let themeSpecificWallpaper = themeSpecificWallpaper {
                 darkWallpaper = themeSpecificWallpaper
@@ -1125,7 +1125,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
         }
     }
     selectThemeImpl = { baseTheme, theme, preset in
-        guard let presentationTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: theme) else {
+        guard let presentationTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: theme, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle) else {
             return
         }
         
@@ -1269,7 +1269,7 @@ public func themePickerController(context: AccountContext, focusOnItemTag: Theme
                     updatedTheme = generalThemeReference
                 }
                 
-                guard let _ = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: generalThemeReference, accentColor: accentColor?.color, wallpaper: presetWallpaper, baseColor: accentColor?.baseColor) else {
+                guard let _ = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: generalThemeReference, accentColor: accentColor?.color, wallpaper: presetWallpaper, baseColor: accentColor?.baseColor, squareStyle: context.sharedContext.currentPresentationData.with { $0 }.theme.squareStyle) else {
                     return current
                 }
                 

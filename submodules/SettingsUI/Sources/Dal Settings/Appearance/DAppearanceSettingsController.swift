@@ -19,17 +19,20 @@ private final class DAppearanceSettingsArguments {
     let updateChatsListViewType: (ListViewType) -> Void
     let openSettingsItemsConfiguration: () -> Void
     let openTabBarSettings: () -> Void
+    let updateViewRounding: (Bool) -> Void
     
     init(
         context: AccountContext,
         updateChatsListViewType: @escaping (ListViewType) -> Void,
         openSettingsItemsConfiguration: @escaping () -> Void,
-        openTabBarSettings: @escaping () -> Void
+        openTabBarSettings: @escaping () -> Void,
+        updateViewRounding: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.updateChatsListViewType = updateChatsListViewType
         self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
         self.openTabBarSettings = openTabBarSettings
+        self.updateViewRounding = updateViewRounding
     }
 }
 
@@ -37,6 +40,7 @@ private enum DAppearanceSettingsSection: Int32 {
     case listViewType
     case menuItems
     case tabBar
+    case viewRounding
 }
 
 private enum DAppearanceSettingsEntry: ItemListNodeEntry {
@@ -45,6 +49,9 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     case menuItemsHeader(title: String)
     case menuItems(title: String, detail: String)
     case tabBar(title: String, detail: String)
+    
+    case viewRoundingHeader(title: String)
+    case viewRounding(title: String, isActive: Bool)
     
     var section: ItemListSectionId {
         switch self {
@@ -56,6 +63,9 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             
         case .tabBar:
             return DAppearanceSettingsSection.tabBar.rawValue
+            
+        case .viewRoundingHeader, .viewRounding:
+            return DAppearanceSettingsSection.viewRounding.rawValue
         }
     }
     
@@ -71,6 +81,10 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 1001
         case .tabBar:
             return 1002
+        case .viewRoundingHeader:
+            return 1003
+        case .viewRounding:
+            return 1004
         }
     }
     
@@ -103,6 +117,18 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case let .tabBar(lhsTitle, lhsDetail):
             if case let .tabBar(rhsTitle, rhsDetail) = rhs {
                 return lhsTitle == rhsTitle && lhsDetail == rhsDetail
+            }
+            return false
+            
+        case let .viewRoundingHeader(lhsTitle):
+            if case let .viewRoundingHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+        
+        case let .viewRounding(lhsTitle, lhsIsActive):
+            if case let .viewRounding(rhsTitle, rhsIsActive) = rhs {
+                return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
             }
             return false
         }
@@ -166,6 +192,23 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                     arguments.openTabBarSettings()
                 }
             )
+            
+        case let .viewRoundingHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .viewRounding(title, isActive):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: isActive,
+                sectionId: section,
+                style: .blocks) { value in
+                    arguments.updateViewRounding(value)
+                }
         }
     }
 }
@@ -191,6 +234,14 @@ public func dAppearanceSettingsController(
         },
         openTabBarSettings: {
             openTabBarSettings?()
+        },
+        updateViewRounding: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.appearanceSettings.squareStyle = value
+                return updatedSettings
+            }
+            .start()
         }
     )
     
@@ -251,6 +302,19 @@ public func dAppearanceSettingsController(
             .tabBar(
                 title: "DahlSettings.TabBarSettings.Title".tp_loc(lang: lang),
                 detail: "\(dahlSettings.tabBarSettings.activeTabs.count)"
+            )
+        )
+        
+        entries.append(
+            .viewRoundingHeader(
+                title: "DahlSettings.Appearance.ViewRounding.Header".tp_loc(lang: lang).uppercased()
+            )
+        )
+        
+        entries.append(
+            .viewRounding(
+                title: "DahlSettings.Appearance.ViewRounding".tp_loc(lang: lang),
+                isActive: dahlSettings.appearanceSettings.squareStyle
             )
         )
         

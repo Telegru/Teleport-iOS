@@ -8,7 +8,7 @@ import SwiftSignalKit
 import DWallpaper
 
 public let defaultDahlServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
-public let defaultDahlPresentationTheme = makeDefaultDahlDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
+public let defaultDahlPresentationTheme = makeDefaultDahlDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false, squareStyle: false)
 public let defaultDahlDayAccentColor = UIColor(rgb: 0x3D4052)
 
 public func customizeDefaultDahlDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
@@ -340,11 +340,12 @@ public func customizeDefaultDahlDayTheme(theme: PresentationTheme, editing: Bool
         contextMenu: theme.contextMenu,
         inAppNotification: theme.inAppNotification,
         chart: theme.chart,
-        preview: theme.preview
+        preview: theme.preview,
+        squareStyle: theme.squareStyle
     )
 }
 
-public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool) -> PresentationTheme {
+public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool, squareStyle: Bool) -> PresentationTheme {
     var serviceBackgroundColor = serviceBackgroundColor ?? defaultServiceBackgroundColor
 
     if !day {
@@ -395,8 +396,7 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
         selectedTextColor: defaultDayAccentColor,
         badgeBackgroundColor: UIColor(rgb: 0xff3b30),
         badgeStrokeColor: UIColor(rgb: 0xff3b30),
-        badgeTextColor: UIColor(rgb: 0xffffff),
-        useSquareStyle: true
+        badgeTextColor: UIColor(rgb: 0xffffff)
     )
     
     let navigationSearchBar = PresentationThemeNavigationSearchBar(
@@ -969,8 +969,7 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
         inputPanel: inputPanel,
         inputMediaPanel: inputMediaPanel,
         inputButtonPanel: inputButtonPanel,
-        historyNavigation: historyNavigation,
-        isRectangleCountMessageBadge: true
+        historyNavigation: historyNavigation
     )
     
     let actionSheet = PresentationThemeActionSheet(
@@ -1054,6 +1053,7 @@ public func makeDefaultDahlDayPresentationTheme(extendingThemeReference: Present
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: preview
+        preview: preview,
+        squareStyle: squareStyle
     )
 }

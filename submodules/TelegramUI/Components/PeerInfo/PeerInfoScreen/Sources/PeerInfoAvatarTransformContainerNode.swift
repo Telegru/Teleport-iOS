@@ -268,7 +268,6 @@ final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
                 }
             }
             
-            let useSquareStyle = theme.useSquareStyle
             var isForum = false
             
             let avatarCornerRadius: CGFloat
@@ -277,7 +276,7 @@ final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
                 avatarCornerRadius = floor(avatarSize * 0.25)
                 isForum = true
             } else {
-                avatarCornerRadius = useSquareStyle ? avatarSize / 16.0 : avatarSize / 2.0
+                avatarCornerRadius = theme.squareStyle ? avatarSize / 16.0 : avatarSize / 2.0
             }
             
             if self.avatarNode.layer.cornerRadius != 0.0 {
