@@ -107,18 +107,21 @@ public final class CallListController: TelegramBaseController {
             self.navigationItem.rightBarButtonItem = UIBarButtonItem(image: PresentationResourcesRootController.navigationCallIcon(self.presentationData.theme), style: .plain, target: self, action: #selector(self.callPressed))
             
             let icon: UIImage?
-            icon = UIImage(bundleImageName: "Chat List/Tabs/DIconCalls")
-//            if useSpecialTabBarIcons() {
-//                icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconCalls")
-//            } else {
-//                icon = UIImage(bundleImageName: "Chat List/Tabs/IconCalls")
-//            }
+            if presentationData.theme.vkIcons {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/DIconCalls")
+            } else {
+                if useSpecialTabBarIcons() {
+                    icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconCalls")
+                } else {
+                    icon = UIImage(bundleImageName: "Chat List/Tabs/IconCalls")
+                }
+            }
             self.tabBarItem.title = self.presentationData.strings.Calls_TabTitle
             self.tabBarItem.image = icon
             self.tabBarItem.selectedImage = icon
-//            if !self.presentationData.reduceMotion {
-//                self.tabBarItem.animationName = "TabCalls"
-//            }
+            if !self.presentationData.reduceMotion && !presentationData.theme.vkIcons {
+                self.tabBarItem.animationName = "TabCalls"
+            }
         }
         
         self.segmentedTitleView.indexUpdated = { [weak self] index in
@@ -170,11 +173,23 @@ public final class CallListController: TelegramBaseController {
         self.segmentedTitleView.index = index
             
         self.tabBarItem.title = self.presentationData.strings.Calls_TabTitle
-//        if !self.presentationData.reduceMotion {
-//            self.tabBarItem.animationName = "TabCalls"
-//        } else {
-//            self.tabBarItem.animationName = nil
-//        }
+        
+        let icon: UIImage?
+        if presentationData.theme.vkIcons {
+            icon = UIImage(bundleImageName: "Chat List/Tabs/DIconCalls")
+        } else {
+            if useSpecialTabBarIcons() {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconCalls")
+            } else {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/IconCalls")
+            }
+        }
+        self.tabBarItem.image = icon
+        self.tabBarItem.selectedImage = icon
+        if !self.presentationData.reduceMotion && !presentationData.theme.vkIcons {
+            self.tabBarItem.animationName = "TabCalls"
+        }
+        
         self.navigationItem.backBarButtonItem = UIBarButtonItem(title: self.presentationData.strings.Common_Back, style: .plain, target: nil, action: nil)
         switch self.mode {
             case .tab:

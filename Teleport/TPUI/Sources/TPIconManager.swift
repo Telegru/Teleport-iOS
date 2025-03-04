@@ -6,14 +6,14 @@ public final class TPIconManager {
     private var currentIconSet: IconSet
 
     private init() {
-        self.currentIconSet = DahlIconSet()
+        self.currentIconSet = TGIconSet()
     }
 
     public func switchIconSet(use iconSet: IconSet) {
         self.currentIconSet = iconSet
     }
 
-    public func icon(_ type: IconType) -> UIImage {
+    public func icon(_ type: IconType) -> UIImage? {
         currentIconSet.icon(type)
     }
 }

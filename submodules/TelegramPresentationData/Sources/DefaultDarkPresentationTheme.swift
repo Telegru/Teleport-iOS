@@ -4,7 +4,7 @@ import TelegramCore
 import TelegramUIPreferences
 import DWallpaper
 
-public let defaultDarkPresentationTheme = makeDefaultDarkPresentationTheme(preview: false, squareStyle: false)
+public let defaultDarkPresentationTheme = makeDefaultDarkPresentationTheme(preview: false, squareStyle: false, vkIcons: false)
 public let defaultDarkColorPresentationTheme = customizeDefaultDarkPresentationTheme(theme: defaultDarkPresentationTheme, editing: false, title: nil, accentColor: UIColor(rgb: 0x3e88f7), backgroundColors: [], bubbleColors: [], animateBubbleColors: false, wallpaper: nil, baseColor: nil)
 
 private extension PresentationThemeBaseColor {
@@ -325,7 +325,8 @@ public func customizeDefaultDarkPresentationTheme(theme: PresentationTheme, edit
         inAppNotification: theme.inAppNotification,
         chart: theme.chart,
         preview: theme.preview,
-        squareStyle: theme.squareStyle
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
@@ -336,7 +337,7 @@ public let defaultDarkWallpaperGradientColors: [UIColor] = [
     UIColor(rgb: 0xf38b58)
 ]
 
-public func makeDefaultDarkPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool) -> PresentationTheme {
+public func makeDefaultDarkPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     let rootNavigationBar = PresentationThemeRootNavigationBar(
         buttonColor: UIColor(rgb: 0xffffff),
         disabledButtonColor: UIColor(rgb: 0x525252),
@@ -820,6 +821,7 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         inAppNotification: inAppNotification,
         chart: chart,
         preview: preview,
-        squareStyle: squareStyle
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }

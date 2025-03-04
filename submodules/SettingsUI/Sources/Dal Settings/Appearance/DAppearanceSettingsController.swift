@@ -20,19 +20,22 @@ private final class DAppearanceSettingsArguments {
     let openSettingsItemsConfiguration: () -> Void
     let openTabBarSettings: () -> Void
     let updateViewRounding: (Bool) -> Void
+    let updateVKIcons: (Bool) -> Void
     
     init(
         context: AccountContext,
         updateChatsListViewType: @escaping (ListViewType) -> Void,
         openSettingsItemsConfiguration: @escaping () -> Void,
         openTabBarSettings: @escaping () -> Void,
-        updateViewRounding: @escaping (Bool) -> Void
+        updateViewRounding: @escaping (Bool) -> Void,
+        updateVKIcons: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.updateChatsListViewType = updateChatsListViewType
         self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
         self.openTabBarSettings = openTabBarSettings
         self.updateViewRounding = updateViewRounding
+        self.updateVKIcons = updateVKIcons
     }
 }
 
@@ -41,6 +44,7 @@ private enum DAppearanceSettingsSection: Int32 {
     case menuItems
     case tabBar
     case viewRounding
+    case icons
 }
 
 private enum DAppearanceSettingsEntry: ItemListNodeEntry {
@@ -52,6 +56,10 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     case viewRoundingHeader(title: String)
     case viewRounding(title: String, isActive: Bool)
+    
+    case iconsHeader(title: String)
+    case vkIcons(title: String, isActive: Bool)
+    case iconsPreview(PresentationTheme)
     
     var section: ItemListSectionId {
         switch self {
@@ -66,6 +74,9 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             
         case .viewRoundingHeader, .viewRounding:
             return DAppearanceSettingsSection.viewRounding.rawValue
+            
+        case .iconsHeader, .vkIcons, .iconsPreview:
+            return DAppearanceSettingsSection.icons.rawValue
         }
     }
     
@@ -85,6 +96,12 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 1003
         case .viewRounding:
             return 1004
+        case .iconsHeader:
+            return 1005
+        case .vkIcons:
+            return 1006
+        case .iconsPreview:
+            return 1007
         }
     }
     
@@ -129,6 +146,24 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case let .viewRounding(lhsTitle, lhsIsActive):
             if case let .viewRounding(rhsTitle, rhsIsActive) = rhs {
                 return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+            
+        case let .iconsHeader(lhsTitle):
+            if case let .iconsHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+            
+        case let .vkIcons(lhsTitle, lhsIsActive):
+            if case let .vkIcons(rhsTitle, rhsIsActive) = rhs {
+                return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+
+        case let .iconsPreview(lhsTheme):
+            if case let .iconsPreview(rhsTheme) = rhs {
+                return lhsTheme === rhsTheme
             }
             return false
         }
@@ -209,6 +244,29 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                 style: .blocks) { value in
                     arguments.updateViewRounding(value)
                 }
+            
+        case let .iconsHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .vkIcons(title, isActive):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: isActive,
+                sectionId: section,
+                style: .blocks) { value in
+                    arguments.updateVKIcons(value)
+                }
+
+        case .iconsPreview:
+            return DIconSetPreviewItem(
+                presentationData: presentationData,
+                sectionId: section
+            )
         }
     }
 }
@@ -239,6 +297,14 @@ public func dAppearanceSettingsController(
             let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
                 var updatedSettings = settings
                 updatedSettings.appearanceSettings.squareStyle = value
+                return updatedSettings
+            }
+            .start()
+        },
+        updateVKIcons: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.appearanceSettings.vkIcons = value
                 return updatedSettings
             }
             .start()
@@ -317,6 +383,21 @@ public func dAppearanceSettingsController(
                 isActive: dahlSettings.appearanceSettings.squareStyle
             )
         )
+        
+        entries.append(
+            .iconsHeader(
+                title: "DahlSettings.Appearance.Icons.Header".tp_loc(lang: lang).uppercased()
+            )
+        )
+        
+        entries.append(
+            .vkIcons(
+                title: "DahlSettings.Appearance.Icons.VKUI".tp_loc(lang: lang),
+                isActive: dahlSettings.appearanceSettings.vkIcons
+            )
+        )
+        
+//        entries.append(.iconsPreview(presentationData.theme))
         
         let listState = ItemListNodeState(
             presentationData: ItemListPresentationData(presentationData),

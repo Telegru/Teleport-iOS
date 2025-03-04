@@ -157,8 +157,14 @@ public func getChatWallpaperImage(context: AccountContext, peerId: EnginePeer.Id
     }
     |> distinctUntilChanged
     
-    return combineLatest(themeSettings, peerWallpaper, squareStyleSignal)
-    |> mapToSignal { themeSettings, peerWallpaper, squareStyle -> Signal<(TelegramWallpaper?, TelegramWallpaper?), NoError> in
+    let vkIconsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> Bool in
+        sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self)?.appearanceSettings.vkIcons ?? false
+    }
+    |> distinctUntilChanged
+    
+    return combineLatest(themeSettings, peerWallpaper, squareStyleSignal, vkIconsSignal)
+    |> mapToSignal { themeSettings, peerWallpaper, squareStyle, vkIcons -> Signal<(TelegramWallpaper?, TelegramWallpaper?), NoError> in
         var currentColors = themeSettings.themeSpecificAccentColors[themeSettings.theme.index]
         if let colors = currentColors, colors.baseColor == .theme {
             currentColors = nil
@@ -170,7 +176,7 @@ public func getChatWallpaperImage(context: AccountContext, peerId: EnginePeer.Id
         if let themeSpecificWallpaper = themeSpecificWallpaper {
             dayWallpaper = themeSpecificWallpaper
         } else {
-            let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true, squareStyle: squareStyle) ?? defaultPresentationTheme
+            let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true, squareStyle: squareStyle, vkIcons: vkIcons) ?? defaultPresentationTheme
             dayWallpaper = theme.chat.defaultWallpaper
         }
         

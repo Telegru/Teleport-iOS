@@ -87,6 +87,9 @@
 "DahlSettings.Appearance.ViewRounding.Header" = "Rounding out elements (avatars and buttons)";
 "DahlSettings.Appearance.ViewRounding" = "Square";
 
+"DahlSettings.Appearance.Icons.Header" = "Icons";
+"DahlSettings.Appearance.Icons.VKUI" = "“VK UI” icons pack";
+
 "DahlSettings.Chats.Title" = "Chats";
 "DahlSettings.Chats.Confirmation.Header" = "Confirmation";
 "DahlSettings.Chats.Confirmation.Call" = "Call";

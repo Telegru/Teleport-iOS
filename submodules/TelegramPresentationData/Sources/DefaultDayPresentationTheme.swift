@@ -53,7 +53,7 @@ public func dateFillNeedsBlur(theme: PresentationTheme, wallpaper: TelegramWallp
 }
 
 public let defaultServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
-public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false, squareStyle: false)
+public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false, squareStyle: false, vkIcons: false)
 public let defaultDayAccentColor = UIColor(rgb: 0x3D4052)
 
 public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
@@ -386,11 +386,12 @@ public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, ti
         inAppNotification: theme.inAppNotification,
         chart: theme.chart,
         preview: theme.preview,
-        squareStyle: theme.squareStyle
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
-public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool, squareStyle: Bool) -> PresentationTheme {
+public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     var serviceBackgroundColor = serviceBackgroundColor ?? defaultServiceBackgroundColor
 
     if !day {
@@ -1101,7 +1102,8 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         inAppNotification: inAppNotification,
         chart: chart,
         preview: preview,
-        squareStyle: squareStyle
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }
 

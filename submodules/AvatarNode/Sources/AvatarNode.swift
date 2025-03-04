@@ -19,9 +19,9 @@ import TelegramUIPreferences
 
 private let deletedIcon = UIImage(bundleImageName: "Avatar/DeletedIcon")?.precomposed()
 private let phoneIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/PhoneIcon"), color: .white)
-public let savedMessagesIcon = generateTintedImage(image: TPIconManager.shared.icon(.avatarSaved), color: .white)
+public var savedMessagesIcon: UIImage? { generateTintedImage(image: TPIconManager.shared.icon(.avatarSaved), color: .white) }
 public let repostStoryIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/RepostStoryIcon"), color: .white)
-private let archivedChatsIcon = TPIconManager.shared.icon(.avatarArchive).precomposed()
+private var archivedChatsIcon: UIImage? { TPIconManager.shared.icon(.avatarArchive)?.precomposed() }
 private let repliesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/RepliesMessagesIcon"), color: .white)
 private let anonymousSavedMessagesIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/AnonymousSenderIcon"), color: .white)
 private let anonymousSavedMessagesDarkIcon = generateTintedImage(image: UIImage(bundleImageName: "Avatar/AnonymousSenderIcon"), color: UIColor(white: 1.0, alpha: 0.4))

@@ -2085,6 +2085,7 @@ extension PresentationTheme: Codable {
         case chart
         
         case squareStyle
+        case vkIcons
     }
     
     public convenience init(from decoder: Decoder) throws {
@@ -2097,6 +2098,7 @@ extension PresentationTheme: Codable {
         }
         
         let squareStyle = try values.decode(Bool.self, forKey: .squareStyle)
+        let vkIcons = try values.decode(Bool.self, forKey: .vkIcons)
         
         let index: Int64
         if let decoder = decoder as? PresentationThemeDecoding {
@@ -2121,7 +2123,8 @@ extension PresentationTheme: Codable {
                   contextMenu: try values.decode(PresentationThemeContextMenu.self, forKey: .contextMenu),
                   inAppNotification: try values.decode(PresentationThemeInAppNotification.self, forKey: .notification),
                   chart: try values.decode(PresentationThemeChart.self, forKey: .chart),
-                  squareStyle: squareStyle
+                  squareStyle: squareStyle,
+                  vkIcons: vkIcons
         )
     }
     
@@ -2141,5 +2144,6 @@ extension PresentationTheme: Codable {
         try container.encode(self.inAppNotification, forKey: .notification)
         try container.encode(self.chart, forKey: .chart)
         try container.encode(self.squareStyle, forKey: .squareStyle)
+        try container.encode(self.vkIcons, forKey: .vkIcons)
     }
 }

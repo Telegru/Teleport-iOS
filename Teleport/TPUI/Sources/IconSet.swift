@@ -1,7 +1,8 @@
 import UIKit
 
 public protocol IconSet {
-    func icon(_ type: IconType) -> UIImage
+    
+    init()
+    
+    func icon(_ type: IconType) -> UIImage?
 }
-
-
