@@ -82,6 +82,14 @@ public struct TGIconSet: IconSet {
             return UIImage(bundleImageName: "Context Menu/Delete")
         case .contextMenuEye:
             return UIImage(bundleImageName: "Context Menu/Eye")
+        case .callsTab:
+            return UIImage(bundleImageName: "Chat List/Tabs/IconCalls")
+        case .contactsTab:
+            return UIImage(bundleImageName: "Chat List/Tabs/IconContacts")
+        case .chatsTab:
+            return UIImage(bundleImageName: "Chat List/Tabs/IconChats")
+        case .settingsTab:
+            return UIImage(bundleImageName: "Chat List/Tabs/IconSettings")
         }
     }
 }

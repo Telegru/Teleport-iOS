@@ -1,6 +1,10 @@
 import UIKit
 
-public enum IconType: String {
+public enum IconType: String, CaseIterable {
+    case callsTab
+    case chatsTab
+    case contactsTab
+    case settingsTab
     case addStory
     case storyCompose
     case peerPinnedIcon

@@ -59,6 +59,7 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     case iconsHeader(title: String)
     case vkIcons(title: String, isActive: Bool)
+    case iconsPreview(PresentationTheme)
     
     var section: ItemListSectionId {
         switch self {
@@ -74,7 +75,7 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case .viewRoundingHeader, .viewRounding:
             return DAppearanceSettingsSection.viewRounding.rawValue
             
-        case .iconsHeader, .vkIcons:
+        case .iconsHeader, .vkIcons, .iconsPreview:
             return DAppearanceSettingsSection.icons.rawValue
         }
     }
@@ -99,6 +100,8 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 1005
         case .vkIcons:
             return 1006
+        case .iconsPreview:
+            return 1007
         }
     }
     
@@ -155,6 +158,12 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case let .vkIcons(lhsTitle, lhsIsActive):
             if case let .vkIcons(rhsTitle, rhsIsActive) = rhs {
                 return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+
+        case let .iconsPreview(lhsTheme):
+            if case let .iconsPreview(rhsTheme) = rhs {
+                return lhsTheme === rhsTheme
             }
             return false
         }
@@ -252,6 +261,12 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                 style: .blocks) { value in
                     arguments.updateVKIcons(value)
                 }
+
+        case .iconsPreview:
+            return DIconSetPreviewItem(
+                presentationData: presentationData,
+                sectionId: section
+            )
         }
     }
 }
@@ -371,16 +386,18 @@ public func dAppearanceSettingsController(
         
         entries.append(
             .iconsHeader(
-                title: "Иконки".uppercased()
+                title: "DahlSettings.Appearance.Icons.Header".tp_loc(lang: lang).uppercased()
             )
         )
         
         entries.append(
             .vkIcons(
-                title: "Использовать набор “VK UI”",
+                title: "DahlSettings.Appearance.Icons.VKUI".tp_loc(lang: lang),
                 isActive: dahlSettings.appearanceSettings.vkIcons
             )
         )
+        
+//        entries.append(.iconsPreview(presentationData.theme))
         
         let listState = ItemListNodeState(
             presentationData: ItemListPresentationData(presentationData),
