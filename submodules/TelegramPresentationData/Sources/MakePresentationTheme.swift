@@ -7,15 +7,14 @@ import TelegramCore
 public func makeDefaultPresentationTheme(reference: PresentationBuiltinThemeReference, extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, preview: Bool = false, squareStyle: Bool, vkIcons: Bool = false) -> PresentationTheme {
     let theme: PresentationTheme
     switch reference {
-        case .dayClassic:
-        theme = makeDefaultDahlDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: false, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
-        case .day:
+    case .dayClassic:
+        theme = makeDefaultDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: false, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
+    case .day:
         theme = makeDefaultDayPresentationTheme(extendingThemeReference: extendingThemeReference, serviceBackgroundColor: serviceBackgroundColor, day: true, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
-        case .night:
+    case .night:
         theme = makeDefaultDarkPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
-        case .nightAccent:
-        theme = makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
-
+    case .nightAccent:
+        theme = makeDefaultDarkTintedPresentationTheme(extendingThemeReference: extendingThemeReference, preview: preview, squareStyle: squareStyle, vkIcons: vkIcons)
     }
     return theme
 }
@@ -26,11 +25,11 @@ public func customizePresentationTheme(_ theme: PresentationTheme, editing: Bool
     }
     switch theme.referenceTheme {
         case .day, .dayClassic:
-        return customizeDefaultDahlDayTheme(theme: theme, editing: editing, title: title, accentColor: accentColor, outgoingAccentColor: outgoingAccentColor, backgroundColors: backgroundColors, bubbleColors: bubbleColors, animateBubbleColors: animateBubbleColors ?? false, wallpaper: wallpaper, serviceBackgroundColor: nil)
+            return customizeDefaultDayTheme(theme: theme, editing: editing, title: title, accentColor: accentColor, outgoingAccentColor: outgoingAccentColor, backgroundColors: backgroundColors, bubbleColors: bubbleColors, animateBubbleColors: animateBubbleColors ?? false, wallpaper: wallpaper, serviceBackgroundColor: nil)
         case .night:
             return customizeDefaultDarkPresentationTheme(theme: theme, editing: editing, title: title, accentColor: accentColor, backgroundColors: backgroundColors, bubbleColors: bubbleColors, animateBubbleColors: animateBubbleColors ?? false, wallpaper: wallpaper, baseColor: baseColor)
         case .nightAccent:
-        return customizeDefaultDahlDarkTintedPresentationTheme(theme: theme, editing: editing, title: title, accentColor: accentColor, backgroundColors: backgroundColors, bubbleColors: bubbleColors, animateBubbleColors: animateBubbleColors ?? false, wallpaper: wallpaper, baseColor: baseColor)
+            return customizeDefaultDarkTintedPresentationTheme(theme: theme, editing: editing, title: title, accentColor: accentColor, backgroundColors: backgroundColors, bubbleColors: bubbleColors, animateBubbleColors: animateBubbleColors ?? false, wallpaper: wallpaper, baseColor: baseColor)
     }
 }
 

@@ -3,6 +3,7 @@ import UIKit
 import TelegramCore
 import TelegramUIPreferences
 import Postbox
+import DWallpaper
 
 private let defaultDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
 public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false, vkIcons: false)
@@ -938,8 +939,18 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         badgeTextColor: .white
     )
 
+//    let chat = PresentationThemeChat(
+//        defaultWallpaper: defaultBuiltinWallpaper(data: .default, colors: [0x1b2836, 0x121a22, 0x1b2836, 0x121a22]),
+//        animateMessageColors: false,
+//        message: message,
+//        serviceMessage: serviceMessage,
+//        inputPanel: inputPanel,
+//        inputMediaPanel: inputMediaPanel,
+//        inputButtonPanel: inputButtonPanel,
+//        historyNavigation: historyNavigation
+//    )
     let chat = PresentationThemeChat(
-        defaultWallpaper: defaultBuiltinWallpaper(data: .default, colors: [0x1b2836, 0x121a22, 0x1b2836, 0x121a22]),
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: true) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: message,
         serviceMessage: serviceMessage,
