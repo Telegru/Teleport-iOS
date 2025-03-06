@@ -383,7 +383,7 @@ private final class ProxyServerActionItemNode: ActionSheetItemNode {
                     settings.servers[index] = proxyServerSettings
                     settings.activeServer = proxyServerSettings
                 } else {
-                    settings.servers.insert(proxyServerSettings, at: 0)
+                    settings.servers.append(proxyServerSettings)
                     settings.activeServer = proxyServerSettings
                 }
                 settings.enabled = true

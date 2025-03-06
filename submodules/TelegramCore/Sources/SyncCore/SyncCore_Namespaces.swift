@@ -551,8 +551,6 @@ private enum SharedDataKeyValues: Int32 {
     case countriesList = 7
     case wallapersState = 8
     case chatThemes = 10
-    
-    case dahlProxySettings = 10001
 }
 
 public struct SharedDataKeys {
@@ -607,12 +605,6 @@ public struct SharedDataKeys {
     public static let chatThemes: ValueBoxKey = {
         let key = ValueBoxKey(length: 4)
         key.setInt32(0, value: SharedDataKeyValues.chatThemes.rawValue)
-        return key
-    }()
-    
-    public static let dahlProxySettings: ValueBoxKey = {
-        let key = ValueBoxKey(length: 4)
-        key.setInt32(0, value: SharedDataKeyValues.dahlProxySettings.rawValue)
         return key
     }()
 }

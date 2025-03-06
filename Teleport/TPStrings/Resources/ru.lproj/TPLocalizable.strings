@@ -26,6 +26,7 @@
 
 "Settings.AppVersion.Footer" = "Даль — мессенджер для iOS v.%@\nОснован на Telegram v.%@";
 
+"ChatSettings.ConnectionType.UseProxy" = "Свой прокси";
 
 // Settings
 "Dahl.TabTitle" = "Даль";

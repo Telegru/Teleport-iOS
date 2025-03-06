@@ -1231,45 +1231,34 @@ public class Account {
                 strongSelf._importantTasksRunning.set(value)
             }
         }))
-        
-        let proxySettings = Promise<ProxyServerSettings?>()
-        proxySettings.set(accountManager.sharedData(keys: [SharedDataKeys.proxySettings])
+        self.managedOperationsDisposable.add((accountManager.sharedData(keys: [SharedDataKeys.proxySettings])
         |> map { sharedData -> ProxyServerSettings? in
-            let settings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? .defaultSettings
-            return settings.activeServer
-        })
-        
-        let dahlProxySettings = Promise<ProxyServerSettings?>()
-        dahlProxySettings.set(accountManager.sharedData(keys: [SharedDataKeys.dahlProxySettings])
-        |> map { sharedData -> ProxyServerSettings? in
-            let settings = sharedData.entries[SharedDataKeys.dahlProxySettings]?.get(DahlProxySettings.self) ?? .defaultSettings
-            return settings.server
-        })
-        
-        self.managedOperationsDisposable.add(
-            (combineLatest(proxySettings.get(), dahlProxySettings.get())
-             |> map { $0 ?? $1 }
-             |> distinctUntilChanged).start(next: { server in
-                 let updated = server.flatMap { activeServer -> MTSocksProxySettings? in
-                     return activeServer.mtProxySettings
-                 }
-                 network.context.updateApiEnvironment { environment in
-                     let current = environment?.socksProxySettings
-                     let updateNetwork: Bool
-                     if let current = current, let updated = updated {
-                         updateNetwork = !current.isEqual(updated)
-                     } else {
-                         updateNetwork = (current != nil) != (updated != nil)
-                     }
-                     if updateNetwork {
-                         network.dropConnectionStatus()
-                         return environment?.withUpdatedSocksProxySettings(updated)
-                     } else {
-                         return nil
-                     }
-                 }
-             })
-        )
+            if let settings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) {
+                return settings.effectiveActiveServer
+            } else {
+                return nil
+            }
+        }
+        |> distinctUntilChanged).start(next: { activeServer in
+            let updated = activeServer.flatMap { activeServer -> MTSocksProxySettings? in
+                return activeServer.mtProxySettings
+            }
+            network.context.updateApiEnvironment { environment in
+                let current = environment?.socksProxySettings
+                let updateNetwork: Bool
+                if let current = current, let updated = updated {
+                    updateNetwork = !current.isEqual(updated)
+                } else {
+                    updateNetwork = (current != nil) != (updated != nil)
+                }
+                if updateNetwork {
+                    network.dropConnectionStatus()
+                    return environment?.withUpdatedSocksProxySettings(updated)
+                } else {
+                    return nil
+                }
+            }
+        }))
 
         if !supplementary {
             let mediaBox = postbox.mediaBox

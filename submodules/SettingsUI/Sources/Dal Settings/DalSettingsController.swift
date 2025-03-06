@@ -761,22 +761,19 @@ public func dalsettingsController(
         updateProxy: { value in
             let _ = (updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager) { proxySettings in
                 var proxySettings = proxySettings
-                if value == true {
-                    proxySettings.enabled = false
+                if let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret) {
+                    let dahlServer = ProxyServerSettings(
+                        host: buildConfig.dProxyServer,
+                        port: buildConfig.dProxyPort,
+                        connection: .mtp(secret: parsedSecret.serialize())
+                    )
+                    if !proxySettings.servers.contains(where: { $0.host == dahlServer.host }) {
+                        proxySettings.servers.insert(dahlServer, at: 0)
+                    }
+                    proxySettings.activeServer = dahlServer
+                    proxySettings.enabled = value
                 }
                 return proxySettings
-            } |> mapToSignal { _ in
-                updateDahlProxyInteractively(
-                    accountManager: context.sharedContext.accountManager) { settings in
-                        var settings = settings
-                        let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret)
-                        settings.server = value ? ProxyServerSettings(
-                            host: buildConfig.dProxyServer,
-                            port: buildConfig.dProxyPort,
-                            connection: .mtp(secret: parsedSecret!.serialize())
-                        ) : nil
-                        return settings
-                    }
             }).start()
         },
         updateHidePublishStoriesButton: { value in
@@ -914,14 +911,12 @@ public func dalsettingsController(
     
     let isProxyEnabled = Promise<Bool>()
     isProxyEnabled.set(
-        context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.dahlProxySettings, SharedDataKeys.proxySettings])
-    |> map { sharedData -> Bool in
-        if sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self)?.effectiveActiveServer != nil {
-            return false
+        context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.proxySettings])
+        |> map { sharedData -> Bool in
+            let proxySettings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? .defaultSettings
+            return proxySettings.activeServer?.host == buildConfig.dProxyServer && proxySettings.enabled
         }
-        
-        return sharedData.entries[SharedDataKeys.dahlProxySettings]?.get(DahlProxySettings.self)?.server != nil
-    })
+    )
     
     let tabBarItemSignal = context.sharedContext.presentationData
     |> map { presentationData -> ItemListControllerTabBarItem in

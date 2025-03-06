@@ -16,6 +16,12 @@ import BuildConfig
 import TPUI
 import TPStrings
 
+private struct DisplayProxyServerStatus: Equatable {
+    let activity: Bool
+    let text: String
+    let textActive: Bool
+}
+
 private final class DGeneralSettingsArguments {
     let context: AccountContext
     let updateProxyEnableState: (Bool) -> Void
@@ -37,28 +43,18 @@ private final class DGeneralSettingsArguments {
 
 private enum DGeneralSettingsSection: Int32, CaseIterable {
     case connection
+    case savedProxies
     case profile
     case premium
-}
-
-private enum DGeneralSettingsEntryTag: ItemListItemTag {
-    case proxy
-    case hidePhoneNumber
-    case premiumSettings
-    
-    func isEqual(to other: ItemListItemTag) -> Bool {
-        if let other = other as? DGeneralSettingsEntryTag, self == other {
-            return true
-        } else {
-            return false
-        }
-    }
 }
 
 private enum DGeneralSettingsEntry: ItemListNodeEntry {
     case connectionHeader(PresentationTheme, title: String)
     case proxy(PresentationTheme, title: String, value: Bool)
     case connectionFooter(PresentationTheme, title: String)
+    
+    case serversHeader(PresentationTheme, String)
+    case server(PresentationTheme, PresentationStrings, String?, ProxyServerSettings, Bool, DisplayProxyServerStatus, Bool)
     
     case profileHeader(PresentationTheme, title: String)
     case hidePhoneNumber(PresentationTheme, title: String, value: Bool)
@@ -71,6 +67,9 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
         switch self {
         case .connectionHeader, .proxy, .connectionFooter:
             return DGeneralSettingsSection.connection.rawValue
+            
+        case .serversHeader, .server:
+            return DGeneralSettingsSection.savedProxies.rawValue
             
         case .profileHeader, .hidePhoneNumber, .profileFooter:
             return DGeneralSettingsSection.profile.rawValue
@@ -88,30 +87,20 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             return 1
         case .connectionFooter:
             return 2
-        case .profileHeader:
+        case .serversHeader:
             return 3
-        case .hidePhoneNumber:
+        case .server:
             return 4
-        case .profileFooter:
+        case .profileHeader:
             return 5
-        case .premiumSettings:
-            return 6
-        case .premiumSettingsFooter:
-            return 7
-        }
-    }
-    
-    var tag: ItemListItemTag? {
-        switch self {
-        case .proxy:
-            return DGeneralSettingsEntryTag.proxy
         case .hidePhoneNumber:
-            return DGeneralSettingsEntryTag.hidePhoneNumber
+            return 6
+        case .profileFooter:
+            return 7
         case .premiumSettings:
-            return DGeneralSettingsEntryTag.premiumSettings
-            
-        case .connectionHeader, .connectionFooter, .profileHeader, .profileFooter, .premiumSettingsFooter:
-            return nil
+            return 8
+        case .premiumSettingsFooter:
+            return 9
         }
     }
     
@@ -140,6 +129,22 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             if case let .connectionFooter(rhsTheme, rhsTitle) = rhs,
                lhsTheme === rhsTheme,
                lhsTitle == rhsTitle {
+                return true
+            } else {
+                return false
+            }
+            
+        case let .serversHeader(lhsTheme, lhsTitle):
+            if case let .serversHeader(rhsTheme, rhsTitle) = rhs,
+               lhsTheme === rhsTheme,
+               lhsTitle == rhsTitle {
+                return true
+            } else {
+                return false
+            }
+            
+        case let .server(lhsTheme, lhsStrings, lhsTitle, lhsSettings, lhsActive, lhsStatus, lhsEnabled):
+            if case let .server(rhsTheme, rhsStrings, rhsTitle, rhsSettings, rhsActive, rhsStatus, rhsEnabled) = rhs, lhsTheme === rhsTheme, lhsStrings == rhsStrings, lhsSettings == rhsSettings, lhsTitle == rhsTitle, lhsActive == rhsActive, lhsStatus == rhsStatus, lhsEnabled == rhsEnabled {
                 return true
             } else {
                 return false
@@ -231,6 +236,32 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section
             )
             
+        case let .serversHeader(_, title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: section
+            )
+            
+        case let .server(theme, strings, title, settings, active, status, enabled):
+            return ProxySettingsServerItem(
+                theme: theme,
+                strings: strings,
+                title: title,
+                server: settings,
+                activity: status.activity,
+                active: active,
+                color: enabled ? .accent : .secondary,
+                label: status.text,
+                labelAccent: status.textActive,
+                editing: ProxySettingsServerItemEditing(editable: false, editing: false, revealed: false, infoAvailable: false),
+                sectionId: self.section,
+                action: {},
+                infoAction: {},
+                setServerWithRevealedOptions: { _, _ in },
+                removeServer: { _ in }
+            )
+            
         case let .profileHeader(_, title):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
@@ -283,6 +314,9 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
 private func dGeneralSettingsEntries(
     presentationData: PresentationData,
     isProxyEnabled: Bool,
+    proxySettings: ProxyServerSettings?,
+    proxyStatus: ProxyServerStatus?,
+    connectionStatus: ConnectionStatus?,
     hidePhoneEnabled: Bool
 ) -> [DGeneralSettingsEntry] {
     var entries = [DGeneralSettingsEntry]()
@@ -309,6 +343,54 @@ private func dGeneralSettingsEntries(
             title: "DahlSettings.General.Network.Footer".tp_loc(lang: lang)
         )
     )
+    
+    if let proxyStatus, let proxySettings, let connectionStatus {
+        entries.append(
+            .serversHeader(
+                presentationData.theme,
+                presentationData.strings.SocksProxySetup_SavedProxies
+            )
+        )
+        let strings = presentationData.strings
+        let displayStatus: DisplayProxyServerStatus
+        if isProxyEnabled {
+            switch connectionStatus {
+            case .waitingForNetwork:
+                displayStatus = DisplayProxyServerStatus(activity: true, text: strings.State_WaitingForNetwork.lowercased(), textActive: false)
+            case .connecting, .updating:
+                displayStatus = DisplayProxyServerStatus(activity: true, text: strings.SocksProxySetup_ProxyStatusConnecting, textActive: false)
+            case .online:
+                var text = strings.SocksProxySetup_ProxyStatusConnected
+                if case let .available(rtt) = proxyStatus {
+                    let pingTime: Int = Int(rtt * 1000.0)
+                    text = text + ", \(strings.SocksProxySetup_ProxyStatusPing("\(pingTime)").string)"
+                }
+                displayStatus = DisplayProxyServerStatus(activity: false, text: text, textActive: true)
+            }
+        } else {
+            var text: String
+            switch proxySettings.connection {
+            case .socks5:
+                text = strings.ChatSettings_ConnectionType_UseSocks5
+            case .mtp:
+                text = strings.SocksProxySetup_ProxyTelegram
+            }
+            switch proxyStatus {
+            case .notAvailable:
+                text = text + ", " + strings.SocksProxySetup_ProxyStatusUnavailable
+                displayStatus = DisplayProxyServerStatus(activity: false, text: text, textActive: false)
+            case .checking:
+                text = text + ", " + strings.SocksProxySetup_ProxyStatusChecking
+                displayStatus = DisplayProxyServerStatus(activity: false, text: text, textActive: false)
+            case let .available(rtt):
+                let pingTime: Int = Int(rtt * 1000.0)
+                text = text + ", \(strings.SocksProxySetup_ProxyStatusPing("\(pingTime)").string)"
+                displayStatus = DisplayProxyServerStatus(activity: false, text: text, textActive: false)
+            }
+        }
+        let title = "DahlSettings.Proxy".tp_loc(lang: strings.baseLanguageCode)
+        entries.append(.server(presentationData.theme, strings, title, proxySettings, true, displayStatus, isProxyEnabled))
+    }
     
     entries.append(
         .profileHeader(
@@ -358,27 +440,30 @@ public func dGeneralSettingsController(
     
     var openPremiumSettings: (() -> Void)?
     
+    let proxyServer: ProxyServerSettings? = {
+        guard let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret) else {
+            return nil
+        }
+        return ProxyServerSettings(
+            host: buildConfig.dProxyServer,
+            port: buildConfig.dProxyPort,
+            connection: .mtp(secret: parsedSecret.serialize())
+        )
+    }()
+    
     let arguments = DGeneralSettingsArguments(
         context: context,
         updateProxyEnableState: { value in
             let _ = (updateProxySettingsInteractively(accountManager: context.sharedContext.accountManager) { proxySettings in
                 var proxySettings = proxySettings
-                if value == true {
-                    proxySettings.enabled = false
+                if let proxyServer {
+                    if !proxySettings.servers.contains(where: { $0.host == proxyServer.host }) {
+                        proxySettings.servers.insert(proxyServer, at: 0)
+                    }
+                    proxySettings.activeServer = proxyServer
+                    proxySettings.enabled = value
                 }
                 return proxySettings
-            } |> mapToSignal { _ in
-                updateDahlProxyInteractively(
-                    accountManager: context.sharedContext.accountManager) { settings in
-                        var settings = settings
-                        let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret)
-                        settings.server = value ? ProxyServerSettings(
-                            host: buildConfig.dProxyServer,
-                            port: buildConfig.dProxyPort,
-                            connection: .mtp(secret: parsedSecret!.serialize())
-                        ) : nil
-                        return settings
-                    }
             }).start()
         },
         updateHidePhone: { value in
@@ -396,29 +481,36 @@ public func dGeneralSettingsController(
         }
     )
     
-    let sharedData = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    let statusesContext = ProxyServersStatuses(network: context.account.network, servers: .single(proxyServer != nil ? [proxyServer!] : []))
+    let sharedData = context.sharedContext.accountManager.sharedData(keys: [
+        ApplicationSpecificSharedDataKeys.dalSettings,
+        SharedDataKeys.proxySettings
+    ])
     
     let isProxyEnabled = Promise<Bool>()
     isProxyEnabled.set(
-        context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.dahlProxySettings, SharedDataKeys.proxySettings])
-    |> map { sharedData -> Bool in
-        if sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self)?.effectiveActiveServer != nil {
-            return false
+        context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.proxySettings])
+        |> map { sharedData -> Bool in
+            let proxySettings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? .defaultSettings
+            return proxySettings.activeServer?.host == buildConfig.dProxyServer && proxySettings.enabled
         }
-        
-        return sharedData.entries[SharedDataKeys.dahlProxySettings]?.get(DahlProxySettings.self)?.server != nil
-    })
+    )
     
     let signal = combineLatest(
         sharedData,
         context.sharedContext.presentationData,
-        isProxyEnabled.get()
-    ) |> map { sharedData, presentationData, isProxyEnabledValue -> (ItemListControllerState, (ItemListNodeState, Any)) in
+        isProxyEnabled.get(),
+        statusesContext.statuses(),
+        context.account.network.connectionStatus
+    ) |> map { sharedData, presentationData, isProxyEnabledValue, statuses, connectionStatus -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
-        
+        let proxySettings = sharedData.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? .defaultSettings
         let entries = dGeneralSettingsEntries(
             presentationData: presentationData,
             isProxyEnabled: isProxyEnabledValue,
+            proxySettings: proxySettings.servers.contains(where: { $0.host == proxyServer?.host }) ? proxyServer : nil,
+            proxyStatus: statuses.first?.value,
+            connectionStatus: connectionStatus,
             hidePhoneEnabled: dahlSettings.hidePhone
         )
         
