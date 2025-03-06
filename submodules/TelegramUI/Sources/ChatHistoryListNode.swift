@@ -526,6 +526,28 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         didSet {
             if let chatHistoryLocationValue = self.chatHistoryLocationValue, chatHistoryLocationValue != oldValue {
                 chatHistoryLocationPromise.set(chatHistoryLocationValue)
+                
+                if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
+                    var messageIndex: MessageIndex?
+                    
+                    switch chatHistoryLocationValue.content {
+                    case let .Navigation(index, _, _, _):
+                        if case let .message(idx) = index {
+                            messageIndex = idx
+                        }
+                    case let .Scroll(subject, _, _, _, _, _, _):
+                        if case let .message(idx) = subject.index {
+                            messageIndex = idx
+                        }
+                    default:
+                        break
+                    }
+                    
+                    // Если у нас есть messageIndex, вызываем loadMoreAt
+                    if let messageIndex = messageIndex {
+                        customChatContents.loadMoreAt(messageIndex: messageIndex)
+                    }
+                }
             }
         }
     }
@@ -1223,7 +1245,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     }
     
     public func resetScrolling() {
-        self.beginChatHistoryTransitions(resetScrolling: true)
+//        self.beginChatHistoryTransitions(resetScrolling: true)
         self.scrollToStartOfHistory()
     }
     
@@ -1463,6 +1485,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         Set()
                     )
                 }
+                
 
                 return (
                     ChatHistoryViewUpdate.HistoryView(
@@ -2291,7 +2314,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             skipFirst = true
         }
 
-        let readHistory = combineLatest( self.maxVisibleIncomingMessageIndex.get(), (self.canReadHistory.get())|>take(1))
+        let readHistory = combineLatest( self.maxVisibleIncomingMessageIndex.get(), (self.canReadHistory.get())|>distinctUntilChanged(isEqual: { $0 == $1 }))
         
         self.readHistoryDisposable.set((readHistory |> deliverOnMainQueue).startStrict(next: { [weak self] messageIndex, canRead in
             guard let strongSelf = self else {
@@ -3259,24 +3282,19 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                 if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
                         switch self.chatHistoryLocationValue?.content {
                         case .Initial(_):
-                            var currentMessage: Message?
-                            if let entry = historyView.filteredEntries.first {
-                                if case let .MessageEntry(message, _, _, _, _, _) = entry {
-                                    currentMessage = message
-                                } else if case let .MessageGroupEntry(_, messages, _) = entry {
-                                    currentMessage = messages.first?.0
+                            self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
+                        case .Scroll:
+                            // TODO: оставить только для скролла вверх это правило
+                            if lastEntry.index != lastVisbleMesssage()?.index {
+                                let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
+                                if self.chatHistoryLocationValue?.content != locationInput {
+                                    self.chatHistoryLocationValue = ChatHistoryLocationInput(content: locationInput, id: self.takeNextHistoryLocationId())
                                 }
-                            }
-                            if let currentMessage {
-                                self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .message(currentMessage.index), quote: nil), anchorIndex: .message(currentMessage.index), sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: true, setupReply: false), id: self.takeNextHistoryLocationId())
-                                customChatContents.loadMore()
                             }
                         default:
                             let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
-
                             if self.chatHistoryLocationValue?.content != locationInput {
                                 self.chatHistoryLocationValue = ChatHistoryLocationInput(content: locationInput, id: self.takeNextHistoryLocationId())
-                                customChatContents.loadMore()
                             }
                     }
                 }
@@ -3365,7 +3383,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     
     public func scrollToStartOfHistory() {
         self.beganDragging?()
-        self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
+        self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
     }
     
     public func scrollToEndOfHistory() {
@@ -3376,18 +3394,20 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         default:
             if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
                 beginChatHistoryTransitions(resetScrolling: true)
-                customChatContents.loadAll()
                 scrollDisposable?.dispose()
+                // TODO: проверить работу без scrollDisposable
+
                 scrollDisposable = (
-                    customChatContents.isLoadingSignal
+                    customChatContents.historyView
                     |> deliverOnMainQueue
-                    |> filter { !$0 }
+                    |> filter { !$0.0.isLoading }
                     |> take(1)
-                ).start(next: { [weak self] isLoading in
+                ).start(next: { [weak self] _ in
                     guard let self else { return }
                     let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
                     self.chatHistoryLocationValue = locationInput
                 })
+                customChatContents.loadAll()
             } else {
                 let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
                 self.chatHistoryLocationValue = locationInput
