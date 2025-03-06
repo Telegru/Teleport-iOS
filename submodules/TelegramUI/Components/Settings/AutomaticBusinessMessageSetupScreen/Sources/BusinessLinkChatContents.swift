@@ -95,7 +95,13 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
     func loadMore() {
     }
     
+    func loadMoreAt(messageIndex: MessageIndex) {
+        
+    }
+    
     func loadAll() {}
+    
+
 
     func hashtagSearchUpdate(query: String) {
     }

@@ -1184,6 +1184,7 @@ public protocol ChatCustomContentsProtocol: AnyObject {
     
     func loadMore()
     func loadAll()
+    func loadMoreAt(messageIndex: MessageIndex) 
 
     func hashtagSearchUpdate(query: String)
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void { get set }

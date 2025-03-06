@@ -72,6 +72,8 @@ extension ChatControllerImpl {
                 if allowedReactions != nil, case let .customChatContents(customChatContents) = self.presentationInterfaceState.subject {
                     if case let .hashTagSearch(publicPosts) = customChatContents.kind, publicPosts {
                         allowedReactions = nil
+                    } else if case .wall = customChatContents.kind {
+                        allowedReactions = nil
                     }
                 }
 
