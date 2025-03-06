@@ -26,6 +26,8 @@
 
 "Settings.AppVersion.Footer" = "Dahl Messenger for iOS v.%@\nBased on Telegram v.%@";
 
+"ChatSettings.ConnectionType.UseProxy" = "Your proxy";
+
 // Settings
 "Dahl.TabTitle" = "Dahl";
 "DahlSettings.TabTitle" = "\"Dahl\" settings";
