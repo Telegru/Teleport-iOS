@@ -580,7 +580,7 @@ extension ChatControllerImpl {
             let chatWallpaper = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
             |> mapToSignal { [weak self] sharedData -> Signal<TelegramWallpaper?, NoError> in
                 let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
-                guard let self, settings.premiumSettings.showCustomWallpaperInChannels else {
+                guard let self, settings.appearanceSettings.showCustomWallpaperInChannels else {
                     return .single(nil)
                 }
                 return self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Wallpaper(id: peerId))
@@ -740,7 +740,7 @@ extension ChatControllerImpl {
                             themeEmoticon = cachedData.themeEmoticon
                         } else if let cachedData = cachedData as? CachedChannelData {
                             themeEmoticon = cachedData.themeEmoticon
-                            if dahlSettings.premiumSettings.showCustomWallpaperInChannels {
+                            if dahlSettings.appearanceSettings.showCustomWallpaperInChannels {
                                 chatWallpaper = cachedData.wallpaper
                             }
                         }
