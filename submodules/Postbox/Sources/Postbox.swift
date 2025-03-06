@@ -3286,14 +3286,31 @@ final class PostboxImpl {
         }
     }
     
+    public func getTopMessageAnchorsForPeerIds(
+        peerIds: [PeerId],
+        namespace: MessageId.Namespace
+    ) -> Signal<[PeerId: MessageIndex], NoError> {
+        return self.transaction { transaction -> [PeerId: MessageIndex] in
+            var result: [PeerId: MessageIndex] = [:]
+            
+            for peerId in peerIds {
+                if let index = transaction.getTopPeerMessageIndex(peerId: peerId, namespace: namespace) {
+                    result[peerId] = index
+                }
+            }
+            
+            return result
+        }
+    }
+    
     // TODO: has methods better
-    public func oldestUnreadMessagesForPeerIds(
+    public func maxReadIndexForPeerIds(
         peerIds: [PeerId],
         clipHoles: Bool,
         namespaces: MessageIdNamespaces
-    ) -> Signal<[PeerId: Message], NoError> {
-        return self.transaction { transaction -> [PeerId: Message] in
-            var result: [PeerId: Message] = [:]
+    ) -> Signal<[PeerId: MessageIndex], NoError> {
+        return self.transaction { transaction -> [PeerId: MessageIndex] in
+            var result: [PeerId: MessageIndex] = [:]
             
             for peerId in peerIds {
                 let view = transaction.getMessagesHistoryViewState(
@@ -3305,21 +3322,12 @@ final class PostboxImpl {
                     anchor: .unread,
                     namespaces: namespaces
                 )
-                
-                if let combinedState = transaction.getCombinedPeerReadState(peerId) {
-                    let unreadEntries = view.entries.filter { entry in
-                        return combinedState.isIncomingMessageIndexRead(entry.message.index) == false
-                    }
-                    if let oldestEntry = unreadEntries.sorted(by: { $0.message.timestamp < $1.message.timestamp }).first {
-                        result[peerId] = oldestEntry.message
-                    }
+                if let maxReadIndex = view.maxReadIndex {
+                    result[peerId] = maxReadIndex
                 } else {
-                    if let oldestEntry = view.entries.sorted(by: { $0.message.timestamp < $1.message.timestamp }).first {
-                        result[peerId] = oldestEntry.message
-                    }
+                    result[peerId] = transaction.getTopPeerMessageIndex(peerId: peerId)
                 }
             }
-            
             return result
         }
     }
@@ -4796,9 +4804,12 @@ public class Postbox {
     
     public func aroundAggregatedMessageHistoryViewForPeerIds(
         peerIds: [PeerId],
-        from: [PeerId: MessageIndex]? = nil,
+        anchors: [PeerId: MessageIndex],
+        anchor: MessageIndex? = nil,
+        filterBofore: [PeerId: MessageIndex],
         count: Int,
         clipHoles: Bool = true,
+        takeTail: Bool = false,
         namespaces: MessageIdNamespaces = .just(Set([0])),
         orderStatistics: MessageHistoryViewOrderStatistics = MessageHistoryViewOrderStatistics(),
         additionalData: [AdditionalMessageHistoryViewData] = []
@@ -4811,7 +4822,7 @@ public class Postbox {
             }
 
             let peerSignals: [Signal<(PeerId, MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>] = peerIds.map { peerId in
-                let anchor: HistoryViewInputAnchor = from?[peerId] != nil ? .index(from![peerId]!) : .unread
+                let anchor: HistoryViewInputAnchor = anchors[peerId] != nil ? .index(anchors[peerId]!) : .unread
 
                 return self.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), anchor: anchor, ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), count: count * 2, fixedCombinedReadStates: nil, topTaggedMessageIdNamespaces: Set(), tag: nil, appendMessagesFromTheSameGroup: true, namespaces: namespaces, orderStatistics: orderStatistics)
                 |> map { viewData -> (PeerId, MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?) in
@@ -4828,9 +4839,9 @@ public class Postbox {
                 for (peerId, view, updateType, data) in peerResults {
                     var entries = view.entries
                     
-                    if let fromIndices = from, let fromIndex = fromIndices[peerId] {
+                    if let fromIndex = filterBofore[peerId] {
                         let passedGroupingKeys = Set(entries
-                            .filter { $0.index >= fromIndex }
+                            .filter { $0.index > fromIndex && $0.index > anchor ?? fromIndex }
                             .compactMap { entry in
                                 if let groupingKey = entry.message.groupingKey {
                                     return groupingKey
@@ -4839,7 +4850,7 @@ public class Postbox {
                             })
 
                         entries = entries.filter { entry in
-                            if entry.index >= fromIndex {
+                            if entry.index > anchor ?? fromIndex {
                                 return true
                             }
                             if let groupingKey = entry.message.groupingKey,
@@ -4850,6 +4861,7 @@ public class Postbox {
                         }
                     }
                     
+                                    
                     allEntries.append(contentsOf: entries)
                     
                     if updateType == .Initial {
@@ -4863,11 +4875,14 @@ public class Postbox {
                     }
                 }
                 
-                allEntries.sort { $0.index < $1.index }
-                
-                if allEntries.count > count {
-                    allEntries = Array(allEntries.prefix(count))
+                allEntries.sort { $0.message.timestamp < $1.message.timestamp }
+
+                if let anchor = anchor {
+                    allEntries = allEntries.filter { $0.index >= anchor }
                 }
+                
+                allEntries = Array(takeTail ? allEntries.suffix(count) : allEntries.prefix(count))
+
                 
                 let namespaceSet = Set(allEntries.map { $0.index.id.namespace })
                 let aggregatedView = MessageHistoryView(
@@ -4909,15 +4924,15 @@ public class Postbox {
 //        }
 //    }
     
-    public func oldestUnreadMessagesForPeerIds(
+    public func maxReadIndexForPeerIds(
             peerIds: [PeerId],
             clipHoles: Bool,
-            namespaces: MessageIdNamespaces) -> Signal<[PeerId: Message], NoError>  {
+            namespaces: MessageIdNamespaces) -> Signal<[PeerId: MessageIndex], NoError>  {
         return Signal { subscriber in
             let disposable = MetaDisposable()
 
             self.impl.with { impl in
-                disposable.set(impl.oldestUnreadMessagesForPeerIds(
+                disposable.set(impl.maxReadIndexForPeerIds(
                     peerIds: peerIds,
                     clipHoles: clipHoles,
                     namespaces: namespaces
@@ -4932,6 +4947,17 @@ public class Postbox {
             let disposable = MetaDisposable()
             self.impl.with { impl in
                 disposable.set(impl.maximumUnreadMessagesCountAmongPeers(peerIds: peerIds)
+                    .start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            }
+            return disposable.strict()
+        }
+    }
+    
+    public func getTopMessageAnchorsForPeerIds(peerIds: [PeerId], namespace: MessageId.Namespace) -> Signal<[PeerId: MessageIndex], NoError> {
+        return Signal { subscriber in
+            let disposable = MetaDisposable()
+            self.impl.with { impl in
+                disposable.set(impl.getTopMessageAnchorsForPeerIds(peerIds: peerIds, namespace: namespace)
                     .start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
             }
             return disposable.strict()

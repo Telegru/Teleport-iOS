@@ -275,6 +275,9 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     }
     
     func loadAll() {}
+    func loadMoreAt(messageIndex: MessageIndex) {
+        
+    }
     
     func hashtagSearchUpdate(query: String) {
     }

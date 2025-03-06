@@ -207,6 +207,10 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
         }
     }
     
+    func loadMoreAt(messageIndex: MessageIndex) {
+        
+    }
+    
     func loadAll() {}
     
     func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
