@@ -22,6 +22,7 @@ private final class DPremiumSettingsArguments {
     let updateShowPremiumStickerAnimation: (Bool) -> Void
 
     let updateHideStories: (Bool) -> Void
+    let updateStoriesPostingGesture: (Bool) -> Void
     let updateHideStoriesPublishButton: (Bool) -> Void
     let updateHideViewedStories: (Bool) -> Void
 
@@ -33,6 +34,7 @@ private final class DPremiumSettingsArguments {
         updateShowAnimatedReactions: @escaping (Bool) -> Void,
         updateShowPremiumStickerAnimation: @escaping (Bool) -> Void,
         updateHideStories: @escaping (Bool) -> Void,
+        updateStoriesPostingGesture: @escaping (Bool) -> Void,
         updateHideStoriesPublishButton: @escaping (Bool) -> Void,
         updateHideViewedStories: @escaping (Bool) -> Void
     ) {
@@ -43,6 +45,7 @@ private final class DPremiumSettingsArguments {
         self.updateShowAnimatedReactions = updateShowAnimatedReactions
         self.updateShowPremiumStickerAnimation = updateShowPremiumStickerAnimation
         self.updateHideStories = updateHideStories
+        self.updateStoriesPostingGesture = updateStoriesPostingGesture
         self.updateHideStoriesPublishButton = updateHideStoriesPublishButton
         self.updateHideViewedStories = updateHideViewedStories
     }
@@ -64,6 +67,7 @@ private enum DPremiumSettingsEntryTag: ItemListItemTag {
     case showPremiumStickerAnimation
 
     case hideStories
+    case storiesPostingGesture
     case hideStoriesPublishButton
     case hideViewedStories
 
@@ -91,6 +95,7 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
 
     case storiesHeader(PresentationTheme, title: String)
     case hideStories(PresentationTheme, title: String, value: Bool)
+    case storiesPostingGesture(PresentationTheme, title: String, value: Bool)
     case hideStoriesPublishButton(PresentationTheme, title: String, value: Bool)
     case hideViewedStories(PresentationTheme, title: String, value: Bool)
 
@@ -103,7 +108,7 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
             .showPremiumStickerAnimation, .generalFooter:
             return DPremiumSettingsSection.general.rawValue
 
-        case .storiesHeader, .hideStories, .hideStoriesPublishButton, .hideViewedStories:
+        case .storiesHeader, .hideStories, .storiesPostingGesture, .hideStoriesPublishButton, .hideViewedStories:
             return DPremiumSettingsSection.stories.rawValue
         }
     }
@@ -120,11 +125,12 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
         case .showAnimatedReactions: return 6
         case .showPremiumStickerAnimation: return 7
         case .generalFooter: return 8
-
+            
         case .storiesHeader: return 9
         case .hideStories: return 10
-        case .hideStoriesPublishButton: return 11
-        case .hideViewedStories: return 12
+        case .storiesPostingGesture: return 11
+        case .hideStoriesPublishButton: return 12
+        case .hideViewedStories: return 13
         }
     }
 
@@ -144,6 +150,8 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
 
         case .hideStories:
             return DPremiumSettingsEntryTag.hideStories
+        case .storiesPostingGesture:
+            return DPremiumSettingsEntryTag.storiesPostingGesture
         case .hideStoriesPublishButton:
             return DPremiumSettingsEntryTag.hideStoriesPublishButton
         case .hideViewedStories:
@@ -217,6 +225,12 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
             }
             return lhsTheme === rhsTheme && lhsTitle == rhsTitle && lhsValue == rhsValue
 
+        case let .storiesPostingGesture(lhsTheme, lhsTitle, lhsValue):
+            guard case let .storiesPostingGesture(rhsTheme, rhsTitle, rhsValue) = rhs else {
+                return false
+            }
+            return lhsTheme === rhsTheme && lhsTitle == rhsTitle && lhsValue == rhsValue
+            
         case let .hideStoriesPublishButton(lhsTheme, lhsTitle, lhsValue):
             guard case let .hideStoriesPublishButton(rhsTheme, rhsTitle, rhsValue) = rhs else {
                 return false
@@ -359,6 +373,19 @@ private enum DPremiumSettingsEntry: ItemListNodeEntry {
                 tag: self.tag
             )
 
+        case let .storiesPostingGesture(_, title, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateStoriesPostingGesture(updatedValue)
+                },
+                tag: self.tag
+            )
+            
         case let .hideStoriesPublishButton(_, title, value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
@@ -397,7 +424,8 @@ private func dPremiumSettingsEntries(
     showPremiumStickerAnimation: Bool,
     hideStories: Bool,
     hideStoriesPublishButton: Bool,
-    hideViewedStories: Bool
+    hideViewedStories: Bool,
+    isStoriesPostingGestureEnabled: Bool
 ) -> [DPremiumSettingsEntry] {
     let lang = presentationData.strings.baseLanguageCode
     var entries = [DPremiumSettingsEntry]()
@@ -459,6 +487,14 @@ private func dPremiumSettingsEntries(
         )
     )
 
+    entries.append(
+        .storiesPostingGesture(
+            presentationData.theme,
+            title: "DahlSettings.General.Premium.Stories.PostingGesture".tp_loc(lang: lang),
+            value: isStoriesPostingGestureEnabled
+        )
+    )
+    
     entries.append(
         .hideStoriesPublishButton(
             presentationData.theme,
@@ -544,6 +580,16 @@ public func dPremiumSettingsController(
                 }
             ).start()
         },
+        updateStoriesPostingGesture: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    settings.isStoriesPostingGestureEnabled = value
+                    return settings
+                }
+            ).start()
+        },
         updateHideStoriesPublishButton: { value in
             let _ = updateDalSettingsInteractively(
                 accountManager: context.sharedContext.accountManager,
@@ -566,19 +612,16 @@ public func dPremiumSettingsController(
         }
     )
 
-    let sharedData = context.sharedContext.accountManager.sharedData(keys: [
-        ApplicationSpecificSharedDataKeys.dalSettings
-    ])
-
-    let signal =
-        combineLatest(
-            sharedData,
-            context.sharedContext.presentationData,
-            context.account.postbox.preferencesView(keys: [
-                ApplicationSpecificSharedDataKeys.dalSettings
-            ])
+    let sharedData = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    
+    let signal = combineLatest(
+        sharedData,
+        context.sharedContext.presentationData,
+        context.account.postbox.preferencesView(keys: [
+            ApplicationSpecificSharedDataKeys.dalSettings
+        ])
         )
-        |> map {
+    |> map {
             sharedData, presentationData, preferences -> (
                 ItemListControllerState, (ItemListNodeState, Any)
             ) in
@@ -595,7 +638,8 @@ public func dPremiumSettingsController(
                 showPremiumStickerAnimation: settings.premiumSettings.showPremiumStickerAnimation,
                 hideStories: settings.hideStories,
                 hideStoriesPublishButton: settings.hidePublishStoriesButton,
-                hideViewedStories: settings.hideViewedStories
+                hideViewedStories: settings.hideViewedStories,
+                isStoriesPostingGestureEnabled: settings.isStoriesPostingGestureEnabled
             )
 
             let controllerState = ItemListControllerState(

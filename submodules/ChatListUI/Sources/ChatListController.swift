@@ -6354,6 +6354,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             return false
         }
     }
+    
+    var isStoriesPostingGestureAvailable: Bool {
+        self.context.currentDahlSettings.with { $0 }.isStoriesPostingGestureEnabled
+    }
 
     private func askToClearRecentChatsHistory(){
         let actionSheet = ActionSheetController(presentationData: self.presentationData)

@@ -79,6 +79,7 @@
 
 "DahlSettings.General.Premium.Stories.Header" = "Histories";
 "DahlSettings.General.Premium.Stories.HideStories" = "Do not show";
+"DahlSettings.General.Premium.Stories.PostingGesture" = "Swipe to create";
 "DahlSettings.General.Premium.Stories.HideStoriesPublishButton" = "Hide the publish button";
 "DahlSettings.General.Premium.Stories.HideViewedStories" = "Hide viewed";
 
