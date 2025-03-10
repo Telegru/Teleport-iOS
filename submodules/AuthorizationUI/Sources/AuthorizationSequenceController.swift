@@ -136,7 +136,12 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
         if let currentController = currentController {
             controller = currentController
         } else {
-            controller = DAuthorizationSequenceSplashController(accountManager: self.sharedContext.accountManager, account: self.account, theme: self.presentationData.theme)
+            controller = DAuthorizationSequenceSplashController(
+                accountManager: self.sharedContext.accountManager,
+                account: self.account,
+                presentationData: self.presentationData,
+                sharedContext: self.sharedContext
+            )
             controller.nextPressed = { [weak self] strings in
                 if let strongSelf = self {
                     if let strings = strings {
@@ -1194,7 +1199,6 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
                         var controllers: [ViewController] = []
                         if self.otherAccountPhoneNumbers.1.isEmpty {
                             controllers.append(self.splashController())
-//                            controllers.append(self.phoneEntryController(countryCode: AuthorizationSequenceController.defaultCountryCode(), number: "", splashController: nil))
                         } else {
                             controllers.append(self.phoneEntryController(countryCode: AuthorizationSequenceController.defaultCountryCode(), number: "", splashController: nil))
                         }
@@ -1293,7 +1297,6 @@ public final class AuthorizationSequenceController: NavigationController, ASAuth
     }
     
     override public func setViewControllers(_ viewControllers: [UIViewController], animated: Bool) {
-//        let viewControllers = viewControllers.filter { !($0 is AuthorizationSequenceSplashController) }
         let wasEmpty = self.viewControllers.isEmpty
         super.setViewControllers(viewControllers, animated: animated)
         if wasEmpty {
