@@ -83,6 +83,21 @@
 "DahlSettings.General.Premium.Stories.HideStoriesPublishButton" = "Hide the publish button";
 "DahlSettings.General.Premium.Stories.HideViewedStories" = "Hide viewed";
 
+"DahlSettings.General.Wall" = "Wall Settings";
+"DahlSettings.Wall.Title" = "Wall Settings";
+"DahlSettings.Wall.Display.Header" = "Show";
+"DahlSettings.Wall.Display.ArchivedChannels" = "Channels from Archive";
+"DahlSettings.Wall.Display.Footer" = "Channel posts from your Archive will appear on your Wall along with other posts.";
+
+"DahlSettings.Wall.Excluded.Header" = "EXCLUDED CHANNELS";
+"DahlSettings.Wall.Excluded.ExcludedChannels" = "Add Exclusions";
+"DahlSettings.Wall.Excluded.Footer" = "By default, posts from all channels you are subscribed to are displayed.";
+"DahlSettings.Wall.Excluded.AddExclusion" = "Add Exclusions";
+"DahlSettings.Wall.Excluded.RemoveAll" = "Remove All Exclusions";
+"DahlSettings.Wall.Excluded.RemoveAllConfirmation" = "Are you sure you want to remove all exclusions?";
+"DahlSettings.Wall.Excluded.Title" = "Excluded Channels";
+"DahlSettings.Wall.Excluded.Search" = "Search channels";
+
 "DahlSettings.Appearance.Title" = "Appearance";
 
 "DahlSettings.Appearance.Chats.Header" = "Enable in chats and channels";

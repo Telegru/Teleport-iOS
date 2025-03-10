@@ -43,6 +43,8 @@ public enum IconType: String, CaseIterable {
     case contextMenuClear
     case contextMenuDelete
     case contextMenuEye
+    case chatAdd
+    case chatDelete
 }
 
 public enum IconRef: Equatable {
