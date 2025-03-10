@@ -18,6 +18,7 @@ import SolidRoundedButtonNode
 import RMIntro
 import DAuth
 import TPOnboarding
+import AccountContext
 
 public final class DAuthorizationSequenceSplashController: ViewController {
     
@@ -27,7 +28,8 @@ public final class DAuthorizationSequenceSplashController: ViewController {
     
     private let accountManager: AccountManager<TelegramAccountManagerTypes>
     private let account: UnauthorizedAccount
-    private let theme: PresentationTheme
+    private let presentationData: PresentationData
+    private let sharedContext: SharedAccountContext
     
     private let controller: DIntroViewController
     
@@ -43,11 +45,13 @@ public final class DAuthorizationSequenceSplashController: ViewController {
     init(
         accountManager: AccountManager<TelegramAccountManagerTypes>,
         account: UnauthorizedAccount,
-        theme: PresentationTheme
+        presentationData: PresentationData,
+        sharedContext: SharedAccountContext
     ) {
         self.accountManager = accountManager
         self.account = account
-        self.theme = theme
+        self.presentationData = presentationData
+        self.sharedContext = sharedContext
         
         self.suggestedLocalization.set(
             .single(nil)
@@ -120,7 +124,7 @@ public final class DAuthorizationSequenceSplashController: ViewController {
     }
     
     public override func loadDisplayNode() {
-        displayNode = AuthorizationSequenceSplashControllerNode(theme: theme)
+        displayNode = AuthorizationSequenceSplashControllerNode(theme: presentationData.theme)
         displayNodeDidLoad()
     }
     
@@ -198,10 +202,50 @@ public final class DAuthorizationSequenceSplashController: ViewController {
         let accountManager = accountManager
         
         activateLocalizationDisposable.set(
-            TelegramEngineUnauthorized(account: account)
-                .localization
-                .downloadAndApplyLocalization(accountManager: accountManager, languageCode: code)
-                .start(completed: { [weak self] in
+            (
+                TelegramEngineUnauthorized(account: account)
+                    .localization
+                    .downloadAndApplyLocalization(accountManager: accountManager, languageCode: code)
+                |> timeout(60.0, queue: Queue.concurrentDefaultQueue(), alternate: .fail(.generic))
+                |> deliverOnMainQueue
+            )
+            .start(
+                error: { [weak self] _ in
+                    guard let self else { return }
+                    
+                    controller.isEnabled = true
+                    startButton.isEnabled = true
+                    startButton.alpha = 1.0
+                    
+                    if code != "en" {
+                        activateLocalization("en")
+                    } else {
+                        let text = self.presentationData.strings.Login_NetworkError
+                        var actions: [TextAlertAction] = []
+                        actions.append(TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {}))
+                        actions.append(TextAlertAction(type: .genericAction, title: presentationData.strings.ChatSettings_ConnectionType_UseProxy, action: { [weak self] in
+                            guard let self else { return }
+                            self.present(
+                                self.sharedContext.makeProxySettingsController(
+                                    sharedContext: self.sharedContext,
+                                    account: self.account
+                                ),
+                                in: .window(.root),
+                                with: ViewControllerPresentationArguments(presentationAnimation: .modalSheet)
+                            )
+                        }))
+                        
+                        self.presentInGlobalOverlay(
+                            standardTextAlertController(
+                                theme: AlertControllerTheme(presentationData: self.presentationData),
+                                title: nil,
+                                text: text,
+                                actions: actions
+                            )
+                        )
+                    }
+                },
+                completed: { [weak self] in
                     let _ = (accountManager.transaction { transaction -> PresentationStrings? in
                         let localizationSettings: LocalizationSettings?
                         if let current = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self) {
