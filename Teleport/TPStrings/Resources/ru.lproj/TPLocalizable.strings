@@ -84,6 +84,9 @@
 
 "DahlSettings.Appearance.Title" = "Оформление";
 
+"DahlSettings.Appearance.Chats.Header" = "Включить в чатах и каналах";
+"DahlSettings.Appearance.Chats.CustomChannelWallpapers" = "Кастомные обои в каналах";
+
 "DahlSettings.Appearance.ChatsList.Header" = "Вид списка чатов";
 
 "DahlSettings.Appearance.MenuItems.Header" = "Меню настроек Telegram";
@@ -150,7 +153,6 @@
 "DahlSettings.PremiumSettings.AnimatedAvatars" = "Анимированные аватары";
 "DahlSettings.PremiumSettings.AnimatedReactions" = "Анимированные реакции";
 "DahlSettings.PremiumSettings.AnimatedPremiumStickers" = "Анимация премиум-стикеров";
-"DahlSettings.PremiumSettings.CustomChannelWallpapers" = "Кастомные обои в каналах";
 
 // Wallet
 "Wallet.TabTitle" = "Кошелек";

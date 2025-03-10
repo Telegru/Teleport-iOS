@@ -84,6 +84,9 @@
 
 "DahlSettings.Appearance.Title" = "Appearance";
 
+"DahlSettings.Appearance.Chats.Header" = "Enable in chats and channels";
+"DahlSettings.Appearance.Chats.CustomChannelWallpapers" = "Custom wallpapers in channels";
+
 "DahlSettings.Appearance.ChatsList.Header" = "View of the chat list";
 
 "DahlSettings.Appearance.MenuItems.Header" = "Telegram Settings Menu";
@@ -149,7 +152,6 @@
 "DahlSettings.PremiumSettings.AnimatedAvatars" = "Animated avatars";
 "DahlSettings.PremiumSettings.AnimatedReactions" = "Animated reactions";
 "DahlSettings.PremiumSettings.AnimatedPremiumStickers" = "Animation of premium stickers";
-"DahlSettings.PremiumSettings.CustomChannelWallpapers" = "Custom wallpapers in channels";
 
 
 // Wallet

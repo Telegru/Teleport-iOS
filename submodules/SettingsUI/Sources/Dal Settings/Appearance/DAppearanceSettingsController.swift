@@ -17,6 +17,7 @@ import TPStrings
 
 private final class DAppearanceSettingsArguments {
     let context: AccountContext
+    let updateShowCustomWallpaperInChannels: (Bool) -> Void
     let updateChatsListViewType: (ListViewType) -> Void
     let openSettingsItemsConfiguration: () -> Void
     let openTabBarSettings: () -> Void
@@ -26,6 +27,7 @@ private final class DAppearanceSettingsArguments {
     
     init(
         context: AccountContext,
+        updateShowCustomWallpaperInChannels: @escaping (Bool) -> Void,
         updateChatsListViewType: @escaping (ListViewType) -> Void,
         openSettingsItemsConfiguration: @escaping () -> Void,
         openTabBarSettings: @escaping () -> Void,
@@ -34,6 +36,7 @@ private final class DAppearanceSettingsArguments {
         updateAlternativeFontInAvatars: @escaping (Bool) -> Void
     ) {
         self.context = context
+        self.updateShowCustomWallpaperInChannels = updateShowCustomWallpaperInChannels
         self.updateChatsListViewType = updateChatsListViewType
         self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
         self.openTabBarSettings = openTabBarSettings
@@ -44,6 +47,7 @@ private final class DAppearanceSettingsArguments {
 }
 
 private enum DAppearanceSettingsSection: Int32 {
+    case chatsAppearance
     case listViewType
     case menuItems
     case tabBar
@@ -53,6 +57,9 @@ private enum DAppearanceSettingsSection: Int32 {
 }
 
 private enum DAppearanceSettingsEntry: ItemListNodeEntry {
+    case chatsAppearanceHeader(title: String)
+    case showCustomWallpaperInChannels(title: String, isActive: Bool)
+    
     case listViewTypeHeader(title: String)
     case listViewTypeOption(title: String, type: ListViewType, isSelected: Bool)
     case menuItemsHeader(title: String)
@@ -72,6 +79,9 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     var section: ItemListSectionId {
         switch self {
+        case .chatsAppearanceHeader, .showCustomWallpaperInChannels:
+            return DAppearanceSettingsSection.chatsAppearance.rawValue
+            
         case .listViewTypeHeader, .listViewTypeOption:
             return DAppearanceSettingsSection.listViewType.rawValue
             
@@ -94,8 +104,12 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     var stableId: Int32 {
         switch self {
-        case .listViewTypeHeader:
+        case .chatsAppearanceHeader:
             return 0
+        case .showCustomWallpaperInChannels:
+            return 1
+        case .listViewTypeHeader:
+            return 2
         case let .listViewTypeOption(_, type, _):
             return Int32(type.rawValue + 100)
         case .menuItemsHeader:
@@ -125,6 +139,18 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     static func == (lhs: DAppearanceSettingsEntry, rhs: DAppearanceSettingsEntry) -> Bool {
         switch lhs {
+        case let .chatsAppearanceHeader(lhsTitle):
+            if case let .chatsAppearanceHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+            
+        case let .showCustomWallpaperInChannels(lhsTitle, lhsIsActive):
+            if case let .showCustomWallpaperInChannels(rhsTitle, rhsIsActive) = rhs {
+                return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+            
         case let .listViewTypeHeader(lhsTitle):
             if case let .listViewTypeHeader(rhsTitle) = rhs {
                 return lhsTitle == rhsTitle
@@ -212,6 +238,25 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     func item(presentationData: ItemListPresentationData, arguments: Any) -> ListViewItem {
         let arguments = arguments as! DAppearanceSettingsArguments
         switch self {
+        case let .chatsAppearanceHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .showCustomWallpaperInChannels(title, isActive):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: isActive,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { value in
+                    arguments.updateShowCustomWallpaperInChannels(value)
+                }
+            )
+            
         case let .listViewTypeHeader(title):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
@@ -342,6 +387,14 @@ public func dAppearanceSettingsController(
     
     let arguments = DAppearanceSettingsArguments(
         context: context,
+        updateShowCustomWallpaperInChannels: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.appearanceSettings.showCustomWallpaperInChannels = value
+                return updatedSettings
+            }
+            .start()
+        },
         updateChatsListViewType: { selectedType in
             let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
                 var updatedSettings = settings
@@ -406,6 +459,14 @@ public func dAppearanceSettingsController(
         )
         
         var entries: [DAppearanceSettingsEntry] = []
+        
+        entries.append(.chatsAppearanceHeader(title: "DahlSettings.Appearance.Chats.Header".tp_loc(lang: lang).uppercased()))
+        entries.append(
+            .showCustomWallpaperInChannels(
+                title: "DahlSettings.Appearance.Chats.CustomChannelWallpapers".tp_loc(lang: lang),
+                isActive: dahlSettings.appearanceSettings.showCustomWallpaperInChannels
+            )
+        )
         
         entries.append(
             .listViewTypeHeader(title: "DahlSettings.Appearance.ChatsList.Header".tp_loc(lang: lang).uppercased())
