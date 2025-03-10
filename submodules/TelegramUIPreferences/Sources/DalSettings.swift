@@ -28,6 +28,7 @@ public struct DalSettings: Codable, Equatable {
     public var hidePublishStoriesButton: Bool
     public var hideStories: Bool
     public var hideViewedStories: Bool
+    public var isStoriesPostingGestureEnabled: Bool
     
     // Раздел Конфиденциальность
     public var hidePhone: Bool
@@ -56,6 +57,7 @@ public struct DalSettings: Codable, Equatable {
             hidePublishStoriesButton: false,
             hideStories: false,
             hideViewedStories: false,
+            isStoriesPostingGestureEnabled: true,
             hidePhone: false,
             disableReadHistory: false,
             offlineMode: false,
@@ -78,6 +80,7 @@ public struct DalSettings: Codable, Equatable {
         hidePublishStoriesButton: Bool,
         hideStories: Bool,
         hideViewedStories: Bool,
+        isStoriesPostingGestureEnabled: Bool,
         hidePhone: Bool,
         disableReadHistory: Bool,
         offlineMode: Bool,
@@ -97,6 +100,7 @@ public struct DalSettings: Codable, Equatable {
         self.hidePublishStoriesButton = hidePublishStoriesButton
         self.hideStories = hideStories
         self.hideViewedStories = hideViewedStories
+        self.isStoriesPostingGestureEnabled = isStoriesPostingGestureEnabled
         self.hidePhone = hidePhone
         self.disableReadHistory = disableReadHistory
         self.offlineMode = offlineMode
@@ -120,6 +124,7 @@ public struct DalSettings: Codable, Equatable {
         self.hidePublishStoriesButton = (try container.decodeIfPresent(Int32.self, forKey: "hidePublishStoriesButton") ?? 0) != 0
         self.hideStories = (try container.decodeIfPresent(Int32.self, forKey: "hideStories") ?? 0) != 0
         self.hideViewedStories = (try container.decodeIfPresent(Int32.self, forKey: "hideViewedStories") ?? 0) != 0
+        self.isStoriesPostingGestureEnabled = (try container.decodeIfPresent(Int32.self, forKey: "isStoriesPostingGestureEnabled") ?? 1) != 0
         // Раздел Конфиденциальность
         self.hidePhone = (try container.decodeIfPresent(Int32.self, forKey: "hidePhone") ?? 0) != 0
         self.disableReadHistory = (try container.decodeIfPresent(Int32.self, forKey: "disableReadHistory") ?? 0) != 0
@@ -157,6 +162,7 @@ public struct DalSettings: Codable, Equatable {
         try container.encode((self.hidePublishStoriesButton ? 1 : 0) as Int32, forKey: "hidePublishStoriesButton")
         try container.encode((self.hideStories ? 1 : 0) as Int32, forKey: "hideStories")
         try container.encode((self.hideViewedStories ? 1 : 0) as Int32, forKey: "hideViewedStories")
+        try container.encode((self.isStoriesPostingGestureEnabled ? 1 : 0) as Int32, forKey: "isStoriesPostingGestureEnabled")
         // Раздел Конфиденциальность
         try container.encode((self.hidePhone ? 1 : 0) as Int32, forKey: "hidePhone")
         try container.encode((self.disableReadHistory ? 1 : 0) as Int32, forKey: "disableReadHistory")

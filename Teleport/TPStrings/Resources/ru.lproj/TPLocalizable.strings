@@ -34,6 +34,7 @@
 "DahlSettings.Title" = "Настройки Даль";
 "DahlSettings.HidePublishStoriesButton" = "Скрыть кнопку публикации историй";
 "DahlSettings.HideStories" = "Скрыть истории";
+"DahlSettings.General.Premium.Stories.PostingGesture" = "Создание по свайпу";
 "DahlSettings.HideViewedStories" = "Скрыть просмотренные истории";
 "DahlSettings.HidePhone" = "Скрыть номер телефона";
 "DahlSettings.HideActivity" = "Без отметок о прочтении";

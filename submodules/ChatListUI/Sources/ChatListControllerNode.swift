@@ -489,7 +489,7 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
         self.applyItemNodeAsCurrent(id: .all, itemNode: itemNode)
         
         let panRecognizer = InteractiveTransitionGestureRecognizer(target: self, action: #selector(self.panGesture(_:)), allowedDirections: { [weak self] _ in
-            guard let self, self.availableFilters.count > 1 || (self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false)) else {
+            guard let self, self.availableFilters.count > 1 || (self.controller?.isStoriesPostingGestureAvailable == true && self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false)) else {
                 return []
             }
             guard case .chatList(.root) = self.location else {
@@ -587,7 +587,7 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
                     return bandingStart + (1.0 - (1.0 / ((bandedOffset * coefficient / range) + 1.0))) * range
                 }
                      
-                if case .compact = layout.metrics.widthClass, self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false) {
+                if case .compact = layout.metrics.widthClass, self.controller?.isStoriesPostingGestureAvailable == true, self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false) {
                     let cameraIsAlreadyOpened = self.controller?.hasStoryCameraTransition ?? false
                     if selectedIndex <= 0 && translation.x > 0.0 {
                         transitionFraction = 0.0
