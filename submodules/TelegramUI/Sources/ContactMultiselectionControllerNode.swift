@@ -101,7 +101,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
         var shortPlaceholder: String?
         var includeChatList = false
         switch mode {
-        case let .peerSelection(_, searchGroups, searchChannels):
+        case let .peerSelection(_, searchGroups, searchChannels, _):
             includeChatList = searchGroups || searchChannels
             if searchGroups {
                 placeholder = self.presentationData.strings.Contacts_SearchUsersAndGroupsLabel
@@ -132,14 +132,26 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
             let chatListFilters = chatSelection.chatListFilters
             
             var chatListFilter: ChatListFilter?
-            if chatSelection.onlyUsers {
+            if chatSelection.onlyChannels {
+                chatListFilter = .filter(id: Int32.max, title: ChatFolderTitle(text: "", entities: [], enableAnimations: true), emoticon: nil, data: ChatListFilterData(
+                    isShared: false,
+                    hasSharedLinks: false,
+                    categories: [.channels],
+                    excludeMuted: false,
+                    excludeRead: false,
+                    excludeArchived: chatSelection.disableArchived,
+                    includePeers: ChatListFilterIncludePeers(),
+                    excludePeers: [],
+                    color: nil
+                ))
+            } else if chatSelection.onlyUsers {
                 chatListFilter = .filter(id: Int32.max, title: ChatFolderTitle(text: "", entities: [], enableAnimations: true), emoticon: nil, data: ChatListFilterData(
                     isShared: false,
                     hasSharedLinks: false,
                     categories: [.contacts, .nonContacts],
                     excludeMuted: false,
                     excludeRead: false,
-                    excludeArchived: false,
+                    excludeArchived: chatSelection.disableArchived,
                     includePeers: ChatListFilterIncludePeers(),
                     excludePeers: [],
                     color: nil
@@ -162,7 +174,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                     categories: categories,
                     excludeMuted: false,
                     excludeRead: false,
-                    excludeArchived: false,
+                    excludeArchived: chatSelection.disableArchived,
                     includePeers: ChatListFilterIncludePeers(),
                     excludePeers: [],
                     color: nil
@@ -235,6 +247,11 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                 }
             } else if case .requestedUsersSelection = mode {
                 displayTopPeers = .recent
+            } else if case let .peerSelection(_, _, _, selectedPeersIds) = mode {
+                for peerId in selectedPeersIds {
+                    selectedPeers.append(peerId)
+                }
+                displayTopPeers = .none
             } else {
                 displayTopPeers = .none
             }
@@ -347,7 +364,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                         switch mode {
                         case .groupCreation, .channelCreation:
                             globalSearch = true
-                        case let .peerSelection(searchChatListValue, searchGroupsValue, searchChannelsValue):
+                        case let .peerSelection(searchChatListValue, searchGroupsValue, searchChannelsValue, _):
                             searchChatList = searchChatListValue
                             searchGroups = searchGroupsValue
                             searchChannels = searchChannelsValue

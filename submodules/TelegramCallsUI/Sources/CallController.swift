@@ -517,7 +517,7 @@ public final class CallController: ViewController {
             context: context,
             updatedPresentationData: (initial: presentationData, signal: .single(presentationData)),
             title: "Invite Members",
-            mode: .peerSelection(searchChatList: true, searchGroups: false, searchChannels: false),
+            mode: .peerSelection(searchChatList: true, searchGroups: false, searchChannels: false, selectedPears: Set()),
             isPeerEnabled: { peer in
                 guard case let .user(user) = peer else {
                     return false

@@ -83,6 +83,21 @@
 "DahlSettings.General.Premium.Stories.HideStoriesPublishButton" = "Скрыть кнопку создания";
 "DahlSettings.General.Premium.Stories.HideViewedStories" = "Скрывать просмотренное";
 
+"DahlSettings.General.Wall" = "Настройки Стены";
+"DahlSettings.Wall.Title" = "Настройки Стены";
+"DahlSettings.Wall.Display.Header" = "Показывать";
+"DahlSettings.Wall.Display.ArchivedChannels" = "Каналы из Архива";
+"DahlSettings.Wall.Display.Footer" = "Записи каналов из вашего Архива будут появляться на Стене вместе с остальными записями.";
+
+"DahlSettings.Wall.Excluded.Header" = "ИСКЛЮЧЕННЫЕ КАНАЛЫ";
+"DahlSettings.Wall.Excluded.ExcludedChannels" = "Добавить исключения";
+"DahlSettings.Wall.Excluded.Footer" = "По умолчанию показываются записи из всех каналов, на которые вы подписаны.";
+"DahlSettings.Wall.Excluded.AddExclusion" = "Добавить исключения";
+"DahlSettings.Wall.Excluded.RemoveAll" = "Удалить все исключения";
+"DahlSettings.Wall.Excluded.RemoveAllConfirmation" = "Вы уверены, что хотите удалить все исключения?";
+"DahlSettings.Wall.Excluded.Title" = "Исключенные каналы";
+"DahlSettings.Wall.Excluded.Search" = "Поиск каналов";
+
 "DahlSettings.Appearance.Title" = "Оформление";
 
 "DahlSettings.Appearance.Chats.Header" = "Включить в чатах и каналах";

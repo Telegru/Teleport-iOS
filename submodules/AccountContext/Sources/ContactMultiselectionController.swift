@@ -48,8 +48,14 @@ public enum ContactMultiselectionControllerMode {
         public var onlyUsers: Bool
         public var disableChannels: Bool
         public var disableBots: Bool
+<<<<<<< HEAD
         public var disableContacts: Bool
         
+=======
+        public var onlyChannels: Bool
+        public var disableArchived: Bool
+
+>>>>>>> 57ee35cd2d (DAHL-53 Add wall settings)
         public init(
             title: String,
             searchPlaceholder: String,
@@ -61,8 +67,13 @@ public enum ContactMultiselectionControllerMode {
             onlyUsers: Bool = false,
             disableChannels: Bool = false,
             disableBots: Bool = false,
-            disableContacts: Bool = false
+            disableContacts: Bool = false,
+            disableArchived: Bool = false,
+            onlyChannels: Bool = false
         ) {
+            assert(!(onlyChannels && onlyUsers), "Cannot set both onlyChannels and onlyUsers to true")
+            assert(!(onlyChannels && disableChannels), "Cannot set both onlyChannels and disableChannels to true")
+               
             self.title = title
             self.searchPlaceholder = searchPlaceholder
             self.selectedChats = selectedChats
@@ -70,15 +81,17 @@ public enum ContactMultiselectionControllerMode {
             self.chatListFilters = chatListFilters
             self.displayAutoremoveTimeout = displayAutoremoveTimeout
             self.displayPresence = displayPresence
+            self.onlyChannels = onlyChannels
             self.onlyUsers = onlyUsers
             self.disableChannels = disableChannels
             self.disableBots = disableBots
             self.disableContacts = disableContacts
+            self.disableArchived = disableArchived
         }
     }
     
     case groupCreation
-    case peerSelection(searchChatList: Bool, searchGroups: Bool, searchChannels: Bool)
+    case peerSelection(searchChatList: Bool, searchGroups: Bool, searchChannels: Bool, selectedPears: Set<EnginePeer.Id>)
     case channelCreation
     case chatSelection(ChatSelection)
     case premiumGifting(birthdays: [EnginePeer.Id: TelegramBirthday]?, selectToday: Bool, hasActions: Bool)
