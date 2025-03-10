@@ -152,31 +152,7 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
                 context.clear(CGRect(origin: CGPoint(), size: size))
                 context.setBlendMode(.normal)
                 context.setFillColor(iconColor.cgColor)
-                let iconRef: IconRef?
-                switch icon {
-                case .message:
-                    iconRef = .name(name: "Peer Info/ButtonMessage")
-                case .call:
-                    iconRef = .iconType(iconType: .peerButtonCall)
-                case .videoCall:
-                    iconRef = .iconType(iconType: .peerVideoCall)
-                case .voiceChat:
-                    iconRef = nil
-                case .mute:
-                    iconRef = .iconType(iconType: .peerMute)
-                case .unmute:
-                    iconRef = .iconType(iconType: .peerUnmute)
-                case .more:
-                    iconRef = .iconType(iconType: .peerMore)
-                case .addMember:
-                    iconRef = .iconType(iconType: .peerAddMember)
-                case .search:
-                    iconRef = .iconType(iconType: .peerSearch)
-                case .leave:
-                    iconRef = .iconType(iconType: .peerLeave)
-                case .stop:
-                    iconRef = .name(name: "Peer Info/ButtonStop")
-                }
+                let iconRef = icon.iconRef
                 if let uiImage = iconRef?.image, let image = generateTintedImage(image: uiImage, color: .white) {
                     let imageRect = CGRect(origin: CGPoint(x: floor((size.width - image.size.width) / 2.0), y: floor((size.height - image.size.height) / 2.0)), size: image.size)
                     context.clip(to: imageRect, mask: image.cgImage!)
@@ -188,7 +164,8 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         let animationName: String?
         var playOnce = false
         var seekToEnd = false
-        if self.iconNode.image == nil {
+        
+        if icon.iconRef?.image == nil {
             switch icon {
             case .voiceChat:
                 animationName = "anim_profilevc"
@@ -216,7 +193,6 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         } else {
             animationName = nil
         }
-        
         
         if let animationName = animationName {
             let animatedIcon: ComponentView<Empty>
@@ -288,5 +264,34 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         transition.updateFrameAdditiveToCenter(node: self.textNode, frame: CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: size.height - titleSize.height - 9.0), size: titleSize))
         
         self.referenceNode.frame = self.containerNode.bounds
+    }
+}
+
+private extension PeerInfoHeaderButtonIcon {
+    var iconRef: IconRef? {
+        switch self {
+        case .message:
+            return .name(name: "Peer Info/ButtonMessage")
+        case .call:
+            return .iconType(iconType: .peerButtonCall)
+        case .videoCall:
+            return .iconType(iconType: .peerVideoCall)
+        case .voiceChat:
+            return nil
+        case .mute:
+            return .iconType(iconType: .peerMute)
+        case .unmute:
+            return .iconType(iconType: .peerUnmute)
+        case .more:
+            return .iconType(iconType: .peerMore)
+        case .addMember:
+            return .iconType(iconType: .peerAddMember)
+        case .search:
+            return .iconType(iconType: .peerSearch)
+        case .leave:
+            return .iconType(iconType: .peerLeave)
+        case .stop:
+            return .name(name: "Peer Info/ButtonStop")
+        }
     }
 }
