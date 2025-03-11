@@ -325,6 +325,16 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
     
     var reduceMotion: Bool = false
     
+    var showTabTitles: Bool = true {
+        didSet {
+            if oldValue != self.showTabTitles {
+                if let validLayout = self.validLayout {
+                    self.updateLayout(size: validLayout.0, leftInset: validLayout.1, rightInset: validLayout.2, additionalSideInsets: validLayout.3, bottomInset: validLayout.4, transition: .immediate)
+                }
+            }
+        }
+    }
+    
     var selectedIndex: Int? {
         didSet {
             if self.selectedIndex != oldValue {
@@ -734,6 +744,11 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.textImageNode.frame = CGRect(origin: CGPoint(), size: nodeFrame.size)
                 node.contextImageNode.frame = CGRect(origin: CGPoint(), size: nodeFrame.size)
                 node.contextTextImageNode.frame = CGRect(origin: CGPoint(), size: nodeFrame.size)
+                
+                node.textImageNode.isHidden = !self.showTabTitles
+                if !self.showTabTitles {
+                    node.imageNode.frame = CGRect(origin: CGPoint(x: 0.0, y: 6.0), size: nodeFrame.size)
+                }
                                 
                 let scaleFactor: CGFloat = horizontal ? 0.8 : 1.0
                 node.animationContainerNode.subnodeTransform = CATransform3DMakeScale(scaleFactor, scaleFactor, 1.0)
@@ -741,11 +756,11 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 let ringImageFrame: CGRect
                 let imageFrame: CGRect
                 if horizontal {
-                    node.animationNode.frame = CGRect(origin: CGPoint(x: -10.0 - UIScreenPixel, y: -4.0 - UIScreenPixel), size: CGSize(width: 51.0, height: 51.0))
+                    node.animationNode.frame = CGRect(origin: CGPoint(x: -10.0 - UIScreenPixel, y: (self.showTabTitles ? -4.0 : 4.0) - UIScreenPixel), size: CGSize(width: 51.0, height: 51.0))
                     ringImageFrame = CGRect(origin: CGPoint(x: UIScreenPixel, y: 5.0 + UIScreenPixel), size: CGSize(width: 23.0, height: 23.0))
                     imageFrame = ringImageFrame.insetBy(dx: -1.0 + UIScreenPixel, dy: -1.0 + UIScreenPixel)
                 } else {
-                    node.animationNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((nodeSize.width - 51.0) / 2.0), y: -10.0 - UIScreenPixel).offsetBy(dx: animationOffset.x, dy: animationOffset.y), size: CGSize(width: 51.0, height: 51.0))
+                    node.animationNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((nodeSize.width - 51.0) / 2.0), y: (self.showTabTitles ? -10.0 : -4.0) - UIScreenPixel).offsetBy(dx: animationOffset.x, dy: animationOffset.y), size: CGSize(width: 51.0, height: 51.0))
                     ringImageFrame = CGRect(origin: CGPoint(x: floorToScreenPixels((nodeSize.width - 29.0) / 2.0), y: 1.0), size: CGSize(width: 29.0, height: 29.0))
                     imageFrame = ringImageFrame.insetBy(dx: -1.0, dy: -1.0)
                 }

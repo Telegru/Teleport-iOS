@@ -112,6 +112,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     private var appsBotSettings: BotAppSettings?
     private var appsBotDisposable: Disposable?
     
+    private var tabsTitleDisposable: Disposable?
+    
     private var tabs: [DAppTab]?
     
     override public var minimizedContainer: MinimizedContainer? {
@@ -161,6 +163,18 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
                 moveStorySource(engine: self.context.engine, peerId: self.context.account.peerId, from: Int64(stableId), to: Int64(id))
             })
         }
+        
+        self.tabsTitleDisposable = (
+            context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+                return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+            }
+            |> map { $0.tabBarSettings.showTabTitles }
+            |> distinctUntilChanged
+            |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] showTabTitles in
+            self?.rootTabController?.showTabTitles = showTabTitles
+        })
         
 //        let botsKey = ValueBoxKey(length: 8)
 //        botsKey.setInt64(0, value: 0)

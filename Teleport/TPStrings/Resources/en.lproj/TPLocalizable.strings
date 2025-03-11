@@ -142,6 +142,8 @@
 "DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i of %i";
 "DahlSettings.TabBarSettings.ActiveTabs.Footer" = "The tab bar of the application can be customized by removing and adding items from the list of available ones.";
 "DahlSettings.TabBarSettings.AvailableTabs.Header" = "More items";
+"DahlSettings.TabBarSettings.TabTitleVisibility" = "Display titles";
+"DahlSettings.TabBarSettings.TabTitleVisibility.Footer" = "Set the visibility of the bottom menu item titles.";
 
 "DahlSettings.RecentChatsHeader" = "Recent chats";
 "DahlSettings.EnablePanel" = "Enable panel";

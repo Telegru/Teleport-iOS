@@ -121,6 +121,15 @@ open class TabBarControllerImpl: ViewController, TabBarController {
         }
     }
     
+    public var showTabTitles: Bool {
+        get {
+            tabBarControllerNode.tabBarNode.showTabTitles
+        }
+        set {
+            tabBarControllerNode.tabBarNode.showTabTitles = newValue
+        }
+    }
+    
     public var currentController: ViewController?
     
     override public var transitionNavigationBar: NavigationBar? {
