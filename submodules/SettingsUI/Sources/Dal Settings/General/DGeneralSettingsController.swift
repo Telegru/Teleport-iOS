@@ -168,6 +168,8 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             return DGeneralSettingsEntryTag.wallSettings
         case .premiumSettings:
             return DGeneralSettingsEntryTag.premiumSettings
+        case .server, .serversHeader, .connectionHeader, .connectionFooter, .profileHeader, .profileFooter, .premiumSettingsFooter:
+            return nil
         }
     }
     

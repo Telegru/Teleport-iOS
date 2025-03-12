@@ -476,7 +476,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     }
     
     private let historyDisposable = MetaDisposable()
-    private let readHistoryDisposable = MetaDisposable()
+    private var readHistoryDisposable: Disposable?
     private var scrollDisposable: Disposable?
 
     private var dequeuedInitialTransitionOnLayout = false
@@ -504,11 +504,13 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         return self._buttonKeyboardMessage.get()
     }
     
-    private let maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
+    private var maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
     let canReadHistory = Promise<Bool>()
+    let resetReadHistory = Promise<Bool>()
     private var canReadHistoryValue: Bool = false
     private var canReadHistoryDisposable: Disposable?
-    
+    private var resetReadHistoryDisposable: Disposable?
+
     var suspendReadingReactions: Bool = false {
         didSet {
             if self.suspendReadingReactions != oldValue {
@@ -1221,7 +1223,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     
     deinit {
         self.historyDisposable.dispose()
-        self.readHistoryDisposable.dispose()
+        self.readHistoryDisposable?.dispose()
         self.interactiveReadActionDisposable?.dispose()
         self.interactiveReadReactionsDisposable?.dispose()
         self.canReadHistoryDisposable?.dispose()
@@ -1246,6 +1248,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     
     public func resetScrolling() {
 //        self.beginChatHistoryTransitions(resetScrolling: true)
+        self.maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
+        self.beginReadHistoryManagement()
         self.scrollToStartOfHistory()
     }
     
@@ -2316,7 +2320,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
 
         let readHistory = combineLatest( self.maxVisibleIncomingMessageIndex.get(), (self.canReadHistory.get())|>distinctUntilChanged(isEqual: { $0 == $1 }))
         
-        self.readHistoryDisposable.set((readHistory |> deliverOnMainQueue).startStrict(next: { [weak self] messageIndex, canRead in
+        self.readHistoryDisposable?.dispose()
+        self.readHistoryDisposable = (readHistory |> deliverOnMainQueue).startStrict(next: { [weak self] messageIndex, canRead in
             guard let strongSelf = self else {
                 return
             }
@@ -2353,8 +2358,9 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                     break
                 }
             }
-        }).strict())
+        }).strict()
         
+        self.canReadHistoryDisposable?.dispose()
         self.canReadHistoryDisposable = (self.canReadHistory.get() |> deliverOnMainQueue).startStrict(next: { [weak self, weak context] value in
             if let strongSelf = self {
                 if strongSelf.canReadHistoryValue != value {
@@ -3283,7 +3289,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         switch self.chatHistoryLocationValue?.content {
                         case .Initial(_):
                             self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
-                        case let .Scroll(_, _, sourceIndex, scrollPosition, _, _, _):                                                       
+                        case .Scroll:
                             if lastEntry.index != lastVisbleMesssage()?.index {
                                 let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
                                 if self.chatHistoryLocationValue?.content != locationInput {

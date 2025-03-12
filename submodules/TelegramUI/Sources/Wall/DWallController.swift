@@ -12,13 +12,15 @@ import ListMessageItem
 import AnimationCache
 import MultiAnimationRenderer
 import SettingsUI
+import TPUI
 
 public final class DWallController: TelegramBaseController {
     
     private let queue = Queue()
     
     private let context: AccountContext
-    
+    private var hasAppearedBefore = false
+
     private var transitionDisposable: Disposable?
     private var scrollDisposable: Disposable?
     private var filterDisposable: Disposable?
@@ -49,7 +51,7 @@ public final class DWallController: TelegramBaseController {
         
         navigationItem.title = "Wall.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)
         tabBarItem.title = "Wall.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
-        let icon = UIImage(bundleImageName: "Chat List/Tabs/IconWall")
+        let icon = TPIconManager.shared.icon(.wallTab)
         tabBarItem.image = icon
         tabBarItem.selectedImage = icon
         
@@ -134,6 +136,10 @@ public final class DWallController: TelegramBaseController {
     }
     
     private func updateThemeAndStrings() {
+        let icon = TPIconManager.shared.icon(.wallTab)
+        tabBarItem.image = icon
+        tabBarItem.selectedImage = icon
+        
         self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
         
         self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))
@@ -207,6 +213,7 @@ public final class DWallController: TelegramBaseController {
 
                 if let first = view.0.entries.first {
                     (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.scrollToMessage(index: first.index)
+
                 }
             })
         })
@@ -222,7 +229,7 @@ public final class DWallController: TelegramBaseController {
             |> take(1)
         ).start(next: { [weak self] _ in
             guard let self else { return }
-            (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.scrollToStartOfHistory()
+            (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
         })
     }
     
