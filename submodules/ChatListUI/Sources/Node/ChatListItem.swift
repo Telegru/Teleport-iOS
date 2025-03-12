@@ -1282,7 +1282,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     
     private var hierarchyTrackingLayer: HierarchyTrackingLayer?
     private var cachedDataDisposable = MetaDisposable()
-    private var dahlSettingsDisposable: Disposable?
+    private var dahlSettingsDisposable = MetaDisposable()
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [ContentImageSpec] = []
@@ -1650,7 +1650,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
     
     deinit {
         self.cachedDataDisposable.dispose()
-        self.dahlSettingsDisposable?.dispose()
+        self.dahlSettingsDisposable.dispose()
     }
     
     override public func secondaryAction(at point: CGPoint) {
@@ -1699,20 +1699,6 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
         if item.interaction.activateChatPreview == nil {
             enablePreview = false
         }
-        
-        self.dahlSettingsDisposable?.dispose()
-        dahlSettingsDisposable = (
-            item.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-            |> map { sharedData -> DalSettings in
-                return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
-            }
-            |> distinctUntilChanged
-            |> deliverOnMainQueue
-        ).startStrict(next: { [weak self] _ in
-            guard let self, let layoutParams else { return }
-            let (_, apply) = asyncLayout()(layoutParams.0, layoutParams.5, layoutParams.1, layoutParams.2, layoutParams.3, layoutParams.4)
-            apply(false, false)
-        })
         
         self.avatarNode.setStoryStats(storyStats: storyState.flatMap { storyState in
             return AvatarNode.StoryStats(
@@ -1768,6 +1754,20 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
             self.avatarNode.setPeer(context: item.context, theme: item.presentationData.theme, peer: peer, overrideImage: overrideImage, emptyColor: item.presentationData.theme.list.mediaPlaceholderColor, clipStyle: isForumAvatar ? .roundedRect : item.presentationData.theme.squareStyle ? .rect : .round, synchronousLoad: synchronousLoads, displayDimensions: CGSize(width: 60.0, height: 60.0))
             
             if peer.isPremium && peer.id != item.context.account.peerId {
+                self.dahlSettingsDisposable.set(
+                    (item.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                     |> map { sharedData -> DalSettings in
+                         return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+                     }
+                     |> distinctUntilChanged
+                     |> deliverOnMainQueue
+                    ).startStrict(next: { [weak self] _ in
+                        guard let self, let layoutParams else { return }
+                        let (_, apply) = asyncLayout()(layoutParams.0, layoutParams.5, layoutParams.1, layoutParams.2, layoutParams.3, layoutParams.4)
+                        apply(false, false)
+                    })
+                )
+                
                 let context = item.context
                 self.cachedDataDisposable.set((context.account.postbox.peerView(id: peer.id)
                 |> deliverOnMainQueue).startStrict(next: { [weak self] peerView in
@@ -1838,6 +1838,7 @@ public class ChatListItemNode: ItemListRevealOptionsItemNode {
                 }))
             } else {
                 self.cachedDataDisposable.set(nil)
+                self.dahlSettingsDisposable.set(nil)
                 
                 self.avatarVideoNode?.removeFromSupernode()
                 self.avatarVideoNode = nil
