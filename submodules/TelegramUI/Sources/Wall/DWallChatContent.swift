@@ -261,7 +261,8 @@ extension DWallChatContent {
             .start(next: { [weak self] anchors in
                 guard let self = self else { return }
                 
-                guard !anchors.isEmpty else {
+                
+                if anchors.isEmpty && currentAnchors == nil {                    
                     let historyView = MessageHistoryView(
                         tag: nil,
                         namespaces: .all,
@@ -294,6 +295,8 @@ extension DWallChatContent {
         }
         
         func reloadData() {
+            currentAnchors = nil
+            pageAnchor = nil
             showLoading()
             loadInitialData()
         }
@@ -396,6 +399,33 @@ extension DWallChatContent {
                     contextHolder: contextHolder,
                     messageIndex: entry.message.index
                 )
+            }
+            else if view.entries.count > 10 && view.entries.count < 10 {
+                var groupedMessages: [Int64?: [MessageHistoryEntry]] = [:]
+                
+                for entry in view.entries {
+                    if let groupingKey = entry.message.groupingKey {
+                        if groupedMessages[groupingKey] == nil {
+                            groupedMessages[groupingKey] = []
+                        }
+                        groupedMessages[groupingKey]?.append(entry)
+                    }
+                }
+                
+                if groupedMessages.count == 1, let groupKey = groupedMessages.keys.first, groupKey != nil {
+                    if let entries = groupedMessages[groupKey], entries.count == view.entries.count {
+                        if let lastEntry = entries.sorted(by: { $0.message.index > $1.message.index }).first {
+                            let location = ChatLocation.peer(id: lastEntry.message.id.peerId)
+                            let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                            
+                            self.context.applyMaxReadIndex(
+                                for: location,
+                                contextHolder: contextHolder,
+                                messageIndex: lastEntry.message.index
+                            )
+                        }
+                    }
+                }
             }
         }
         
