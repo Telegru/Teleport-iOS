@@ -79,9 +79,9 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     }
     
     func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
-//        self.impl.with { impl in
-////            impl.markAllMessagesRead(olderThan: messageIndex)
-//        }
+        self.impl.with { impl in
+            impl.markAllMessagesRead(olderThan: messageIndex)
+        }
     }
     
     func enqueueMessages(messages: [EnqueueMessage]) {}
@@ -387,16 +387,16 @@ extension DWallChatContent {
         }
         
         private func checkAndMarkAsReadIfNeeded(view: MessageHistoryView) {
-//            if view.entries.count == 1, let entry = view.entries.first {
-//                let location = ChatLocation.peer(id: entry.message.id.peerId)
-//                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-//                
-//                self.context.applyMaxReadIndex(
-//                    for: location,
-//                    contextHolder: contextHolder,
-//                    messageIndex: entry.message.index
-//                )
-//            }
+            if view.entries.count == 1, let entry = view.entries.first {
+                let location = ChatLocation.peer(id: entry.message.id.peerId)
+                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                
+                self.context.applyMaxReadIndex(
+                    for: location,
+                    contextHolder: contextHolder,
+                    messageIndex: entry.message.index
+                )
+            }
         }
         
         private func showLoading() {

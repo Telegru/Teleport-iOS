@@ -5,6 +5,7 @@ public enum IconType: String, CaseIterable {
     case chatsTab
     case contactsTab
     case settingsTab
+    case wallTab
     case addStory
     case storyCompose
     case peerPinnedIcon
