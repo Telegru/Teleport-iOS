@@ -94,6 +94,8 @@ public struct DahlIconSet: IconSet {
             return UIImage(bundleImageName: "TPChat List/Add")!
         case .chatDelete:
             return UIImage(bundleImageName: "TPChat List/Delete")!
+        case .wallGear:
+            return UIImage(bundleImageName: "Wall/WallGear")!
         }
     }
 }

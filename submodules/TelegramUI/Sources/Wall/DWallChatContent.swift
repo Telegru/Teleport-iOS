@@ -5,6 +5,7 @@ import Postbox
 import TelegramCore
 import AccountContext
 import ChatListUI
+import TelegramUIPreferences
 
 final class DWallChatContent: ChatCustomContentsProtocol {
     
@@ -13,6 +14,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     var isLoadingSignal: Signal<Bool, NoError> {
         impl.syncWith { impl in
             impl.isLoadingPromise.get()
+        }
+    }
+    
+    var filterSignal: Signal<ChatListFilterPredicate, NoError> {
+        return impl.syncWith { impl in
+            impl.filterPredicatePromise.get()
         }
     }
     
@@ -38,25 +45,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         let queue = Queue()
         self.queue = queue
         
-        let filterData = ChatListFilterData(
-            isShared: false,
-            hasSharedLinks: false,
-            categories: .channels,
-            excludeMuted: false,
-            excludeRead: true,
-            excludeArchived: false,
-            includePeers: ChatListFilterIncludePeers(),
-            excludePeers: [],
-            color: nil
-        )
+        let tailChatsCount = 1000
         
-        let tailChatsCount = 100
-        let filterPredicate = chatListFilterPredicate(filter: filterData, accountPeerId: context.account.peerId)
-        
-        kind = .wall(tailChatsCount: tailChatsCount, filter: filterPredicate)
+        kind = .wall(tailChatsCount: tailChatsCount)
         
         self.impl = QueueLocalObject(queue: queue, generate: {
-            return Impl(queue: queue, context: context, filterPredicate: filterPredicate, tailChatsCount: tailChatsCount)
+            return Impl(queue: queue, context: context, tailChatsCount: tailChatsCount)
         })
     }
     
@@ -85,9 +79,9 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     }
     
     func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
-        self.impl.with { impl in
-            impl.markAllMessagesRead(olderThan: messageIndex)
-        }
+//        self.impl.with { impl in
+////            impl.markAllMessagesRead(olderThan: messageIndex)
+//        }
     }
     
     func enqueueMessages(messages: [EnqueueMessage]) {}
@@ -108,8 +102,19 @@ extension DWallChatContent {
         let context: AccountContext
         let historyViewStream = ValuePipe<(MessageHistoryView, ViewUpdateType)>()
         let isLoadingPromise = ValuePromise<Bool>(true)
-        let filterPredicate: ChatListFilterPredicate
         let tailChatsCount: Int
+        
+        var filterPredicate: ChatListFilterPredicate {
+            didSet {
+                filterPredicatePromise.set(filterPredicate)
+            }
+        }
+        
+        let filterPredicatePromise: ValuePromise<ChatListFilterPredicate>
+
+        var excludedPeerIds: Set<PeerId> = Set()
+        var showArchivedChannels: Bool = true
+        private var settingsDisposable: Disposable?
         
         var mergedHistoryView: MessageHistoryView?
         private var historyViewDisposable: Disposable?
@@ -137,13 +142,53 @@ extension DWallChatContent {
         init(
             queue: Queue,
             context: AccountContext,
-            filterPredicate: ChatListFilterPredicate,
             tailChatsCount: Int
         ) {
             self.queue = queue
             self.context = context
             self.tailChatsCount = tailChatsCount
+            
+            let filterData = ChatListFilterData(
+                isShared: false,
+                hasSharedLinks: false,
+                categories: .channels,
+                excludeMuted: false,
+                excludeRead: true,
+                excludeArchived: false,
+                includePeers: ChatListFilterIncludePeers(),
+                excludePeers: [],
+                color: nil
+            )
+            
+            let filterPredicate = chatListFilterPredicate(
+                filter: filterData,
+                accountPeerId: context.account.peerId
+            )
             self.filterPredicate = filterPredicate
+            self.filterPredicatePromise = ValuePromise<ChatListFilterPredicate>(filterPredicate)
+            
+            self.settingsDisposable = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> deliverOn(self.queue)).start(next: { [weak self] sharedData in
+                    guard let self = self else { return }
+                    
+                    let dalSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                    let wallSettings = dalSettings.wallSettings
+                    
+                    let showArchivedChannelsChanged = self.showArchivedChannels != wallSettings.showArchivedChannels
+                    let excludedPeerIdsChanged = Set(wallSettings.excludedChannels) != self.excludedPeerIds
+                    
+                    if showArchivedChannelsChanged || excludedPeerIdsChanged {
+                        self.showArchivedChannels = wallSettings.showArchivedChannels
+                        self.excludedPeerIds = Set(wallSettings.excludedChannels)
+                        
+                        self.updateFilterPredicate()
+                        
+                        self.reloadData()
+                    }
+                })
+            
+            self.updateFilterPredicate()
+            
             self.loadInitialData()
             self.loadingDisposable = (self.historyViewStream.signal()
                                       |> map { $0.0.isLoading })
@@ -159,6 +204,26 @@ extension DWallChatContent {
             self.readViewDisposable?.dispose()
             self.loadMaxCountDisposable?.dispose()
             self.autoMarkReadDisposable?.dispose()
+            self.settingsDisposable?.dispose()
+        }
+        
+        private func updateFilterPredicate() {
+            let filterData = ChatListFilterData(
+                isShared: false,
+                hasSharedLinks: false,
+                categories: .channels,
+                excludeMuted: false,
+                excludeRead: true,
+                excludeArchived: !self.showArchivedChannels,
+                includePeers: ChatListFilterIncludePeers(),
+                excludePeers: Array(self.excludedPeerIds),
+                color: nil
+            )
+            
+            self.filterPredicate = chatListFilterPredicate(
+                filter: filterData,
+                accountPeerId: self.context.account.peerId
+            )
         }
         
         func loadInitialData() {
@@ -322,16 +387,16 @@ extension DWallChatContent {
         }
         
         private func checkAndMarkAsReadIfNeeded(view: MessageHistoryView) {
-            if view.entries.count == 1, let entry = view.entries.first {
-                let location = ChatLocation.peer(id: entry.message.id.peerId)
-                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                
-                self.context.applyMaxReadIndex(
-                    for: location,
-                    contextHolder: contextHolder,
-                    messageIndex: entry.message.index
-                )
-            }
+//            if view.entries.count == 1, let entry = view.entries.first {
+//                let location = ChatLocation.peer(id: entry.message.id.peerId)
+//                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+//                
+//                self.context.applyMaxReadIndex(
+//                    for: location,
+//                    contextHolder: contextHolder,
+//                    messageIndex: entry.message.index
+//                )
+//            }
         }
         
         private func showLoading() {
@@ -387,11 +452,6 @@ extension DWallChatContent {
                 self.mergedHistoryView = view.0
                 self.historyViewStream.putNext((view.0, self.mergedHistoryView?.entries.isEmpty == true ? view.1 : .Generic))
                 self.checkAndMarkAsReadIfNeeded(view: view.0)
-                if self.mergedHistoryView?.entries.isEmpty == false {
-                    debugPrint("---||| locationInput_\(self.mergedHistoryView!.entries.first!.index.timestamp) \(self.mergedHistoryView!.entries.last!.index.timestamp)")
-
-                }
-
             })
         }
         
@@ -406,13 +466,13 @@ extension DWallChatContent {
                 messagesByPeer[peerId]?.append(entry)
             }
             for (peerId, entries) in messagesByPeer {
-                if entries.count > 2 {
+                if entries.count > 22 {
                     let middleIndex = entries.count / 2
                     let anchor = entries[middleIndex].index
                     self.currentAnchors?[peerId] = anchor
                 }
             }
-            if view.entries.count > 2 {
+            if view.entries.count > 22 {
                 self.pageAnchor = view.entries[view.entries.count / 2].message.index
             }
         }
