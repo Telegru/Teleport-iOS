@@ -3283,8 +3283,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         switch self.chatHistoryLocationValue?.content {
                         case .Initial(_):
                             self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
-                        case .Scroll:
-                            // TODO: оставить только для скролла вверх это правило
+                        case let .Scroll(_, _, sourceIndex, scrollPosition, _, _, _):                                                       
                             if lastEntry.index != lastVisbleMesssage()?.index {
                                 let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
                                 if self.chatHistoryLocationValue?.content != locationInput {
@@ -3292,8 +3291,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                                 }
                             }
                         default:
-                            let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
-                            if self.chatHistoryLocationValue?.content != locationInput {
+                            if self.chatHistoryLocationValue == nil {
+                                let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
                                 self.chatHistoryLocationValue = ChatHistoryLocationInput(content: locationInput, id: self.takeNextHistoryLocationId())
                             }
                     }

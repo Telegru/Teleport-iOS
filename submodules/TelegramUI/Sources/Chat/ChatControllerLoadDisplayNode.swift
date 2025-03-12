@@ -4582,8 +4582,10 @@ extension ChatControllerImpl {
                     let baseSignal: Signal<Int, NoError>
                     
                     if case let .customChatContents(contents) = self.subject,
-                       case let .wall(count, filter) = contents.kind {
-                        baseSignal = self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+                       case let .wall(count) = contents.kind, let wallContent = contents as? DWallChatContent {
+                        baseSignal = wallContent.filterSignal |> mapToSignal { filter -> Signal<Int, NoError> in
+                            self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+                        }
                     } else {
                         baseSignal = self.context.chatLocationUnreadCount(for: self.chatLocation,
                                                                   contextHolder: self.chatLocationContextHolder)

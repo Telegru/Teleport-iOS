@@ -3,6 +3,7 @@ import UIKit
 import Display
 import TelegramCore
 import AppBundle
+import TPUI
 
 private func generateLineImage(color: UIColor) -> UIImage? {
     return generateImage(CGSize(width: 2.0, height: 3.0), contextGenerator: { size, context in
@@ -129,6 +130,10 @@ public struct PresentationResourcesChat {
         return theme.image(PresentationResourceKey.chatBubbleVerticalLineOutgoingImage.rawValue, { theme in
             return generateLineImage(color: theme.chat.message.outgoing.accentTextColor)
         })
+    }
+    
+    public static func chatWallGearImage(_ theme: PresentationTheme) -> UIImage? {
+        return generateTintedImage(image: TPIconManager.shared.icon(.wallGear), color: theme.chat.inputPanel.panelControlAccentColor)
     }
     
     public static func chatBubbleArrowImage(color: UIColor) -> UIImage? {

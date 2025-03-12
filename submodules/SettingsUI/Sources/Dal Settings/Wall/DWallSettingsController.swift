@@ -395,7 +395,7 @@ public func dWallSettingsController(
     }
     
     var presentControllerImpl: ((ViewController, ViewControllerPresentationArguments?) -> Void)?
-    var pushControllerImpl: ((ViewController) -> Void)?
+//    var pushControllerImpl: ((ViewController) -> Void)?
     let presentationData = context.sharedContext.currentPresentationData.with { $0 }
     let lang = presentationData.strings.baseLanguageCode
 
@@ -429,7 +429,7 @@ public func dWallSettingsController(
                     filters: []
                 ))
                 
-                pushControllerImpl?(controller)
+                presentControllerImpl?(controller, ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
                 
                 let _ = (controller.result
                 |> take(1)
@@ -590,9 +590,9 @@ public func dWallSettingsController(
         }
     }
     
-    pushControllerImpl = { [weak controller] c in
-        controller?.push(c)
-    }
+//    pushControllerImpl = { [weak controller] c in
+//        controller?.push(c)
+//    }
     
     return controller
 }

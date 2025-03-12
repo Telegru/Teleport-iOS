@@ -11,6 +11,7 @@ import Postbox
 import ListMessageItem
 import AnimationCache
 import MultiAnimationRenderer
+import SettingsUI
 
 public final class DWallController: TelegramBaseController {
     
@@ -20,6 +21,7 @@ public final class DWallController: TelegramBaseController {
     
     private var transitionDisposable: Disposable?
     private var scrollDisposable: Disposable?
+    private var filterDisposable: Disposable?
 
     private(set) var presentationData: PresentationData
     private var presentationDataDisposable: Disposable?
@@ -86,11 +88,20 @@ public final class DWallController: TelegramBaseController {
             action: #selector(self.reloadPressed)
         )
         
+        let settingsIcon = PresentationResourcesChat.chatWallGearImage(self.presentationData.theme)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: settingsIcon,
+            style: .plain,
+            target: self,
+            action: #selector(self.settingsPressed)
+        )
+        
         self.scrollToTop = { [weak self] in
             self?.controllerNode.scrollToTop()
         }
         
         setupUnreadCounterObserving()
+        setupFilterUpdateObserving()
     }
     
     public required init(coder aDecoder: NSCoder) {
@@ -100,6 +111,8 @@ public final class DWallController: TelegramBaseController {
     deinit {
         presentationDataDisposable?.dispose()
         unreadCountDisposable?.dispose()
+        scrollDisposable?.dispose()
+        filterDisposable?.dispose()
     }
     
     public override func loadDisplayNode() {
@@ -133,16 +146,27 @@ public final class DWallController: TelegramBaseController {
             target: self,
             action: #selector(self.reloadPressed)
         )
+        
+        let settingsIcon = PresentationResourcesChat.chatWallGearImage(self.presentationData.theme)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: settingsIcon,
+            style: .plain,
+            target: self,
+            action: #selector(self.settingsPressed)
+        )
     }
     
     private func setupUnreadCounterObserving(single: Bool = false) {
         let context = self.context
 
-        if case let .wall(count, filter) = controllerNode.wallContent.kind {
+        if case let .wall(count) = controllerNode.wallContent.kind {
             unreadCountDisposable?.dispose()
             unreadCountDisposable = nil
             
-            let unreadCountSignal = self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+            let unreadCountSignal = controllerNode.wallContent.filterSignal
+            |> mapToSignal { filter -> Signal<Int, NoError>  in
+                self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+            }
             
             unreadCountDisposable = (combineLatest(unreadCountSignal, context.sharedContext.presentationData) |> deliverOnMainQueue)
                 .startStrict(next: { [weak self] unreadCount, presentationData in
@@ -157,6 +181,37 @@ public final class DWallController: TelegramBaseController {
         }
     }
     
+    private func setupFilterUpdateObserving() {
+        var skipFirst = true
+
+        filterDisposable = (
+            controllerNode.wallContent.filterSignal
+        ).start(next: { [weak self] _ in
+            if skipFirst {
+                skipFirst = false
+                return
+            }
+            guard let self = self else { return }
+            (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
+
+            self.scrollDisposable?.dispose()
+            self.scrollDisposable = (
+                self.controllerNode.wallContent.historyView
+                |> filter { !$0.0.isLoading }
+                |> take(1)
+                |> delay(2.0, queue: .mainQueue())
+            )
+            .start(next: { [weak self] view in
+                guard let self = self else { return }
+                (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
+
+                if let first = view.0.entries.first {
+                    (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.scrollToMessage(index: first.index)
+                }
+            })
+        })
+    }
+    
     @objc private func reloadPressed() {
         controllerNode.wallContent.reloadData()
         scrollDisposable?.dispose()
@@ -169,5 +224,10 @@ public final class DWallController: TelegramBaseController {
             guard let self else { return }
             (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.scrollToStartOfHistory()
         })
+    }
+    
+    @objc private func settingsPressed() {
+        let settingsController = dWallSettingsController(context: context)
+        self.present(settingsController, in: .window(.root), with: ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
     }
 }
