@@ -516,7 +516,11 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                     node.animationNode.setOverlayColor(self.theme.tabBarSelectedIconColor, replace: true, animated: false)
                     node.animationNode.updateLayout(size: CGSize(width: 51.0, height: 51.0))
                 } else {
-                    (image, imageContentWidth) = tabBarItemImage(item.item.selectedImage, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarSelectedIconColor, horizontal: self.horizontal, imageMode: true, centered: self.centered)
+                    if item.item.ringSelection {
+                        (image, imageContentWidth) = (item.item.selectedImage ?? UIImage(), item.item.selectedImage?.size.width ?? 0.0)
+                    } else {
+                        (image, imageContentWidth) = tabBarItemImage(item.item.selectedImage, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarSelectedIconColor, horizontal: self.horizontal, imageMode: true, centered: self.centered)
+                    }
                     
                     node.animationNode.isHidden = true
                     node.animationNode.visibility = false
@@ -532,9 +536,16 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.accessibilityTraits = [.button, .selected]
                 node.contentWidth = max(contentWidth, imageContentWidth)
                 node.isSelected = true
+                
+                ContainedViewLayoutTransition.immediate.updateTransformScale(node: node.ringImageNode, scale: 1.0)
             } else {
                 let (textImage, contentWidth) = tabBarItemImage(item.item.image, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarTextColor, horizontal: self.horizontal, imageMode: false, centered: self.centered)
-                let (image, imageContentWidth) = tabBarItemImage(item.item.image, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarIconColor, horizontal: self.horizontal, imageMode: true, centered: self.centered)
+                let (image, imageContentWidth): (UIImage, CGFloat)
+                if item.item.ringSelection {
+                    (image, imageContentWidth) = (item.item.image ?? UIImage(), item.item.image?.size.width ?? 0.0)
+                } else {
+                    (image, imageContentWidth) = tabBarItemImage(item.item.image, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarIconColor, horizontal: self.horizontal, imageMode: true, centered: self.centered)
+                }
                 let (contextTextImage, _) = tabBarItemImage(item.item.image, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarExtractedTextColor, horizontal: self.horizontal, imageMode: false, centered: self.centered)
                 let (contextImage, _) = tabBarItemImage(item.item.image, title: item.item.title ?? "", backgroundColor: .clear, tintColor: self.theme.tabBarExtractedIconColor, horizontal: self.horizontal, imageMode: true, centered: self.centered)
                 
@@ -549,6 +560,8 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.contextImageNode.image = contextImage
                 node.contentWidth = max(contentWidth, imageContentWidth)
                 node.isSelected = false
+                
+                ContainedViewLayoutTransition.immediate.updateTransformScale(node: node.ringImageNode, scale: 0.5)
             }
             container.badgeBackgroundNode.image = self.badgeImage
             node.extractedContainerNode.contentNode.addSubnode(container.badgeContainerNode)
@@ -697,16 +710,15 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
             var tabBarNodeContainers = self.tabBarNodeContainers
             var width = size.width
             
-            var callsTabBarNodeContainer: TabBarNodeContainer?
-            if tabBarNodeContainers.count == 4 {
-                callsTabBarNodeContainer = tabBarNodeContainers[1]
-            }
+            let callsTabBarNodeContainer = tabBarNodeContainers.first(where: { $0.item.tag == 101 })
             
             if additionalSideInsets.right > 0.0 {
                 width -= additionalSideInsets.right
                 
                 if let callsTabBarNodeContainer = callsTabBarNodeContainer {
-                    tabBarNodeContainers.remove(at: 1)
+                    if let callsTabIndex = tabBarNodeContainers.firstIndex(where: { $0 === callsTabBarNodeContainer }) {
+                        tabBarNodeContainers.remove(at: callsTabIndex)
+                    }
                     transition.updateAlpha(node: callsTabBarNodeContainer.imageNode, alpha: 0.0)
                     callsTabBarNodeContainer.imageNode.isUserInteractionEnabled = false
                 }
@@ -746,7 +758,7 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 node.contextTextImageNode.frame = CGRect(origin: CGPoint(), size: nodeFrame.size)
                 
                 node.textImageNode.isHidden = !self.showTabTitles
-                if !self.showTabTitles {
+                if !self.showTabTitles && !horizontal {
                     node.imageNode.frame = CGRect(origin: CGPoint(x: 0.0, y: 6.0), size: nodeFrame.size)
                 }
                                 
@@ -756,12 +768,12 @@ class TabBarNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 let ringImageFrame: CGRect
                 let imageFrame: CGRect
                 if horizontal {
-                    node.animationNode.frame = CGRect(origin: CGPoint(x: -10.0 - UIScreenPixel, y: (self.showTabTitles ? -4.0 : 4.0) - UIScreenPixel), size: CGSize(width: 51.0, height: 51.0))
+                    node.animationNode.frame = CGRect(origin: CGPoint(x: -10.0 - UIScreenPixel, y: -4.0 - UIScreenPixel), size: CGSize(width: 51.0, height: 51.0))
                     ringImageFrame = CGRect(origin: CGPoint(x: UIScreenPixel, y: 5.0 + UIScreenPixel), size: CGSize(width: 23.0, height: 23.0))
                     imageFrame = ringImageFrame.insetBy(dx: -1.0 + UIScreenPixel, dy: -1.0 + UIScreenPixel)
                 } else {
                     node.animationNode.frame = CGRect(origin: CGPoint(x: floorToScreenPixels((nodeSize.width - 51.0) / 2.0), y: (self.showTabTitles ? -10.0 : -4.0) - UIScreenPixel).offsetBy(dx: animationOffset.x, dy: animationOffset.y), size: CGSize(width: 51.0, height: 51.0))
-                    ringImageFrame = CGRect(origin: CGPoint(x: floorToScreenPixels((nodeSize.width - 29.0) / 2.0), y: 1.0), size: CGSize(width: 29.0, height: 29.0))
+                    ringImageFrame = CGRect(origin: CGPoint(x: floorToScreenPixels((nodeSize.width - 29.0) / 2.0), y: self.showTabTitles ? 1.0 : 8.0), size: CGSize(width: 29.0, height: 29.0))
                     imageFrame = ringImageFrame.insetBy(dx: -1.0, dy: -1.0)
                 }
                 node.ringImageNode.bounds = CGRect(origin: CGPoint(), size: ringImageFrame.size)

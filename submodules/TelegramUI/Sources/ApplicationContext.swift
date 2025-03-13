@@ -809,6 +809,7 @@ final class AuthorizedApplicationContext {
             }
             return value.activeTabs
         }
+        |> distinctUntilChanged
         self.appTabsDisposable = (appTabsSignal |> deliverOnMainQueue).start(next: { [weak self] value in
             guard let self else { return }
             if self.appTabs != value {

@@ -174,7 +174,8 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             |> deliverOnMainQueue
         ).startStrict(next: { [weak self] showTabTitles in
             self?.rootTabController?.showTabTitles = showTabTitles
-        })
+        }
+        )
         
 //        let botsKey = ValueBoxKey(length: 8)
 //        botsKey.setInt64(0, value: 0)
@@ -275,6 +276,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.storyUploadEventsDisposable?.dispose()
         self.walletDisposable?.dispose()
         self.appsBotDisposable?.dispose()
+        self.tabsTitleDisposable?.dispose()
     }
     
     public func getContactsController() -> ViewController? {
