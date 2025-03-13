@@ -307,12 +307,12 @@ private func dWallSettingsEntries(
     presentationData: PresentationData,
     state: DWallSettingsState,
     wallSettings: DWallSettings,
-    excludedPeers: [EnginePeer]
+    excludedPeers: [EnginePeer],
+    excludedPeersGroups: [EnginePeer.Id: EngineChatList.Group]
 ) -> [DWallSettingsEntry] {
     var entries: [DWallSettingsEntry] = []
     let lang = presentationData.strings.baseLanguageCode
     
-    // Display section
     entries.append(
         .displayHeader(
             presentationData.theme,
@@ -335,7 +335,6 @@ private func dWallSettingsEntries(
         )
     )
     
-    // Excluded channels section
     entries.append(
         .excludedHeader(
             presentationData.theme,
@@ -350,9 +349,20 @@ private func dWallSettingsEntries(
         )
     )
     
-    // Add excluded peer entries
+    let filteredPeers: [EnginePeer]
+    if wallSettings.showArchivedChannels {
+        filteredPeers = excludedPeers
+    } else {
+        filteredPeers = excludedPeers.filter { peer in
+            if let group = excludedPeersGroups[peer.id], group == EngineChatList.Group.archive {
+                return false
+            }
+            return true
+        }
+    }
+    
     var index: Int32 = 0
-    for peer in excludedPeers {
+    for peer in filteredPeers {
         entries.append(
             .excludedChannel(
                 index,
@@ -364,8 +374,7 @@ private func dWallSettingsEntries(
         index += 1
     }
     
-    // Only show remove all button if there are channels to remove
-    if !excludedPeers.isEmpty {
+    if !filteredPeers.isEmpty {
         entries.append(
             .removeAllExcludedChannels(
                 presentationData.theme,
@@ -381,7 +390,6 @@ private func dWallSettingsEntries(
         )
     )
     
-    // Sort entries to ensure they are in the correct order
     return entries.sorted()
 }
 
@@ -395,7 +403,6 @@ public func dWallSettingsController(
     }
     
     var presentControllerImpl: ((ViewController, ViewControllerPresentationArguments?) -> Void)?
-//    var pushControllerImpl: ((ViewController) -> Void)?
     let presentationData = context.sharedContext.currentPresentationData.with { $0 }
     let lang = presentationData.strings.baseLanguageCode
 
@@ -414,65 +421,75 @@ public func dWallSettingsController(
             ).start()
         },
         addExcludedChannel: {
-            
             let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
                 |> take(1)
-                     |> deliverOnMainQueue).start(next: { sharedData in
-                let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
-                let selectedChats = dahlSettings.wallSettings.excludedChannels
-                let showArchivedChannels = dahlSettings.wallSettings.showArchivedChannels
-                
-                // Make sure to use the correct ChatSelection mode that exists in your codebase
-                let controller = context.sharedContext.makeContactMultiselectionController(ContactMultiselectionControllerParams(
-                    context: context,
-                    mode: .chatSelection(ContactMultiselectionControllerMode.ChatSelection(title: "DahlSettings.Wall.Excluded.Title".tp_loc(lang: lang), searchPlaceholder: "DahlSettings.Wall.Excluded.Search".tp_loc(lang: lang), selectedChats: Set(selectedChats), additionalCategories: nil, chatListFilters: [], disableArchived: !showArchivedChannels, onlyChannels: true)),
-                    filters: []
-                ))
-                
-                presentControllerImpl?(controller, ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
-                
-                let _ = (controller.result
-                |> take(1)
-                |> deliverOnMainQueue).start(next: { [weak controller] result in
-                    controller?.dismiss()
+                |> deliverOnMainQueue).start(next: { sharedData in
+                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                    let selectedChats = Set(dahlSettings.wallSettings.excludedChannels)
+                    let showArchivedChannels = dahlSettings.wallSettings.showArchivedChannels
                     
-                    if case let .result(peerIds, _) = result {
-                        let updatedPeerIds = peerIds.compactMap { peerId -> EnginePeer.Id? in
-                            if case let .peer(id) = peerId {
-                                return id
-                            } else {
-                                return nil
+                    let chatListFilter = ChatListFilter.filter(id: 1, title: ChatFolderTitle(text: "", entities: [], enableAnimations: true), emoticon: nil, data: ChatListFilterData(
+                        isShared: false,
+                        hasSharedLinks: false,
+                        categories: [.channels],
+                        excludeMuted: false,
+                        excludeRead: false,
+                        excludeArchived: !showArchivedChannels,
+                        includePeers: ChatListFilterIncludePeers(),
+                        excludePeers: [],
+                        color: nil
+                    ))
+                    
+                    let controller = context.sharedContext.makeContactMultiselectionController(ContactMultiselectionControllerParams(
+                        context: context,
+                        mode: .chatSelection(ContactMultiselectionControllerMode.ChatSelection(title: "DahlSettings.Wall.Excluded.Title".tp_loc(lang: lang), searchPlaceholder: "DahlSettings.Wall.Excluded.Search".tp_loc(lang: lang), selectedChats: selectedChats, additionalCategories: nil, chatListFilters: [chatListFilter], disableArchived: !showArchivedChannels, onlyChannels: true)),
+                        filters: []
+                    ))
+                    
+                    presentControllerImpl?(controller, ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
+                    
+                    let _ = (controller.result
+                    |> take(1)
+                    |> deliverOnMainQueue).start(next: { [weak controller] result in
+                        controller?.dismiss()
+                        
+                        if case let .result(peerIds, _) = result {
+                            let updatedPeerIds = peerIds.compactMap { peerId -> EnginePeer.Id? in
+                                if case let .peer(id) = peerId {
+                                    return id
+                                } else {
+                                    return nil
+                                }
+                            }
+                            
+                            if !updatedPeerIds.isEmpty {
+                                let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                                |> take(1)
+                                |> deliverOnMainQueue).start(next: { sharedData in
+                                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                                    var currentExcludedPeers = dahlSettings.wallSettings.excludedChannels
+                                    
+                                    for peerId in updatedPeerIds {
+                                        if !currentExcludedPeers.contains(peerId) {
+                                            currentExcludedPeers.append(peerId)
+                                        }
+                                    }
+                                    
+                                    let _ = updateDalSettingsInteractively(
+                                        accountManager: context.sharedContext.accountManager,
+                                        { settings in
+                                            var updatedSettings = settings
+                                            var updatedWallSettings = settings.wallSettings
+                                            updatedWallSettings.excludedChannels = currentExcludedPeers
+                                            updatedSettings.wallSettings = updatedWallSettings
+                                            return updatedSettings
+                                        }
+                                    ).start()
+                                })
                             }
                         }
-                        
-                        if !updatedPeerIds.isEmpty {
-                            let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-                            |> take(1)
-                            |> deliverOnMainQueue).start(next: { sharedData in
-                                let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
-                                var currentExcludedPeers = dahlSettings.wallSettings.excludedChannels
-                                
-                                for peerId in updatedPeerIds {
-                                    if !currentExcludedPeers.contains(peerId) {
-                                        currentExcludedPeers.append(peerId)
-                                    }
-                                }
-                                
-                                let _ = updateDalSettingsInteractively(
-                                    accountManager: context.sharedContext.accountManager,
-                                    { settings in
-                                        var updatedSettings = settings
-                                        var updatedWallSettings = settings.wallSettings
-                                        updatedWallSettings.excludedChannels = currentExcludedPeers
-                                        updatedSettings.wallSettings = updatedWallSettings
-                                        return updatedSettings
-                                    }
-                                ).start()
-                            })
-                        }
-                    }
+                    })
                 })
-            })
         },
         removeExcludedChannel: { peerId in
             let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
@@ -542,23 +559,26 @@ public func dWallSettingsController(
         statePromise.get(),
         context.sharedContext.presentationData
     )
-    |> mapToSignal { sharedData, state, presentationData -> Signal<(PresentationData, DWallSettingsState, DalSettings, [EnginePeer]), NoError> in
+    |> mapToSignal { sharedData, state, presentationData -> Signal<(PresentationData, DWallSettingsState, DalSettings, [EnginePeer], [EnginePeer.Id: EngineChatList.Group]), NoError> in
         let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
         
         return context.engine.data.get(
-            EngineDataList(dahlSettings.wallSettings.excludedChannels.map(TelegramEngine.EngineData.Item.Peer.Peer.init))
+            EngineDataList(dahlSettings.wallSettings.excludedChannels.map(TelegramEngine.EngineData.Item.Peer.Peer.init)),
+            EngineDataMap(dahlSettings.wallSettings.excludedChannels.map(TelegramEngine.EngineData.Item.Messages.ChatListGroup.init))
         )
-        |> map { peerList -> (PresentationData, DWallSettingsState, DalSettings, [EnginePeer]) in
+        |> map { peerList, groupsMap -> (PresentationData, DWallSettingsState, DalSettings, [EnginePeer], [EnginePeer.Id: EngineChatList.Group]) in
             let peers = peerList.compactMap { $0 }
-            return (presentationData, state, dahlSettings, peers)
+            let groups = groupsMap.compactMapValues { $0 }
+            return (presentationData, state, dahlSettings, peers, groups)
         }
     }
-    |> map { presentationData, state, dahlSettings, excludedPeers -> (ItemListControllerState, (ItemListNodeState, Any)) in
+    |> map { presentationData, state, dahlSettings, excludedPeers, groups -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let entries = dWallSettingsEntries(
             presentationData: presentationData,
             state: state,
             wallSettings: dahlSettings.wallSettings,
-            excludedPeers: excludedPeers
+            excludedPeers: excludedPeers,
+            excludedPeersGroups: groups
         )
         
         let controllerState = ItemListControllerState(
@@ -589,10 +609,6 @@ public func dWallSettingsController(
             controller.present(c, in: .window(.root), with: p)
         }
     }
-    
-//    pushControllerImpl = { [weak controller] c in
-//        controller?.push(c)
-//    }
     
     return controller
 }

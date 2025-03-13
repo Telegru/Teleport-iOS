@@ -321,7 +321,7 @@ extension DWallChatContent {
             //FIXME: Тут вероятно перестанет работать подгрузка обновлений, по лайкам
             historyViewDisposable?.dispose()
             //FIXME: Тут вероятно перестанет работать подгрузка обновлений, по подпискам
-            anchorsDisposable?.dispose()
+//            anchorsDisposable?.dispose()
             
             loadMaxCountDisposable = (context.account.viewTracker.tailChatListView(
                 groupId: .root,
@@ -350,11 +350,19 @@ extension DWallChatContent {
                         clipHoles: false,
                         takeTail: true
                     )
-                } )
+                    |> map { result in
+                        return (result, topAnchors)
+                    }
+                })
             } |> take(1))
-            .startStrict(next: { [weak self] view in
+            .startStrict(next: { [weak self] (view, topAnchors) in
                 guard let self = self else { return }
                 
+                if topAnchors.isEmpty || view.0.entries.isEmpty {
+                    self.checkAndMarkAsReadIfNeeded(view: view.0)
+                    return
+                }
+                self.currentAnchors = topAnchors
                 self.mergedHistoryView = view.0
                 self.historyViewStream.putNext((view.0, self.mergedHistoryView?.entries.isEmpty == true ? view.1 : .Generic))
                 self.checkAndMarkAsReadIfNeeded(view: view.0)
@@ -399,31 +407,38 @@ extension DWallChatContent {
                     contextHolder: contextHolder,
                     messageIndex: entry.message.index
                 )
-            }
-            else if view.entries.count > 10 && view.entries.count < 10 {
-                var groupedMessages: [Int64?: [MessageHistoryEntry]] = [:]
+            } else if view.entries.count > 1 {
+                var currentGroupKey: Int64? = nil
+                var isMultipleGroups = false
                 
-                for entry in view.entries {
-                    if let groupingKey = entry.message.groupingKey {
-                        if groupedMessages[groupingKey] == nil {
-                            groupedMessages[groupingKey] = []
-                        }
-                        groupedMessages[groupingKey]?.append(entry)
+                for entryIndex in (0..<view.entries.count).reversed() {
+                    let entry = view.entries[entryIndex]
+                    let groupKey = entry.message.groupingKey
+                    
+                    if groupKey == nil {
+                        isMultipleGroups = true
+                        break
+                    }
+                    
+                    if currentGroupKey == nil {
+                        currentGroupKey = groupKey
+                    }
+                    else if currentGroupKey != groupKey {
+                        isMultipleGroups = true
+                        break
                     }
                 }
                 
-                if groupedMessages.count == 1, let groupKey = groupedMessages.keys.first, groupKey != nil {
-                    if let entries = groupedMessages[groupKey], entries.count == view.entries.count {
-                        if let lastEntry = entries.sorted(by: { $0.message.index > $1.message.index }).first {
-                            let location = ChatLocation.peer(id: lastEntry.message.id.peerId)
-                            let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                            
-                            self.context.applyMaxReadIndex(
-                                for: location,
-                                contextHolder: contextHolder,
-                                messageIndex: lastEntry.message.index
-                            )
-                        }
+                if !isMultipleGroups && currentGroupKey != nil {
+                    if let latestEntry = view.entries.first {
+                        let location = ChatLocation.peer(id: latestEntry.message.id.peerId)
+                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                        
+                        self.context.applyMaxReadIndex(
+                            for: location,
+                            contextHolder: contextHolder,
+                            messageIndex: latestEntry.message.index
+                        )
                     }
                 }
             }
@@ -477,11 +492,12 @@ extension DWallChatContent {
                 count: self.messagesPerPage,
                 clipHoles: false
             ))
-            .start(next: { [weak self] view in
+            .start(next: { [weak self] result in
                 guard let self = self else { return }
-                self.mergedHistoryView = view.0
-                self.historyViewStream.putNext((view.0, self.mergedHistoryView?.entries.isEmpty == true ? view.1 : .Generic))
-                self.checkAndMarkAsReadIfNeeded(view: view.0)
+                let (view, updateType, _) = result
+                self.mergedHistoryView = view
+                self.historyViewStream.putNext((view, self.mergedHistoryView?.entries.isEmpty == true ? updateType : .Generic))
+                self.checkAndMarkAsReadIfNeeded(view: view)
             })
         }
         

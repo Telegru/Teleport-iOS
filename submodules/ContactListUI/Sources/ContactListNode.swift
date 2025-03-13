@@ -873,15 +873,17 @@ public enum ContactListPresentation {
         public var searchDeviceContacts: Bool
         public var searchGroups: Bool
         public var searchChannels: Bool
+        public var searchAcrchivedChannels: Bool
         public var globalSearch: Bool
         public var displaySavedMessages: Bool
         
-        public init(signal: Signal<String, NoError>, searchChatList: Bool, searchDeviceContacts: Bool, searchGroups: Bool, searchChannels: Bool, globalSearch: Bool, displaySavedMessages: Bool) {
+        public init(signal: Signal<String, NoError>, searchChatList: Bool, searchDeviceContacts: Bool, searchGroups: Bool, searchChannels: Bool, searchAcrchivedChannels: Bool, globalSearch: Bool, displaySavedMessages: Bool) {
             self.signal = signal
             self.searchChatList = searchChatList
             self.searchDeviceContacts = searchDeviceContacts
             self.searchGroups = searchGroups
             self.searchChannels = searchChannels
+            self.searchAcrchivedChannels = searchAcrchivedChannels
             self.globalSearch = globalSearch
             self.displaySavedMessages = displaySavedMessages
         }
@@ -1348,7 +1350,8 @@ public final class ContactListNode: ASDisplayNode {
                 let searchChannels = search.searchChannels
                 let globalSearch = search.globalSearch
                 let displaySavedMessages = search.displaySavedMessages
-                
+                let searchAcrchivedChannels = search.searchAcrchivedChannels
+
                 return query
                 |> mapToSignal { query in
                     let foundLocalContacts: Signal<([FoundPeer], [EnginePeer.Id: EnginePeer.Presence]), NoError>
@@ -1396,14 +1399,19 @@ public final class ContactListNode: ASDisplayNode {
                             
                             return context.engine.data.get(
                                 EngineDataMap(resultPeers.map(\.peer.id).map(TelegramEngine.EngineData.Item.Peer.Presence.init)),
-                                EngineDataMap(resultPeers.map(\.peer.id).map(TelegramEngine.EngineData.Item.Peer.ParticipantCount.init))
+                                EngineDataMap(resultPeers.map(\.peer.id).map(TelegramEngine.EngineData.Item.Peer.ParticipantCount.init)),
+                                EngineDataMap(resultPeers.map(\.peer.id).map(TelegramEngine.EngineData.Item.Messages.ChatListGroup.init))
                             )
-                            |> map { presenceMap, participantCountMap -> ([FoundPeer], [EnginePeer.Id: EnginePeer.Presence]) in
+                            |> map { presenceMap, participantCountMap, groupId -> ([FoundPeer], [EnginePeer.Id: EnginePeer.Presence]) in
                                 var resultPresences: [EnginePeer.Id: EnginePeer.Presence] = [:]
                                 var mappedPeers: [FoundPeer] = []
                                 for peer in resultPeers {
                                     if let maybePresence = presenceMap[peer.peer.id], let presence = maybePresence {
                                         resultPresences[peer.peer.id] = presence
+                                    }
+                                    if let peerGroup = groupId[peer.peer.id],
+                                       peerGroup == .archive && !searchAcrchivedChannels {
+                                        continue
                                     }
                                     if let _ = peer.peer as? TelegramChannel {
                                         var subscribers: Int32?

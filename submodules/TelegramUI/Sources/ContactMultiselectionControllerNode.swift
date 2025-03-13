@@ -360,6 +360,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                         var searchChannels = false
                         var globalSearch = false
                         var displaySavedMessages = true
+                        var searchAcrchivedChannels = true
                         var filters = filters
                         switch mode {
                         case .groupCreation, .channelCreation:
@@ -381,6 +382,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                                 searchGroups = true
                                 searchChannels = !chatSelection.disableChannels
                             }
+                            searchAcrchivedChannels = !chatSelection.disableArchived
                             globalSearch = false
                         case .premiumGifting, .requestedUsersSelection:
                             searchChatList = true
@@ -391,6 +393,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                                 searchDeviceContacts: false,
                                 searchGroups: searchGroups,
                                 searchChannels: searchChannels,
+                                searchAcrchivedChannels: searchAcrchivedChannels,
                                 globalSearch: globalSearch,
                                 displaySavedMessages: displaySavedMessages
                         ))), filters: filters, onlyWriteable: strongSelf.onlyWriteable, isGroupInvitation: strongSelf.isGroupInvitation, isPeerEnabled: strongSelf.isPeerEnabled, selectionState: selectionState, isSearch: true)

@@ -3399,19 +3399,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         default:
             if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
                 beginChatHistoryTransitions(resetScrolling: true)
-                scrollDisposable?.dispose()
-                // TODO: проверить работу без scrollDisposable
-
-                scrollDisposable = (
-                    customChatContents.historyView
-                    |> deliverOnMainQueue
-                    |> filter { !$0.0.isLoading }
-                    |> take(1)
-                ).start(next: { [weak self] _ in
-                    guard let self else { return }
-                    let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
-                    self.chatHistoryLocationValue = locationInput
-                })
+                let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
+                self.chatHistoryLocationValue = locationInput
                 customChatContents.loadAll()
             } else {
                 let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
