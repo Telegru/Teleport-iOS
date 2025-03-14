@@ -21,12 +21,17 @@ public enum DAppTab: Int, Codable, CaseIterable {
     }
 }
 
-public struct TabBarSettings: Codable, Hashable {
+public struct DTabBarSettings: Codable, Hashable {
     
     public var activeTabs: [DAppTab]
+    public var showTabTitles: Bool
     
-    public init(currentTabs: [DAppTab]) {
+    public init(
+        currentTabs: [DAppTab],
+        showTabTitles: Bool
+    ) {
         self.activeTabs = currentTabs
+        self.showTabTitles = showTabTitles
     }
     
     public init(from decoder: any Decoder) throws {
@@ -34,21 +39,26 @@ public struct TabBarSettings: Codable, Hashable {
         self.activeTabs = try container
             .decodeIfPresent([Int32].self, forKey: "currentTabs")?
             .compactMap { DAppTab(rawValue: Int($0)) } ?? []
+        self.showTabTitles = try container.decodeIfPresent(Bool.self, forKey: "showTabTitles") ?? true
     }
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
         try container.encode(self.activeTabs.map { Int32($0.rawValue) }, forKey: "currentTabs")
+        try container.encode(self.showTabTitles, forKey: "showTabTitles")
     }
 }
 
-extension TabBarSettings {
+extension DTabBarSettings {
     
-    public static var `default`: TabBarSettings {
-        TabBarSettings(currentTabs: [
-            .contacts,
-            .chats,
-            .settings
-        ])
+    public static var `default`: DTabBarSettings {
+        DTabBarSettings(
+            currentTabs: [
+                .contacts,
+                .chats,
+                .settings
+            ],
+            showTabTitles: true
+        )
     }
 }

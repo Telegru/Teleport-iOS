@@ -12,6 +12,7 @@ public protocol TabBarController: ViewController {
     var currentController: ViewController? { get }
     var controllers: [ViewController] { get }
     var selectedIndex: Int { get set }
+    var showTabTitles: Bool { get set }
     
     var cameraItemAndAction: (item: UITabBarItem, action: () -> Void)? { get set }
     

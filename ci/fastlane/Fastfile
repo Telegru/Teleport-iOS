@@ -176,9 +176,18 @@ lane :generate_new_certificates do |options|
   ensure_env_vars(
     env_vars: ['CERTS_GIT_URL']
   )
-  types = ['development', 'appstore', 'adhoc']
+  types = ['development', 'adhoc', 'appstore']
+
   types.each do |type|
     team_id = team_id(build_type: type)
+    match_nuke(
+      type: type,
+      app_identifier: app_bundle_ids(build_type: type),
+      team_id: team_id,
+      git_url: ENV['CERTS_GIT_URL'],
+      git_branch: team_id,
+      api_key: generate_app_store_connect_api_key()
+    )
     match(
       type: type,
       app_identifier: app_bundle_ids(build_type: type),

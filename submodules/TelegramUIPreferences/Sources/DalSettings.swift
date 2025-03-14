@@ -18,7 +18,7 @@ public enum ListViewType: Int32, Codable, Equatable {
 
 public struct DalSettings: Codable, Equatable {
     
-    public var tabBarSettings: TabBarSettings
+    public var tabBarSettings: DTabBarSettings
     public var menuItemsSettings: MenuItemsSettings
     public var chatsListViewType: ListViewType
     public var premiumSettings: DPremiumSettings
@@ -73,7 +73,7 @@ public struct DalSettings: Codable, Equatable {
     }
     
     public init(
-        tabBarSettings: TabBarSettings,
+        tabBarSettings: DTabBarSettings,
         menuItemsSettings: MenuItemsSettings,
         premiumSettings: DPremiumSettings,
         appearanceSettings: DAppearanceSettings,
@@ -116,7 +116,7 @@ public struct DalSettings: Codable, Equatable {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
-        self.tabBarSettings = (try container.decodeIfPresent(TabBarSettings.self, forKey: "tabBarSettings") ?? .default)
+        self.tabBarSettings = (try container.decodeIfPresent(DTabBarSettings.self, forKey: "tabBarSettings") ?? .default)
         self.menuItemsSettings = (try container.decodeIfPresent(MenuItemsSettings.self, forKey: "menuItemsSettings") ?? .default)
         self.premiumSettings = (try container.decodeIfPresent(DPremiumSettings.self, forKey: "premiumSettings") ?? .default)
         self.appearanceSettings = (try container.decodeIfPresent(DAppearanceSettings.self, forKey: "appearanceSettings") ?? .default)
