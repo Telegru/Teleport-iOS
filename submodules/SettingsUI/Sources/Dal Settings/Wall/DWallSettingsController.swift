@@ -12,6 +12,8 @@ import AppBundle
 import PresentationDataUtils
 import ItemListPeerItem
 import ItemListPeerActionItem
+import AsyncDisplayKit
+import ContextUI
 
 import TPUI
 import TPStrings
@@ -23,6 +25,7 @@ private final class DWallSettingsArguments {
     let removeExcludedChannel: (EnginePeer.Id) -> Void
     let removeAllExcludedChannels: () -> Void
     let setPeerIdWithRevealedOptions: (EnginePeer.Id?, EnginePeer.Id?) -> Void
+    let peerContextAction: (EnginePeer, ASDisplayNode, ContextGesture?, CGPoint?) -> Void
     
     init(
         context: AccountContext,
@@ -30,7 +33,8 @@ private final class DWallSettingsArguments {
         addExcludedChannel: @escaping () -> Void,
         removeExcludedChannel: @escaping (EnginePeer.Id) -> Void,
         removeAllExcludedChannels: @escaping () -> Void,
-        setPeerIdWithRevealedOptions: @escaping (EnginePeer.Id?, EnginePeer.Id?) -> Void
+        setPeerIdWithRevealedOptions: @escaping (EnginePeer.Id?, EnginePeer.Id?) -> Void,
+        peerContextAction: @escaping (EnginePeer, ASDisplayNode, ContextGesture?, CGPoint?) -> Void
     ) {
         self.context = context
         self.updateShowArchivedChannels = updateShowArchivedChannels
@@ -38,6 +42,7 @@ private final class DWallSettingsArguments {
         self.removeExcludedChannel = removeExcludedChannel
         self.removeAllExcludedChannels = removeAllExcludedChannels
         self.setPeerIdWithRevealedOptions = setPeerIdWithRevealedOptions
+        self.peerContextAction = peerContextAction
     }
 }
 
@@ -266,6 +271,9 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
                 text: .none,
                 label: .none,
                 editing: ItemListPeerItemEditing(editable: true, editing: false, revealed: isRevealed),
+                revealOptions: ItemListPeerItemRevealOptions(options: [ItemListPeerItemRevealOption(type: .destructive, title: presentationData.strings.Common_Delete, action: {
+                    arguments.removeExcludedChannel(peer.id)
+                })]),
                 switchValue: nil,
                 enabled: true,
                 selectable: false,
@@ -276,6 +284,9 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
                 },
                 removePeer: { peerId in
                     arguments.removeExcludedChannel(peerId)
+                },
+                contextAction: { sourceNode, gesture in
+                    arguments.peerContextAction(peer, sourceNode, gesture, nil)
                 }
             )
             
@@ -354,7 +365,7 @@ private func dWallSettingsEntries(
         filteredPeers = excludedPeers
     } else {
         filteredPeers = excludedPeers.filter { peer in
-            if let group = excludedPeersGroups[peer.id], group == EngineChatList.Group.archive {
+            if let group = excludedPeersGroups[peer.id], group == .archive {
                 return false
             }
             return true
@@ -393,6 +404,34 @@ private func dWallSettingsEntries(
     return entries.sorted()
 }
 
+private final class ContextControllerContentSourceImpl: ContextControllerContentSource {
+    let controller: ViewController
+    weak var sourceNode: ASDisplayNode?
+    
+    let navigationController: NavigationController? = nil
+    
+    let passthroughTouches: Bool = true
+    
+    init(controller: ViewController, sourceNode: ASDisplayNode?) {
+        self.controller = controller
+        self.sourceNode = sourceNode
+    }
+    
+    func transitionInfo() -> ContextControllerTakeControllerInfo? {
+        let sourceNode = self.sourceNode
+        return ContextControllerTakeControllerInfo(contentAreaInScreenSpace: CGRect(origin: CGPoint(), size: CGSize(width: 10.0, height: 10.0)), sourceNode: { [weak sourceNode] in
+            if let sourceNode = sourceNode {
+                return (sourceNode.view, sourceNode.bounds)
+            } else {
+                return nil
+            }
+        })
+    }
+    
+    func animatedIn() {
+    }
+}
+
 public func dWallSettingsController(
     context: AccountContext
 ) -> ViewController {
@@ -403,6 +442,7 @@ public func dWallSettingsController(
     }
     
     var presentControllerImpl: ((ViewController, ViewControllerPresentationArguments?) -> Void)?
+    var presentInGlobalOverlayImpl: ((ViewController) -> Void)?
     let presentationData = context.sharedContext.currentPresentationData.with { $0 }
     let lang = presentationData.strings.baseLanguageCode
 
@@ -422,11 +462,30 @@ public func dWallSettingsController(
         },
         addExcludedChannel: {
             let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-                |> take(1)
-                |> deliverOnMainQueue).start(next: { sharedData in
-                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
-                    let selectedChats = Set(dahlSettings.wallSettings.excludedChannels)
-                    let showArchivedChannels = dahlSettings.wallSettings.showArchivedChannels
+                     |> take(1)
+                     |> deliverOnMainQueue).start(next: { sharedData in
+                let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                let showArchivedChannels = dahlSettings.wallSettings.showArchivedChannels
+                
+                let allExcludedChannels = dahlSettings.wallSettings.excludedChannels
+                
+                let _ = (context.engine.data.get(
+                    EngineDataMap(allExcludedChannels.map(TelegramEngine.EngineData.Item.Messages.ChatListGroup.init))
+                )
+                         |> deliverOnMainQueue).start(next: { groupsMap in
+                    let groups = groupsMap.compactMapValues { $0 }
+                    
+                    let selectedChats: Set<EnginePeer.Id>
+                    if showArchivedChannels {
+                        selectedChats = Set(allExcludedChannels)
+                    } else {
+                        selectedChats = Set(allExcludedChannels.filter { peerId in
+                            if let group = groups[peerId], group == .archive {
+                                return false
+                            }
+                            return true
+                        })
+                    }
                     
                     let chatListFilter = ChatListFilter.filter(id: 1, title: ChatFolderTitle(text: "", entities: [], enableAnimations: true), emoticon: nil, data: ChatListFilterData(
                         isShared: false,
@@ -443,18 +502,19 @@ public func dWallSettingsController(
                     let controller = context.sharedContext.makeContactMultiselectionController(ContactMultiselectionControllerParams(
                         context: context,
                         mode: .chatSelection(ContactMultiselectionControllerMode.ChatSelection(title: "DahlSettings.Wall.Excluded.Title".tp_loc(lang: lang), searchPlaceholder: "DahlSettings.Wall.Excluded.Search".tp_loc(lang: lang), selectedChats: selectedChats, additionalCategories: nil, chatListFilters: [chatListFilter], disableArchived: !showArchivedChannels, onlyChannels: true)),
-                        filters: []
+                        filters: [],
+                        alwaysEnabled: true
                     ))
                     
                     presentControllerImpl?(controller, ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
                     
                     let _ = (controller.result
-                    |> take(1)
-                    |> deliverOnMainQueue).start(next: { [weak controller] result in
+                             |> take(1)
+                             |> deliverOnMainQueue).start(next: { [weak controller] result in
                         controller?.dismiss()
                         
                         if case let .result(peerIds, _) = result {
-                            let updatedPeerIds = peerIds.compactMap { peerId -> EnginePeer.Id? in
+                            let updatedVisiblePeerIds = peerIds.compactMap { peerId -> EnginePeer.Id? in
                                 if case let .peer(id) = peerId {
                                     return id
                                 } else {
@@ -462,34 +522,33 @@ public func dWallSettingsController(
                                 }
                             }
                             
-                            if !updatedPeerIds.isEmpty {
-                                let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
-                                |> take(1)
-                                |> deliverOnMainQueue).start(next: { sharedData in
-                                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
-                                    var currentExcludedPeers = dahlSettings.wallSettings.excludedChannels
+                            let _ = updateDalSettingsInteractively(
+                                accountManager: context.sharedContext.accountManager,
+                                { settings in
+                                    var updatedSettings = settings
+                                    var updatedWallSettings = settings.wallSettings
                                     
-                                    for peerId in updatedPeerIds {
-                                        if !currentExcludedPeers.contains(peerId) {
-                                            currentExcludedPeers.append(peerId)
+                                    if !showArchivedChannels {
+                                        var finalExcludedChannels = updatedVisiblePeerIds
+                                        
+                                        for peerId in allExcludedChannels {
+                                            if let group = groups[peerId], group == .archive {
+                                                finalExcludedChannels.append(peerId)
+                                            }
                                         }
+                                        updatedWallSettings.excludedChannels = finalExcludedChannels
+                                    } else {
+                                        updatedWallSettings.excludedChannels = updatedVisiblePeerIds
                                     }
                                     
-                                    let _ = updateDalSettingsInteractively(
-                                        accountManager: context.sharedContext.accountManager,
-                                        { settings in
-                                            var updatedSettings = settings
-                                            var updatedWallSettings = settings.wallSettings
-                                            updatedWallSettings.excludedChannels = currentExcludedPeers
-                                            updatedSettings.wallSettings = updatedWallSettings
-                                            return updatedSettings
-                                        }
-                                    ).start()
-                                })
-                            }
+                                    updatedSettings.wallSettings = updatedWallSettings
+                                    return updatedSettings
+                                }
+                            ).start()
                         }
                     })
                 })
+            })
         },
         removeExcludedChannel: { peerId in
             let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
@@ -549,6 +608,43 @@ public func dWallSettingsController(
                 }
                 return state
             }
+        },
+        peerContextAction: { peer, sourceNode, gesture, _ in
+            let chatController = context.sharedContext.makeChatController(context: context, chatLocation: .peer(id: peer.id), subject: nil, botStart: nil, mode: .standard(.previewing), params: nil)
+            chatController.canReadHistory.set(false)
+            let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+            
+            var items: [ContextMenuItem] = []
+            items.append(.action(ContextMenuActionItem(text: presentationData.strings.ChatList_Context_RemoveFromFolder, textColor: .destructive, icon: { theme in
+                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Delete"), color: theme.contextMenu.destructiveColor)
+            }, action: { _, f in
+                f(.dismissWithoutContent)
+                
+                let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> take(1)
+                |> deliverOnMainQueue).start(next: { sharedData in
+                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                    var excludedChannels = dahlSettings.wallSettings.excludedChannels
+                    
+                    if let index = excludedChannels.firstIndex(of: peer.id) {
+                        excludedChannels.remove(at: index)
+                        
+                        let _ = updateDalSettingsInteractively(
+                            accountManager: context.sharedContext.accountManager,
+                            { settings in
+                                var updatedSettings = settings
+                                var updatedWallSettings = settings.wallSettings
+                                updatedWallSettings.excludedChannels = excludedChannels
+                                updatedSettings.wallSettings = updatedWallSettings
+                                return updatedSettings
+                            }
+                        ).start()
+                    }
+                })
+            })))
+            
+            let contextController = ContextController(presentationData: presentationData, source: .controller(ContextControllerContentSourceImpl(controller: chatController, sourceNode: sourceNode)), items: .single(ContextController.Items(content: .list(items))), gesture: gesture)
+            presentInGlobalOverlayImpl?(contextController)
         }
     )
     
@@ -607,6 +703,12 @@ public func dWallSettingsController(
     presentControllerImpl = { [weak controller] c, p in
         if let controller = controller {
             controller.present(c, in: .window(.root), with: p)
+        }
+    }
+    
+    presentInGlobalOverlayImpl = { [weak controller] c in
+        if let controller = controller {
+            controller.presentInGlobalOverlay(c)
         }
     }
     

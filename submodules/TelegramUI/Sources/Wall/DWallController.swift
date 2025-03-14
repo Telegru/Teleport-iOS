@@ -224,9 +224,9 @@ public final class DWallController: TelegramBaseController {
         scrollDisposable?.dispose()
         scrollDisposable = (
             controllerNode.wallContent.historyView
-            |> deliverOnMainQueue
             |> filter { !$0.0.isLoading }
             |> take(1)
+            |> deliverOnMainQueue
         ).start(next: { [weak self] _ in
             guard let self else { return }
             (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
