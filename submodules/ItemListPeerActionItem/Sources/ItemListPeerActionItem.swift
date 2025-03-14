@@ -14,6 +14,7 @@ public enum ItemListPeerActionItemHeight {
 }
 
 public enum ItemListPeerActionItemColor {
+    case primary
     case accent
     case destructive
     case disabled
@@ -205,6 +206,8 @@ public final class ItemListPeerActionItemNode: ListViewItemNode {
             
             let textColor: UIColor
             switch item.color {
+                case .primary:
+                    textColor = item.presentationData.theme.list.itemPrimaryTextColor
                 case .accent:
                     textColor = item.presentationData.theme.list.itemAccentColor
                 case .destructive:

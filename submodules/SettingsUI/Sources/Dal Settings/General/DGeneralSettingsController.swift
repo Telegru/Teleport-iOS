@@ -27,17 +27,20 @@ private final class DGeneralSettingsArguments {
     let updateProxyEnableState: (Bool) -> Void
     let updateHidePhone: (Bool) -> Void
     let openPremiumSettings: () -> Void
+    let openWallSettings: () -> Void
     
     init(
         context: AccountContext,
         updateProxyEnableState: @escaping (Bool) -> Void,
         updateHidePhone: @escaping (Bool) -> Void,
-        openPremiumSettings: @escaping () -> Void
+        openPremiumSettings: @escaping () -> Void,
+        openWallSettings: @escaping () -> Void
     ) {
         self.context = context
         self.updateProxyEnableState = updateProxyEnableState
         self.updateHidePhone = updateHidePhone
         self.openPremiumSettings = openPremiumSettings
+        self.openWallSettings = openWallSettings
     }
 }
 
@@ -45,7 +48,23 @@ private enum DGeneralSettingsSection: Int32, CaseIterable {
     case connection
     case savedProxies
     case profile
+    case wall
     case premium
+}
+
+private enum DGeneralSettingsEntryTag: ItemListItemTag {
+    case proxy
+    case hidePhoneNumber
+    case wallSettings
+    case premiumSettings
+    
+    func isEqual(to other: ItemListItemTag) -> Bool {
+        if let other = other as? DGeneralSettingsEntryTag, self == other {
+            return true
+        } else {
+            return false
+        }
+    }
 }
 
 private enum DGeneralSettingsEntry: ItemListNodeEntry {
@@ -60,6 +79,8 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
     case hidePhoneNumber(PresentationTheme, title: String, value: Bool)
     case profileFooter(PresentationTheme, title: String)
     
+    case wallSettings(PresentationTheme, title: String)
+    
     case premiumSettings(PresentationTheme, title: String)
     case premiumSettingsFooter(PresentationTheme, title: String)
     
@@ -73,6 +94,9 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             
         case .profileHeader, .hidePhoneNumber, .profileFooter:
             return DGeneralSettingsSection.profile.rawValue
+            
+        case .wallSettings:
+            return DGeneralSettingsSection.wall.rawValue
             
         case .premiumSettings, .premiumSettingsFooter:
             return DGeneralSettingsSection.premium.rawValue
@@ -97,10 +121,27 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             return 6
         case .profileFooter:
             return 7
-        case .premiumSettings:
+        case .wallSettings:
             return 8
-        case .premiumSettingsFooter:
+        case .premiumSettings:
             return 9
+        case .premiumSettingsFooter:
+            return 10
+        }
+    }
+    
+    var tag: ItemListItemTag? {
+        switch self {
+        case .proxy:
+            return DGeneralSettingsEntryTag.proxy
+        case .hidePhoneNumber:
+            return DGeneralSettingsEntryTag.hidePhoneNumber
+        case .wallSettings:
+            return DGeneralSettingsEntryTag.wallSettings
+        case .premiumSettings:
+            return DGeneralSettingsEntryTag.premiumSettings
+        case .server, .serversHeader, .connectionHeader, .connectionFooter, .profileHeader, .profileFooter, .premiumSettingsFooter:
+            return nil
         }
     }
     
@@ -171,6 +212,15 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             
         case let .profileFooter(lhsTheme, lhsTitle):
             if case let .profileFooter(rhsTheme, rhsTitle) = rhs,
+               lhsTheme === rhsTheme,
+               lhsTitle == rhsTitle {
+                return true
+            } else {
+                return false
+            }
+            
+        case let .wallSettings(lhsTheme, lhsTitle):
+            if case let .wallSettings(rhsTheme, rhsTitle) = rhs,
                lhsTheme === rhsTheme,
                lhsTitle == rhsTitle {
                 return true
@@ -287,6 +337,18 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
                 presentationData: presentationData,
                 text: .plain(title),
                 sectionId: self.section
+            )
+            
+        case let .wallSettings(_, title):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: title,
+                label: "",
+                sectionId: section,
+                style: .blocks,
+                action: {
+                    arguments.openWallSettings()
+                }
             )
             
         case let .premiumSettings(_, title):
@@ -416,6 +478,13 @@ private func dGeneralSettingsEntries(
     )
     
     entries.append(
+        .wallSettings(
+            presentationData.theme,
+            title: "DahlSettings.General.Wall".tp_loc(lang: lang)
+        )
+    )
+    
+    entries.append(
         .premiumSettings(
             presentationData.theme,
             title: "DahlSettings.General.Premium".tp_loc(lang: lang)
@@ -439,6 +508,7 @@ public func dGeneralSettingsController(
     let buildConfig = BuildConfig(baseAppBundleId: baseAppBundleId)
     
     var openPremiumSettings: (() -> Void)?
+    var openWallSettings: (() -> Void)?
     
     let proxyServer: ProxyServerSettings? = {
         guard let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret) else {
@@ -478,6 +548,9 @@ public func dGeneralSettingsController(
         },
         openPremiumSettings: {
             openPremiumSettings?()
+        },
+        openWallSettings: {
+            openWallSettings?()
         }
     )
     
@@ -539,6 +612,11 @@ public func dGeneralSettingsController(
     openPremiumSettings = { [weak controller] in
         let premiumSettings = dPremiumSettingsController(context: context)
         controller?.push(premiumSettings)
+    }
+    
+    openWallSettings = { [weak controller] in
+        let wallSettings = dWallSettingsController(context: context)
+        controller?.push(wallSettings)
     }
     
     return controller

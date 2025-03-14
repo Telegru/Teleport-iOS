@@ -18,7 +18,7 @@ public func generateItemListCheckIcon(color: UIColor) -> UIImage? {
 }
 
 public func generateItemListPlusIcon(_ color: UIColor) -> UIImage? {
-    return generateTintedImage(image: UIImage(bundleImageName: "Chat List/AddIcon"), color: color)
+    return generateTintedImage(image: TPIconManager.shared.icon(.chatAdd), color: color)
 }
 
 public struct PresentationResourcesItemList {
@@ -64,6 +64,12 @@ public struct PresentationResourcesItemList {
         })
     }
     
+    public static func plusIconImage(_ theme: PresentationTheme, color: UIColor) -> UIImage? {
+        return theme.image(PresentationResourceKey.itemListPlusIcon.rawValue, { theme in
+            return generateItemListPlusIcon(color)
+        })
+    }
+    
     public static func roundPlusIconImage(_ theme: PresentationTheme) -> UIImage? {
         return theme.image(PresentationResourceKey.itemListRoundPlusIcon.rawValue, { theme in
             return generateTintedImage(image: UIImage(bundleImageName: "Chat List/AddRoundIcon"), color: theme.list.itemAccentColor)
@@ -78,7 +84,7 @@ public struct PresentationResourcesItemList {
     
     public static func deleteIconImage(_ theme: PresentationTheme) -> UIImage? {
         return theme.image(PresentationResourceKey.itemListDeleteIcon.rawValue, { theme in
-            return generateTintedImage(image: UIImage(bundleImageName: "Chat/Input/Accessory Panels/MessageSelectionTrash"), color: theme.list.itemDestructiveColor)
+            return generateTintedImage(image: TPIconManager.shared.icon(.chatDelete), color: theme.list.itemDestructiveColor)
         })
     }
     
