@@ -842,7 +842,7 @@ class VoiceChatParticipantItemNode: ItemListRevealOptionsItemNode {
                 credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
             } else if item.peer.isFake {
                 credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-            } else if let emojiStatus = item.peer.emojiStatus, !premiumConfiguration.isPremiumDisabled,
+            } else if let emojiStatus = item.peer.emojiStatus,
                       isPremiumStatusEnabled {
                 credibilityIcon = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 20.0, height: 20.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
             } else if item.peer.isVerified {
