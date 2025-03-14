@@ -3,9 +3,10 @@ import UIKit
 import TelegramCore
 import TelegramUIPreferences
 import Postbox
+import DWallpaper
 
-private let defaultDarkTintedAccentColor = UIColor(rgb: 0x2ea6ff)
-public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false)
+private let defaultDarkTintedAccentColor = UIColor(rgb: 0x7B86C3)
+public let defaultDarkTintedPresentationTheme = makeDefaultDarkTintedPresentationTheme(preview: false, squareStyle: false, vkIcons: false)
 
 private extension PresentationThemeBaseColor {
     var colorWallpaper: (BuiltinWallpaperData, Int32, [UInt32])? {
@@ -505,11 +506,13 @@ public func customizeDefaultDarkTintedPresentationTheme(theme: PresentationTheme
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: theme.preview
+        preview: theme.preview,
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
-public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool) -> PresentationTheme {
+public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     let accentColor = defaultDarkTintedAccentColor
     
     let secondaryBadgeTextColor: UIColor
@@ -709,9 +712,9 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         unreadBadgeActiveBackgroundColor: accentColor,
         unreadBadgeActiveTextColor: secondaryBadgeTextColor,
         unreadBadgeInactiveBackgroundColor: mainSecondaryTextColor.withAlphaComponent(0.4),
-        unreadBadgeInactiveTextColor: additionalBackgroundColor,
+        unreadBadgeInactiveTextColor: secondaryBadgeTextColor,
         reactionBadgeActiveBackgroundColor: UIColor(rgb: 0xFF2D55),
-        pinnedBadgeColor: mainSecondaryTextColor.withAlphaComponent(0.5),
+        pinnedBadgeColor: accentColor,
         pinnedSearchBarColor: accentColor.withMultiplied(hue: 1.029, saturation: 0.609, brightness: 0.12),
         regularSearchBarColor: accentColor.withMultiplied(hue: 1.029, saturation: 0.609, brightness: 0.12),
         sectionHeaderFillColor: mainBackgroundColor,
@@ -722,7 +725,7 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         pinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x72d5fd), bottomColor: UIColor(rgb: 0x2a9ef1)), foregroundColor: .white),
         unpinnedArchiveAvatarColor: PresentationThemeArchiveAvatarColors(backgroundColors: PresentationThemeGradientColors(topColor: accentColor.withMultiplied(hue: 0.985, saturation: 0.268, brightness: 0.47), bottomColor: accentColor.withMultiplied(hue: 0.98, saturation: 0.268, brightness: 0.39)), foregroundColor: additionalBackgroundColor),
         onlineDotColor: UIColor(rgb: 0x4cc91f),
-        storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x34C76F), bottomColor: UIColor(rgb: 0x3DA1FD)),
+        storyUnseenColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x4B52F2), bottomColor: UIColor(rgb: 0x7B86C3)),
         storyUnseenPrivateColors: PresentationThemeGradientColors(topColor: UIColor(rgb: 0x7CD636), bottomColor: UIColor(rgb: 0x26B470)),
         storySeenColors: PresentationThemeGradientColors(topColor: mainForegroundColor, bottomColor: mainForegroundColor)
     )
@@ -936,8 +939,18 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         badgeTextColor: .white
     )
 
+//    let chat = PresentationThemeChat(
+//        defaultWallpaper: defaultBuiltinWallpaper(data: .default, colors: [0x1b2836, 0x121a22, 0x1b2836, 0x121a22]),
+//        animateMessageColors: false,
+//        message: message,
+//        serviceMessage: serviceMessage,
+//        inputPanel: inputPanel,
+//        inputMediaPanel: inputMediaPanel,
+//        inputButtonPanel: inputButtonPanel,
+//        historyNavigation: historyNavigation
+//    )
     let chat = PresentationThemeChat(
-        defaultWallpaper: defaultBuiltinWallpaper(data: .default, colors: [0x1b2836, 0x121a22, 0x1b2836, 0x121a22]),
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: true) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: message,
         serviceMessage: serviceMessage,
@@ -1028,6 +1041,8 @@ public func makeDefaultDarkTintedPresentationTheme(extendingThemeReference: Pres
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: preview
+        preview: preview,
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }

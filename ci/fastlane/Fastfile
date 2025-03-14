@@ -1,0 +1,275 @@
+default_platform(:ios)
+
+lane :deploy_tf do
+  setup_ci if ENV['CI']
+
+  build_number = latest_testflight_build_number(
+    api_key: generate_app_store_connect_api_key(),
+    app_identifier: app_bundle_id(build_type: 'appstore')
+  ) + 1
+
+  unless ENV['GITHUB_RUN_NUMBER'].nil?
+    run_number = ENV['GITHUB_RUN_NUMBER'].to_i
+    unless ENV['TF_BUILD_INDENT'].nil?
+      run_number = run_number + ENV['TF_BUILD_INDENT'].to_i
+    end
+    if run_number > build_number
+      build_number = run_number
+    end
+  end
+
+  ipa_path = archive(
+    build_number: build_number,
+    build_type: 'appstore'
+  )
+  upload_to_testflight(
+    api_key: generate_app_store_connect_api_key(),
+    ipa: ipa_path,
+    skip_waiting_for_build_processing: true,
+  )
+end
+
+lane :deploy_ad do
+  setup_ci if ENV['CI']
+
+  ensure_env_vars(
+    env_vars: ['FIREBASE_APP_ID', 'FIREBASE_TOKEN']
+  )
+
+  latest_release = firebase_app_distribution_get_latest_release(
+    app: ENV['FIREBASE_APP_ID'],
+    firebase_cli_token: ENV['FIREBASE_TOKEN']
+  )
+
+  build_number = if latest_release.nil?
+    1
+  else
+    latest_release[:buildVersion].to_i + 1
+  end
+
+  unless ENV['GITHUB_RUN_NUMBER'].nil?
+    run_number = ENV['GITHUB_RUN_NUMBER'].to_i
+    if run_number > build_number
+      build_number = run_number
+    end
+  end
+
+  ipa_path = archive(
+    build_number: build_number,
+    build_type: 'adhoc'
+  )
+
+  release_notes = git_branch
+
+  firebase_app_distribution(
+    app: ENV['FIREBASE_APP_ID'],
+    firebase_cli_token: ENV['FIREBASE_TOKEN'],
+    ipa_path: ipa_path,
+    release_notes: release_notes,
+    groups: "qa-team"
+  )
+end
+
+lane :generate_proj do |options|
+  build_type = options[:build_type] || 'development'
+  ensure_env_vars(
+    env_vars: ['CERTS_GIT_URL']
+  )
+
+  team_id = team_id(build_type: build_type)
+  match(
+    type: build_type,
+    app_identifier: app_bundle_ids(build_type: build_type),
+    team_id: team_id,
+    git_url: ENV['CERTS_GIT_URL'],
+    git_branch: team_id,
+    readonly: true
+  )
+
+  configuration_path = get_telegram_config_path(build_type: build_type)
+  source_path = ENV['SOURCE_PATH'] || File.expand_path('../../.')
+  cache_dir = ENV['BAZEL_LOCAL_CACHE'] || '$HOME/telegram-bazel-cache'
+
+  sh "cd #{source_path} && python3 build-system/Make/Make.py \
+  --cacheDir=#{cache_dir} \
+  generateProject \
+  --configurationPath=#{configuration_path} \
+  --buildNumber=10000 \
+  --gitCodesigningRepository=#{ENV['CERTS_GIT_URL']} \
+  --gitCodesigningType=#{build_type}"
+end
+
+lane :build do |options|
+  setup_ci if ENV['CI']
+
+  archive(build_number:10000, build_type:"appstore")
+end
+
+lane :archive do |options|
+  build_number = options[:build_number]
+  build_type = options[:build_type]
+
+  configuration_path = get_telegram_config_path(build_type: build_type)
+  source_path = ENV['SOURCE_PATH'] || File.expand_path('../../.')
+
+  match_certs(type: build_type)
+  artifacts_path = "#{ENV['BUILD_WORKING_DIR']}/artifacts"
+  FileUtils.rm_rf(artifacts_path)
+  FileUtils.mkdir(artifacts_path)
+
+  shell_command = "cd #{source_path} && python3 build-system/Make/Make.py "
+
+  unless ENV['BAZEL_PATH'].nil?
+    shell_command += "--bazel=#{ENV['BAZEL_PATH']} "
+  end
+
+  unless ENV['BAZEL_USER_ROOT'].nil?
+    shell_command += "--bazelUserRoot=#{ENV['BAZEL_USER_ROOT']} "
+  end
+
+  unless ENV['BAZEL_LOCAL_CACHE'].nil?
+    shell_command += "--cacheDir=#{ENV['BAZEL_LOCAL_CACHE']} "
+  end
+
+  unless ENV['BAZEL_REMOTE_CACHE'].nil?
+    shell_command += "--cacheHost=#{ENV['BAZEL_REMOTE_CACHE']} "
+  end
+
+  shell_command += "build \
+  --configurationPath=#{configuration_path} \
+  --gitCodesigningRepository=#{ENV['CERTS_GIT_URL']} \
+  --gitCodesigningType=#{build_type} \
+  --buildNumber=#{build_number} \
+  --configuration=release_arm64 \
+  --outputBuildArtifactsPath=#{artifacts_path}"
+
+  error_callback = lambda do |result|
+    raise "❌ Build script error\n#{result}"
+  end
+
+  sh shell_command, error_callback: error_callback
+
+  ipa_path = "#{artifacts_path}/Telegram.ipa"
+  UI.success "IPA saved at path: #{ipa_path}"
+  ipa_path
+end
+
+lane :match_certs do |options|
+  type = options[:type]
+  ensure_env_vars(
+    env_vars: ['CERTS_GIT_URL']
+  )
+
+  team_id = team_id(build_type: type)
+  match(
+    type: type,
+    app_identifier: app_bundle_ids(),
+    team_id: team_id,
+    git_url: ENV['CERTS_GIT_URL'],
+    git_branch: team_id,
+    skip_provisioning_profiles: true,
+    readonly: true
+  )
+end
+
+lane :generate_new_certificates do |options|
+  ensure_env_vars(
+    env_vars: ['CERTS_GIT_URL']
+  )
+  types = ['development', 'adhoc', 'appstore']
+
+  types.each do |type|
+    team_id = team_id(build_type: type)
+    match_nuke(
+      type: type,
+      app_identifier: app_bundle_ids(build_type: type),
+      team_id: team_id,
+      git_url: ENV['CERTS_GIT_URL'],
+      git_branch: team_id,
+      api_key: generate_app_store_connect_api_key()
+    )
+    match(
+      type: type,
+      app_identifier: app_bundle_ids(build_type: type),
+      team_id: team_id,
+      git_url: ENV['CERTS_GIT_URL'],
+      git_branch: team_id,
+      api_key: generate_app_store_connect_api_key(),
+      readonly: false
+    )
+  end
+end
+
+private_lane :generate_app_store_connect_api_key do |options|
+  ensure_env_vars(
+    env_vars: [
+      'APP_STORE_CONNECT_API_KEY_ID',
+      'APP_STORE_CONNECT_API_KEY_ISSUER_ID',
+      'APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT'
+    ]
+  )
+
+  app_store_connect_api_key(
+    key_id: ENV['APP_STORE_CONNECT_API_KEY_ID'],
+    issuer_id: ENV['APP_STORE_CONNECT_API_KEY_ISSUER_ID'],
+    key_content: ENV['APP_STORE_CONNECT_API_PRIVATE_KEY_CONTENT'],
+    is_key_content_base64: true
+  )
+end
+
+private_lane :get_telegram_config_path do |options|
+  if ENV['TG_CUSTOM_CONFIG_PATH'].nil?
+    build_type = options[:build_type]
+    build_dir = ENV['SOURCE_PATH']
+    if build_type == 'appstore'
+      "#{build_dir}/build-system/build-configs/appstore-configuration.json"
+    elsif build_type == 'adhoc'
+      "#{build_dir}/build-system/build-configs/adhoc-configuration.json"
+    else
+      "#{build_dir}/build-system/build-configs/dev-configuration.json"
+    end
+  else
+    ensure_env_vars(
+      env_vars: [
+        'TG_CUSTOM_CONFIG_PATH',
+      ]
+    )
+    ENV['TG_CUSTOM_CONFIG_PATH']
+  end
+end
+
+private_lane :app_config do |options|
+  config_path = get_telegram_config_path(build_type: options[:build_type])
+  read_json(json_path: config_path)
+end
+
+private_lane :team_id do |options|
+  if options[:build_type].nil?
+    ensure_env_vars(
+      env_vars: ['TEAM_ID']
+    )
+    ENV['TEAM_ID']
+  else
+    app_config(build_type: options[:build_type])[:team_id]
+  end
+end
+
+private_lane :app_bundle_id do |options|
+  app_config(build_type: options[:build_type])[:bundle_id]
+end
+
+private_lane :app_bundle_ids do |options|
+  base_app_identifier = app_bundle_id(build_type: options[:build_type])
+
+  [
+    base_app_identifier,
+    base_app_identifier + ".Widget",
+    base_app_identifier + ".NotificationContent",
+    base_app_identifier + ".SiriIntents",
+    base_app_identifier + ".Share",
+    base_app_identifier + ".NotificationService",
+    base_app_identifier + ".watchkitapp",
+    base_app_identifier + ".watchkitapp.watchkitextension",
+    base_app_identifier + ".BroadcastUpload"
+  ]
+end

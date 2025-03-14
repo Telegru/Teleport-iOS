@@ -664,6 +664,11 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     
     var lastPostedScheduledMessagesToastTimestamp: Double = 0.0
     var postedScheduledMessagesEventsDisposable: Disposable?
+        
+    var confirmSendAudioMessage = false
+    
+    private var addToRecentChats: Bool = false
+    private var addToRecentChatsDisposable: Disposable?
     
     public init(
         context: AccountContext,
@@ -2839,7 +2844,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             if let strongSelf = self {
                 let _ = strongSelf.presentVoiceMessageDiscardAlert(action: {
                     strongSelf.commitPurposefulAction()
-                    
+
                     let _ = (context.account.viewTracker.peerView(peerId)
                     |> take(1)
                     |> map { view -> Peer? in
@@ -2849,15 +2854,60 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         guard let peer = peer else {
                             return
                         }
-                        
+
                         if let cachedUserData = strongSelf.peerView?.cachedData as? CachedUserData, cachedUserData.callsPrivate {
                             let presentationData = context.sharedContext.currentPresentationData.with { $0 }
-                            
-                            strongSelf.present(textAlertController(context: strongSelf.context, updatedPresentationData: strongSelf.updatedPresentationData, title: presentationData.strings.Call_ConnectionErrorTitle, text: presentationData.strings.Call_PrivacyErrorMessage(EnginePeer(peer).compactDisplayTitle).string, actions: [TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})]), in: .window(.root))
+
+                            strongSelf.present(
+                                textAlertController(
+                                    context: strongSelf.context,
+                                    updatedPresentationData: strongSelf.updatedPresentationData,
+                                    title: presentationData.strings.Call_ConnectionErrorTitle,
+                                    text: presentationData.strings.Call_PrivacyErrorMessage(EnginePeer(peer).compactDisplayTitle).string,
+                                    actions: [
+                                        TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {})
+                                    ]
+                                ),
+                                in: .window(.root)
+                            )
                             return
                         }
-                        
-                        context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+
+                        let _ = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                        |> map { sharedData -> Bool in
+                            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                                return current.callConfirmation
+                            } else {
+                                return DalSettings.defaultSettings.callConfirmation
+                            }
+                        }
+                        |> take(1)
+                        |> deliverOnMainQueue).startStandalone(next: { (callConfirmation: Bool) in
+                            if callConfirmation {
+                                let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+                                let text = isVideo
+                                    ? "Chat.ConfirmVideoCall".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)
+                                    : "Chat.ConfirmCall".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)
+
+                                let actions: [TextAlertAction] = [
+                                    TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_OK, action: {
+                                        context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+                                    }),
+                                    TextAlertAction(type: .genericAction, title: presentationData.strings.Common_Cancel, action: {})
+                                ]
+
+                                let alert = textAlertController(
+                                    context: strongSelf.context,
+                                    title: nil,
+                                    text: text,
+                                    actions: actions,
+                                    actionLayout: .horizontal
+                                )
+                                strongSelf.present(alert, in: .window(.root))
+                            } else {
+                                context.requestCall(peerId: peer.id, isVideo: isVideo, completion: {})
+                            }
+                        })
                     })
                 })
             }
@@ -5572,7 +5622,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 } else {
                                     imageOverride = nil
                                 }
-                                (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.setPeer(context: strongSelf.context, theme: strongSelf.presentationData.theme, peer: EnginePeer(peer), overrideImage: imageOverride)
+                                (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.setPeer(context: strongSelf.context, theme: strongSelf.presentationData.theme, peer: EnginePeer(peer), overrideImage: imageOverride, clipStyle: strongSelf.presentationData.theme.squareStyle ? .rect : .round)
                                 if case .standard(.previewing) = strongSelf.mode {
                                     (strongSelf.chatInfoNavigationButton?.buttonItem.customDisplayNode as? ChatAvatarNavigationNode)?.contextActionIsEnabled = false
                                 } else {
@@ -7058,7 +7108,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         if let darkAppearancePreview = darkAppearancePreview {
                             useDarkAppearance = darkAppearancePreview
                         }
-                        if let theme = makePresentationTheme(cloudTheme: theme, dark: useDarkAppearance) {
+                        if let theme = makePresentationTheme(cloudTheme: theme, squareStyle: presentationData.theme.squareStyle, dark: useDarkAppearance) {
                             theme.forceSync = true
                             presentationData = presentationData.withUpdated(theme: theme).withUpdated(chatWallpaper: theme.chat.defaultWallpaper)
                             
@@ -7088,7 +7138,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                             if let themeSpecificWallpaper = themeSpecificWallpaper {
                                 lightWallpaper = themeSpecificWallpaper
                             } else {
-                                let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true) ?? defaultPresentationTheme
+                                let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
                                 lightWallpaper = theme.chat.defaultWallpaper
                             }
                             
@@ -7097,7 +7147,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 preferredBaseTheme = baseTheme
                             }
                             
-                            lightTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, baseTheme: preferredBaseTheme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+                            lightTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: themeSettings.theme, baseTheme: preferredBaseTheme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
                         } else {
                             lightTheme = presentationData.theme
                             lightWallpaper = presentationData.chatWallpaper
@@ -7113,7 +7163,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                                 preferredBaseTheme = .night
                             }
                             
-                            darkTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+                            darkTheme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: presentationData.theme.squareStyle) ?? defaultPresentationTheme
                             
                             if let themeSpecificWallpaper = themeSpecificWallpaper {
                                 darkWallpaper = themeSpecificWallpaper
@@ -7242,14 +7292,24 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             })
         }
         
+        let disableReadHistory = (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+        |> map { sharedData -> Bool in
+            var hideReadTime = false
+//            if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+//                hideReadTime = current.disableReadHistory
+//            } else {
+                hideReadTime = DalSettings.defaultSettings.disableReadHistory
+//            }
+            return hideReadTime
+        })
 
-        
         self.canReadHistoryDisposable = (combineLatest(
             context.sharedContext.applicationBindings.applicationInForeground,
             self.canReadHistory.get(),
-            self.hasBrowserOrAppInFront.get()
-        ) |> map { inForeground, globallyEnabled, hasBrowserOrWebAppInFront in
-            return inForeground && globallyEnabled && !hasBrowserOrWebAppInFront
+            self.hasBrowserOrAppInFront.get(),
+            disableReadHistory
+        ) |> map { inForeground, globallyEnabled, hasBrowserOrWebAppInFront, disableReadHistory in
+            return inForeground && globallyEnabled && !hasBrowserOrWebAppInFront && !disableReadHistory
         } |> deliverOnMainQueue).startStrict(next: { [weak self] value in
             if let strongSelf = self, strongSelf.canReadHistoryValue != value {
                 strongSelf.canReadHistoryValue = value
@@ -7270,6 +7330,17 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                 return state.updatedInterfaceState({ $0.withUpdatedSelectedMessages(messageIds) })
             })
         }
+        
+        self.addToRecentChatsDisposable =  (self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                                            |> map { sharedData -> DalSettings in
+            return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+        }
+                                            |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] dalSettings in
+            if let self {
+                self.addToRecentChats = dalSettings.showRecentChats != nil
+            }
+        })
     }
     
     required public init(coder aDecoder: NSCoder) {
@@ -7375,6 +7446,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             self.networkSpeedEventsDisposable?.dispose()
             self.postedScheduledMessagesEventsDisposable?.dispose()
             self.premiumOrStarsRequiredDisposable?.dispose()
+            self.addToRecentChatsDisposable?.dispose()
         }
         deallocate()
     }
@@ -7903,7 +7975,9 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
     
     override public func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+        if let peerId = self.chatLocation.peerId, self.addToRecentChats{
+            self.context.engine.peers.addRecentChat(peerId: peerId)
+        }
         self.didAppear = true
         
         self.chatDisplayNode.historyNode.experimentalSnapScrollToItem = false

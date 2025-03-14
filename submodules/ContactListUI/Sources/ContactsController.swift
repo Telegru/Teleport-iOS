@@ -152,15 +152,19 @@ public class ContactsController: ViewController {
         self.tabBarItem.title = self.presentationData.strings.Contacts_Title
         
         let icon: UIImage?
-        if useSpecialTabBarIcons() {
-            icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconContacts")
+        if presentationData.theme.vkIcons {
+            icon = UIImage(bundleImageName: "Chat List/Tabs/DIconContacts")
         } else {
-            icon = UIImage(bundleImageName: "Chat List/Tabs/IconContacts")
+            if useSpecialTabBarIcons() {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconContacts")
+            } else {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/IconContacts")
+            }
         }
         
         self.tabBarItem.image = icon
         self.tabBarItem.selectedImage = icon
-        if !self.presentationData.reduceMotion {
+        if !self.presentationData.reduceMotion && !presentationData.theme.vkIcons {
             self.tabBarItem.animationName = "TabContacts"
         }
         
@@ -246,7 +250,22 @@ public class ContactsController: ViewController {
         
         self.title = self.presentationData.strings.Contacts_Title
         self.tabBarItem.title = self.presentationData.strings.Contacts_Title
-        if !self.presentationData.reduceMotion {
+        
+        let icon: UIImage?
+        if presentationData.theme.vkIcons {
+            icon = UIImage(bundleImageName: "Chat List/Tabs/DIconContacts")
+        } else {
+            if useSpecialTabBarIcons() {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/Holiday/IconContacts")
+            } else {
+                icon = UIImage(bundleImageName: "Chat List/Tabs/IconContacts")
+            }
+        }
+        
+        self.tabBarItem.image = icon
+        self.tabBarItem.selectedImage = icon
+        
+        if !self.presentationData.reduceMotion && !presentationData.theme.vkIcons {
             self.tabBarItem.animationName = "TabContacts"
         } else {
             self.tabBarItem.animationName = nil

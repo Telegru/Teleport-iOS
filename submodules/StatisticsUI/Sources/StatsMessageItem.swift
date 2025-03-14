@@ -672,7 +672,8 @@ final class StatsMessageItemNode: ListViewItemNode, ItemListItemNode {
                                     totalCount: 1,
                                     unseenCount: 1
                                 ),
-                                progress: nil
+                                progress: nil,
+                                isRectSimple: item.presentationData.theme.squareStyle
                             )),
                             environment: {},
                             containerSize: indicatorSize

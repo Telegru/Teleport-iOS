@@ -645,7 +645,7 @@ public enum ChatListSearchFilter: Equatable {
     case chats
     case topics
     case channels
-    case apps
+//    case apps
     case media
     case downloads
     case links
@@ -664,8 +664,8 @@ public enum ChatListSearchFilter: Equatable {
             return 1
         case .channels:
             return 2
-        case .apps:
-            return 3
+//        case .apps:
+//            return 3
         case .media:
             return 4
         case .downloads:
@@ -974,6 +974,7 @@ public protocol SharedAccountContext: AnyObject {
     func makePeersNearbyController(context: AccountContext) -> ViewController
     func makeComposeController(context: AccountContext) -> ViewController
     func makeChatListController(context: AccountContext, location: ChatListControllerLocation, controlsHistoryPreload: Bool, hideNetworkActivityStatus: Bool, previewing: Bool, enableDebugActions: Bool) -> ChatListController
+    func makeNewsFeedController(context: AccountContext) -> ViewController
     func makeChatController(context: AccountContext, chatLocation: ChatLocation, subject: ChatControllerSubject?, botStart: ChatControllerInitialBotStart?, mode: ChatControllerPresentationMode, params: ChatControllerParams?) -> ChatController
     func makeChatHistoryListNode(
         context: AccountContext,
@@ -1215,6 +1216,7 @@ public protocol AccountContext: AnyObject {
     var currentContentSettings: Atomic<ContentSettings> { get }
     var currentAppConfiguration: Atomic<AppConfiguration> { get }
     var currentCountriesConfiguration: Atomic<CountriesConfiguration> { get }
+    var currentDahlSettings: Atomic<DalSettings> { get }
     
     var cachedGroupCallContexts: AccountGroupCallContextCache { get }
     

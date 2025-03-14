@@ -3,6 +3,7 @@ import UIKit
 import Display
 import AppBundle
 import PresentationStrings
+import TPUI
 
 private func generateStatusCheckImage(theme: PresentationTheme, single: Bool) -> UIImage? {
     return generateImage(CGSize(width: single ? 13.0 : 18.0, height: 13.0), rotatedContext: { size, context in
@@ -38,9 +39,23 @@ private func generateBadgeBackgroundImage(theme: PresentationTheme, diameter: CG
                 context.setFillColor(theme.chatList.unreadBadgeInactiveBackgroundColor.cgColor)
             }
         }
-        context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+        
+        if theme.squareStyle {
+            let rect = CGRect(origin: .zero, size: size)
+            let cornerRadius: CGFloat = diameter * 0.2
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: cornerRadius)
+            context.addPath(path.cgPath)
+            context.fillPath()
+        } else {
+            context.fillEllipse(in: CGRect(origin: .zero, size: size))
+        }
+        
         if let icon = icon, let cgImage = icon.cgImage {
-            context.draw(cgImage, in: CGRect(origin: CGPoint(x: floor((size.width - icon.size.width) / 2.0), y: floor((size.height - icon.size.height) / 2.0)), size: icon.size))
+            let iconOrigin = CGPoint(
+                x: floor((size.width - icon.size.width) / 2.0),
+                y: floor((size.height - icon.size.height) / 2.0)
+            )
+            context.draw(cgImage, in: CGRect(origin: iconOrigin, size: icon.size))
         }
     })?.stretchableImage(withLeftCapWidth: Int(diameter / 2.0), topCapHeight: Int(diameter / 2.0))
 }
@@ -231,7 +246,7 @@ public struct PresentationResourcesChatList {
     
     public static func badgeBackgroundPinned(_ theme: PresentationTheme, diameter: CGFloat) -> UIImage? {
         return theme.image(PresentationResourceParameterKey.chatListBadgeBackgroundPinned(diameter), { theme in
-            return generateTintedImage(image: UIImage(bundleImageName: "Chat List/PeerPinnedIcon"), color: theme.chatList.pinnedBadgeColor)
+            return generateTintedImage(image: TPIconManager.shared.icon(.peerPinnedIcon), color: theme.chatList.pinnedBadgeColor)
         })
     }
     

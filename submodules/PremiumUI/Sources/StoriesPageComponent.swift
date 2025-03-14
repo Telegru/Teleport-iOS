@@ -85,7 +85,8 @@ private final class AvatarComponent: Component {
                         colors: AvatarStoryIndicatorComponent.Colors(unseenColors: colors, unseenCloseFriendsColors: colors, seenColors: colors),
                         activeLineWidth: 3.0,
                         inactiveLineWidth: 3.0,
-                        counters: AvatarStoryIndicatorComponent.Counters(totalCount: 8, unseenCount: 8)
+                        counters: AvatarStoryIndicatorComponent.Counters(totalCount: 8, unseenCount: 8),
+                        isRectSimple: component.theme.squareStyle
                     )
                 ),
                 environment: {},

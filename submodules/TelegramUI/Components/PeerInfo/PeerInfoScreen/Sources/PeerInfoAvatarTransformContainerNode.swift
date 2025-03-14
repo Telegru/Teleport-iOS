@@ -17,6 +17,7 @@ import Postbox
 import TelegramCore
 import EmojiStatusComponent
 import GalleryUI
+import TelegramUIPreferences
 
 
 final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
@@ -49,6 +50,10 @@ final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
     var item: PeerInfoAvatarListItem?
     
     private let playbackStartDisposable = MetaDisposable()
+    
+    private var isVideoAvatarEnabled: Bool {
+        context.currentDahlSettings.with { $0 }.premiumSettings.showAnimatedAvatar
+    }
     
     var storyData: (totalCount: Int, unseenCount: Int, hasUnseenCloseFriends: Bool)?
     var storyProgress: Float?
@@ -264,13 +269,16 @@ final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
             }
             
             var isForum = false
+            
             let avatarCornerRadius: CGFloat
+            
             if let channel = peer as? TelegramChannel, channel.flags.contains(.isForum) {
                 avatarCornerRadius = floor(avatarSize * 0.25)
                 isForum = true
             } else {
-                avatarCornerRadius = avatarSize / 2.0
+                avatarCornerRadius = theme.squareStyle ? avatarSize / 16.0 : avatarSize / 2.0
             }
+            
             if self.avatarNode.layer.cornerRadius != 0.0 {
                 ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut).updateCornerRadius(layer: self.avatarNode.contentNode.layer, cornerRadius: avatarCornerRadius)
             } else {
@@ -339,7 +347,7 @@ final class PeerInfoAvatarTransformContainerNode: ASDisplayNode {
                     }
                     markupNode.update(markup: markup, size: CGSize(width: 320.0, height: 320.0))
                     markupNode.updateVisibility(true)
-                } else if threadInfo == nil, let video = videoRepresentations.last, let peerReference = PeerReference(peer) {
+                } else if isVideoAvatarEnabled, threadInfo == nil, let video = videoRepresentations.last, let peerReference = PeerReference(peer) {
                     let videoFileReference = FileMediaReference.avatarList(peer: peerReference, media: TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: 0), partialReference: nil, resource: video.representation.resource, previewRepresentations: representations.map { $0.representation }, videoThumbnails: [], immediateThumbnailData: immediateThumbnailData, mimeType: "video/mp4", size: nil, attributes: [.Animated, .Video(duration: 0, size: video.representation.dimensions, flags: [], preloadSize: nil, coverTime: nil, videoCodec: nil)], alternativeRepresentations: []))
                     let videoContent = NativeVideoContent(id: .profileVideo(videoId, nil), userLocation: .other, fileReference: videoFileReference, streamVideo: isMediaStreamable(resource: video.representation.resource) ? .conservative : .none, loopVideo: true, enableSound: false, fetchAutomatically: true, onlyFullSizeThumbnail: false, useLargeThumbnail: true, autoFetchFullSizeThumbnail: true, startTimestamp: video.representation.startTimestamp, continuePlayingWithoutSoundOnLostAudioSession: false, placeholderColor: .clear, captureProtected: peer.isCopyProtectionEnabled, storeAfterDownload: nil)
                     if videoContent.id != self.videoContent?.id {

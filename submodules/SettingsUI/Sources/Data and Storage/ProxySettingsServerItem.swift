@@ -16,11 +16,13 @@ struct ProxySettingsServerItemEditing: Equatable {
     let editable: Bool
     let editing: Bool
     let revealed: Bool
+    let infoAvailable: Bool
 }
 
 final class ProxySettingsServerItem: ListViewItem, ItemListItem {
     let theme: PresentationTheme
     let strings: PresentationStrings
+    let title: String?
     let server: ProxyServerSettings
     let activity: Bool
     let active: Bool
@@ -34,9 +36,10 @@ final class ProxySettingsServerItem: ListViewItem, ItemListItem {
     let setServerWithRevealedOptions: (ProxyServerSettings?, ProxyServerSettings?) -> Void
     let removeServer: (ProxyServerSettings) -> Void
     
-    init(theme: PresentationTheme, strings: PresentationStrings, server: ProxyServerSettings, activity: Bool, active: Bool, color: ItemListCheckboxItemColor, label: String, labelAccent: Bool, editing: ProxySettingsServerItemEditing, sectionId: ItemListSectionId, action: @escaping () -> Void, infoAction: @escaping () -> Void, setServerWithRevealedOptions: @escaping (ProxyServerSettings?, ProxyServerSettings?) -> Void, removeServer: @escaping (ProxyServerSettings) -> Void) {
+    init(theme: PresentationTheme, strings: PresentationStrings, title: String? = nil, server: ProxyServerSettings, activity: Bool, active: Bool, color: ItemListCheckboxItemColor, label: String, labelAccent: Bool, editing: ProxySettingsServerItemEditing, sectionId: ItemListSectionId, action: @escaping () -> Void, infoAction: @escaping () -> Void, setServerWithRevealedOptions: @escaping (ProxyServerSettings?, ProxyServerSettings?) -> Void, removeServer: @escaping (ProxyServerSettings) -> Void) {
         self.theme = theme
         self.strings = strings
+        self.title = title
         self.server = server
         self.activity = activity
         self.active = active
@@ -236,8 +239,12 @@ private final class ProxySettingsServerItemNode: ItemListRevealOptionsItemNode {
             }
             
             let titleAttributedString = NSMutableAttributedString()
-            titleAttributedString.append(NSAttributedString(string: urlEncodedStringFromString(item.server.host), font: titleFont, textColor: item.theme.list.itemPrimaryTextColor))
-            titleAttributedString.append(NSAttributedString(string: ":\(item.server.port)", font: titleFont, textColor: item.theme.list.itemSecondaryTextColor))
+            if let title = item.title {
+                titleAttributedString.append(NSAttributedString(string: title, font: titleFont, textColor: item.theme.list.itemPrimaryTextColor))
+            } else {
+                titleAttributedString.append(NSAttributedString(string: urlEncodedStringFromString(item.server.host), font: titleFont, textColor: item.theme.list.itemPrimaryTextColor))
+                titleAttributedString.append(NSAttributedString(string: ":\(item.server.port)", font: titleFont, textColor: item.theme.list.itemSecondaryTextColor))
+            }
             let statusAttributedString = NSAttributedString(string: item.label, font: statusFont, textColor: item.labelAccent ? item.theme.list.itemAccentColor : item.theme.list.itemSecondaryTextColor)
             
             var editableControlSizeAndApply: (CGFloat, (CGFloat) -> ItemListEditableControlNode)?
@@ -408,7 +415,7 @@ private final class ProxySettingsServerItemNode: ItemListRevealOptionsItemNode {
                     
                     strongSelf.activateArea.frame = CGRect(origin: CGPoint(x: leftInset + revealOffset + editingOffset, y: 0.0), size: CGSize(width: params.width - params.rightInset - 56.0 - (leftInset + revealOffset + editingOffset), height: layout.contentSize.height))
                     
-                    transition.updateAlpha(node: strongSelf.infoIconNode, alpha: item.editing.editing ? 0.0 : 1.0)
+                    transition.updateAlpha(node: strongSelf.infoIconNode, alpha: item.editing.editing || !item.editing.infoAvailable ? 0.0 : 1.0)
                     
                     if let checkImage = strongSelf.checkNode.image {
                         transition.updateFrame(node: strongSelf.checkNode, frame: CGRect(origin: CGPoint(x: params.leftInset + revealOffset + editingOffset + floor((50.0 - checkImage.size.width) / 2.0), y: floor((layout.contentSize.height - checkImage.size.height) / 2.0)), size: checkImage.size))
@@ -421,7 +428,7 @@ private final class ProxySettingsServerItemNode: ItemListRevealOptionsItemNode {
                         transition.updateFrame(node: strongSelf.infoIconNode, frame: CGRect(origin: CGPoint(x: revealOffset + params.width - params.rightInset - 55.0 + floor((55.0 - infoImage.size.width) / 2.0), y: floor((layout.contentSize.height - infoImage.size.height) / 2.0)), size: infoImage.size))
                     }
                     
-                    strongSelf.infoButtonNode.isUserInteractionEnabled = revealOffset.isZero && !item.editing.editing
+                    strongSelf.infoButtonNode.isUserInteractionEnabled = revealOffset.isZero && !item.editing.editing && item.editing.infoAvailable
                     strongSelf.infoButtonNode.frame = CGRect(origin: CGPoint(x: params.width - params.rightInset - 55.0, y: 0.0), size: CGSize(width: 55.0, height: layout.contentSize.height))
                     
                     strongSelf.highlightedBackgroundNode.frame = CGRect(origin: CGPoint(x: 0.0, y: -UIScreenPixel), size: CGSize(width: params.width, height: contentSize.height + UIScreenPixel + UIScreenPixel))

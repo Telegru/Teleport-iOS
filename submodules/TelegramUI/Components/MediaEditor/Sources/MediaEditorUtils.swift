@@ -151,8 +151,20 @@ public func getChatWallpaperImage(context: AccountContext, peerId: EnginePeer.Id
         return (transaction.getPeerCachedData(peerId: peerId) as? CachedChannelData)?.wallpaper
     }
     
-    return combineLatest(themeSettings, peerWallpaper)
-    |> mapToSignal { themeSettings, peerWallpaper -> Signal<(TelegramWallpaper?, TelegramWallpaper?), NoError> in
+    let squareStyleSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> Bool in
+        sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self)?.appearanceSettings.squareStyle ?? false
+    }
+    |> distinctUntilChanged
+    
+    let vkIconsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> Bool in
+        sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self)?.appearanceSettings.vkIcons ?? false
+    }
+    |> distinctUntilChanged
+    
+    return combineLatest(themeSettings, peerWallpaper, squareStyleSignal, vkIconsSignal)
+    |> mapToSignal { themeSettings, peerWallpaper, squareStyle, vkIcons -> Signal<(TelegramWallpaper?, TelegramWallpaper?), NoError> in
         var currentColors = themeSettings.themeSpecificAccentColors[themeSettings.theme.index]
         if let colors = currentColors, colors.baseColor == .theme {
             currentColors = nil
@@ -164,7 +176,7 @@ public func getChatWallpaperImage(context: AccountContext, peerId: EnginePeer.Id
         if let themeSpecificWallpaper = themeSpecificWallpaper {
             dayWallpaper = themeSpecificWallpaper
         } else {
-            let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true) ?? defaultPresentationTheme
+            let theme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeSettings.theme, accentColor: currentColors?.color, bubbleColors: currentColors?.customBubbleColors ?? [], wallpaper: currentColors?.wallpaper, baseColor: currentColors?.baseColor, preview: true, squareStyle: squareStyle, vkIcons: vkIcons) ?? defaultPresentationTheme
             dayWallpaper = theme.chat.defaultWallpaper
         }
         
@@ -181,7 +193,7 @@ public func getChatWallpaperImage(context: AccountContext, peerId: EnginePeer.Id
             preferredBaseTheme = .night
         }
         
-        let darkTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor) ?? defaultPresentationTheme
+        let darkTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: automaticTheme, baseTheme: preferredBaseTheme, accentColor: effectiveColors?.color, bubbleColors: effectiveColors?.customBubbleColors ?? [], wallpaper: effectiveColors?.wallpaper, baseColor: effectiveColors?.baseColor, serviceBackgroundColor: defaultServiceBackgroundColor, squareStyle: squareStyle) ?? defaultPresentationTheme
         
         if let nightThemeSpecificWallpaper = nightThemeSpecificWallpaper {
             nightWallpaper = nightThemeSpecificWallpaper

@@ -96,6 +96,9 @@ public struct Namespaces {
         public static let CloudDisabledChannelStatusEmoji: Int32 = 28
         public static let CloudDefaultTagReactions: Int32 = 29
         public static let CloudUniqueStarGifts: Int32 = 30
+        
+
+		public static let RecentChats: Int32 = 30000
     }
     
     public struct CachedItemCollection {

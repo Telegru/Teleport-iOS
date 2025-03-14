@@ -388,7 +388,8 @@ final class PeerInfoScreenData {
     let profileGiftsContext: ProfileGiftsContext?
     let premiumGiftOptions: [PremiumGiftCodeOption]
     let webAppPermissions: WebAppPermissionsState?
-    
+    let dalSettings: DalSettings?
+
     let _isContact: Bool
     var forceIsContact: Bool = false
 
@@ -437,7 +438,8 @@ final class PeerInfoScreenData {
         revenueStatsContext: RevenueStatsContext?,
         profileGiftsContext: ProfileGiftsContext?,
         premiumGiftOptions: [PremiumGiftCodeOption],
-        webAppPermissions: WebAppPermissionsState?
+        webAppPermissions: WebAppPermissionsState?,
+        dalSettings: DalSettings
     ) {
         self.peer = peer
         self.chatPeer = chatPeer
@@ -476,6 +478,7 @@ final class PeerInfoScreenData {
         self.profileGiftsContext = profileGiftsContext
         self.premiumGiftOptions = premiumGiftOptions
         self.webAppPermissions = webAppPermissions
+        self.dalSettings = dalSettings
     }
 }
 
@@ -837,6 +840,14 @@ func peerInfoScreenSettingsData(context: AccountContext, peerId: EnginePeer.Id, 
     }
     
     let profileGiftsContext = ProfileGiftsContext(account: context.account, peerId: peerId)
+    let dalSettings = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map { sharedData -> DalSettings in
+        var dalSettings =  DalSettings.defaultSettings
+        if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+            dalSettings = current
+        }
+        return dalSettings
+    }
     
     return combineLatest(
         context.account.viewTracker.peerView(peerId, updateData: true),
@@ -863,9 +874,10 @@ func peerInfoScreenSettingsData(context: AccountContext, peerId: EnginePeer.Id, 
         hasStories,
         bots,
         peerInfoPersonalChannel(context: context, peerId: peerId, isSettings: true),
-        starsState
+        starsState,
+        dalSettings
     )
-    |> map { peerView, accountsAndPeers, accountSessions, privacySettings, sharedPreferences, notifications, stickerPacks, hasPassport, hasWatchApp, accountPreferences, suggestions, limits, hasPassword, isPowerSavingEnabled, hasStories, bots, personalChannel, starsState -> PeerInfoScreenData in
+    |> map { peerView, accountsAndPeers, accountSessions, privacySettings, sharedPreferences, notifications, stickerPacks, hasPassport, hasWatchApp, accountPreferences, suggestions, limits, hasPassword, isPowerSavingEnabled, hasStories, bots, personalChannel, starsState, dalSettings -> PeerInfoScreenData in
         let (notificationExceptions, notificationsAuthorizationStatus, notificationsWarningSuppressed) = notifications
         let (featuredStickerPacks, archivedStickerPacks) = stickerPacks
         
@@ -949,7 +961,8 @@ func peerInfoScreenSettingsData(context: AccountContext, peerId: EnginePeer.Id, 
             revenueStatsContext: nil,
             profileGiftsContext: profileGiftsContext,
             premiumGiftOptions: [],
-            webAppPermissions: nil
+            webAppPermissions: nil,
+            dalSettings: dalSettings
         )
     }
 }
@@ -998,7 +1011,8 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 revenueStatsContext: nil,
                 profileGiftsContext: nil,
                 premiumGiftOptions: [],
-                webAppPermissions: nil
+                webAppPermissions: nil,
+                dalSettings: DalSettings.defaultSettings
             ))
         case let .user(userPeerId, secretChatId, kind):
             let groupsInCommon: GroupsInCommonContext?
@@ -1310,6 +1324,15 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 }
             }
                      
+            let dalSettings = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+                var dalSettings =  DalSettings.defaultSettings
+                if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                    dalSettings = current
+                }
+                return dalSettings
+            }
+                        
             return combineLatest(
                 context.account.viewTracker.peerView(peerId, updateData: true),
                 peerInfoAvailableMediaPanes(context: context, peerId: peerId, chatLocation: chatLocation, isMyProfile: isMyProfile, chatLocationContextHolder: chatLocationContextHolder),
@@ -1330,9 +1353,10 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 starsRevenueContextAndState,
                 revenueContextAndState,
                 premiumGiftOptions,
-                webAppPermissions
+                webAppPermissions,
+                dalSettings
             )
-            |> map { peerView, availablePanes, globalNotificationSettings, encryptionKeyFingerprint, status, hasStories, hasStoryArchive, recommendedBots, accountIsPremium, savedMessagesPeer, hasSavedMessagesChats, hasSavedMessages, hasSavedMessageTags, hasBotPreviewItems, personalChannel, privacySettings, starsRevenueContextAndState, revenueContextAndState, premiumGiftOptions, webAppPermissions -> PeerInfoScreenData in
+            |> map { peerView, availablePanes, globalNotificationSettings, encryptionKeyFingerprint, status, hasStories, hasStoryArchive, recommendedBots, accountIsPremium, savedMessagesPeer, hasSavedMessagesChats, hasSavedMessages, hasSavedMessageTags, hasBotPreviewItems, personalChannel, privacySettings, starsRevenueContextAndState, revenueContextAndState, premiumGiftOptions, webAppPermissions, dalSettings -> PeerInfoScreenData in
                 var availablePanes = availablePanes
                 if isMyProfile {
                     availablePanes?.insert(.stories, at: 0)
@@ -1456,7 +1480,8 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                     revenueStatsContext: revenueContextAndState.0,
                     profileGiftsContext: profileGiftsContext,
                     premiumGiftOptions: premiumGiftOptions,
-                    webAppPermissions: webAppPermissions
+                    webAppPermissions: webAppPermissions,
+                    dalSettings: dalSettings
                 )
             }
         case .channel:
@@ -1563,6 +1588,14 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
             }
             
             let profileGiftsContext = ProfileGiftsContext(account: context.account, peerId: peerId)
+            let dalSettings = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+                var dalSettings =  DalSettings.defaultSettings
+                if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                    dalSettings = current
+                }
+                return dalSettings
+            }
             
             return combineLatest(
                 context.account.viewTracker.peerView(peerId, updateData: true),
@@ -1582,9 +1615,10 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 isPremiumRequiredForStoryPosting,
                 starsRevenueContextAndState,
                 revenueContextAndState,
-                profileGiftsContext.state
+                profileGiftsContext.state,
+				dalSettings
             )
-            |> map { peerView, availablePanes, globalNotificationSettings, status, currentInvitationsContext, invitations, currentRequestsContext, requests, hasStories, accountIsPremium, recommendedChannels, hasSavedMessages, hasSavedMessagesChats, hasSavedMessageTags, isPremiumRequiredForStoryPosting, starsRevenueContextAndState, revenueContextAndState, profileGiftsState -> PeerInfoScreenData in
+            |> map { peerView, availablePanes, globalNotificationSettings, status, currentInvitationsContext, invitations, currentRequestsContext, requests, hasStories, accountIsPremium, recommendedChannels, hasSavedMessages, hasSavedMessagesChats, hasSavedMessageTags, isPremiumRequiredForStoryPosting, starsRevenueContextAndState, revenueContextAndState, profileGiftsState, dalSettings -> PeerInfoScreenData in
                 var availablePanes = availablePanes
                 if let hasStories {
                     if hasStories {
@@ -1678,7 +1712,8 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                     revenueStatsContext: revenueContextAndState.0,
                     profileGiftsContext: profileGiftsContext,
                     premiumGiftOptions: [],
-                    webAppPermissions: nil
+                    webAppPermissions: nil,
+                    dalSettings: dalSettings
                 )
             }
         case let .group(groupId):
@@ -1878,6 +1913,15 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
             
             let isPremiumRequiredForStoryPosting: Signal<Bool, NoError> = isPremiumRequiredForStoryPosting(context: context)
             
+            let dalSettings = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> map { sharedData -> DalSettings in
+                var dalSettings =  DalSettings.defaultSettings
+                if let current = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
+                    dalSettings = current
+                }
+                return dalSettings
+            }
+            
             return combineLatest(queue: .mainQueue(),
                 context.account.viewTracker.peerView(groupId, updateData: true),
                 peerInfoAvailableMediaPanes(context: context, peerId: groupId, chatLocation: chatLocation, isMyProfile: false, chatLocationContextHolder: chatLocationContextHolder),
@@ -1896,9 +1940,10 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                 hasSavedMessagesChats,
                 hasSavedMessageTags,
                 isPremiumRequiredForStoryPosting,
-                starsRevenueContextAndState
+                starsRevenueContextAndState,
+				dalSettings
             )
-            |> mapToSignal { peerView, availablePanes, globalNotificationSettings, status, membersData, currentInvitationsContext, invitations, currentRequestsContext, requests, hasStories, threadData, preferencesView, accountIsPremium, hasSavedMessages, hasSavedMessagesChats, hasSavedMessageTags, isPremiumRequiredForStoryPosting, starsRevenueContextAndState -> Signal<PeerInfoScreenData, NoError> in
+            |> mapToSignal { peerView, availablePanes, globalNotificationSettings, status, membersData, currentInvitationsContext, invitations, currentRequestsContext, requests, hasStories, threadData, preferencesView, accountIsPremium, hasSavedMessages, hasSavedMessagesChats, hasSavedMessageTags, isPremiumRequiredForStoryPosting, starsRevenueContextAndState, dalSettings -> Signal<PeerInfoScreenData, NoError> in
                 var discussionPeer: Peer?
                 if case let .known(maybeLinkedDiscussionPeerId) = (peerView.cachedData as? CachedChannelData)?.linkedDiscussionPeerId, let linkedDiscussionPeerId = maybeLinkedDiscussionPeerId, let peer = peerView.peers[linkedDiscussionPeerId] {
                     discussionPeer = peer
@@ -2004,7 +2049,8 @@ func peerInfoScreenData(context: AccountContext, peerId: PeerId, strings: Presen
                     revenueStatsContext: nil,
                     profileGiftsContext: nil,
                     premiumGiftOptions: [],
-                    webAppPermissions: nil
+                    webAppPermissions: nil,
+                    dalSettings: dalSettings
                 ))
             }
         }

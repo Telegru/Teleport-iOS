@@ -2,8 +2,9 @@ import Foundation
 import UIKit
 import TelegramCore
 import TelegramUIPreferences
+import DWallpaper
 
-public let defaultDarkPresentationTheme = makeDefaultDarkPresentationTheme(preview: false)
+public let defaultDarkPresentationTheme = makeDefaultDarkPresentationTheme(preview: false, squareStyle: false, vkIcons: false)
 public let defaultDarkColorPresentationTheme = customizeDefaultDarkPresentationTheme(theme: defaultDarkPresentationTheme, editing: false, title: nil, accentColor: UIColor(rgb: 0x3e88f7), backgroundColors: [], bubbleColors: [], animateBubbleColors: false, wallpaper: nil, baseColor: nil)
 
 private extension PresentationThemeBaseColor {
@@ -323,7 +324,9 @@ public func customizeDefaultDarkPresentationTheme(theme: PresentationTheme, edit
         contextMenu: theme.contextMenu,
         inAppNotification: theme.inAppNotification,
         chart: theme.chart,
-        preview: theme.preview
+        preview: theme.preview,
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
@@ -334,7 +337,7 @@ public let defaultDarkWallpaperGradientColors: [UIColor] = [
     UIColor(rgb: 0xf38b58)
 ]
 
-public func makeDefaultDarkPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool) -> PresentationTheme {
+public func makeDefaultDarkPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     let rootNavigationBar = PresentationThemeRootNavigationBar(
         buttonColor: UIColor(rgb: 0xffffff),
         disabledButtonColor: UIColor(rgb: 0x525252),
@@ -724,11 +727,10 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         badgeStrokeColor: UIColor(rgb: 0xffffff),
         badgeTextColor:  UIColor(rgb: 0x000000)
     )
-
-    let defaultPatternWallpaper: TelegramWallpaper = defaultBuiltinWallpaper(data: .default, colors: defaultDarkWallpaperGradientColors.map(\.rgb), intensity: -34)
+    
     
     let chat = PresentationThemeChat(
-        defaultWallpaper: defaultPatternWallpaper,
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: true) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: message,
         serviceMessage: serviceMessage,
@@ -818,6 +820,8 @@ public func makeDefaultDarkPresentationTheme(extendingThemeReference: Presentati
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: preview
+        preview: preview,
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }

@@ -459,7 +459,8 @@ final class ThemePreviewControllerNode: ASDisplayNode, ASScrollViewDelegate {
                 header: nil,
                 enableContextActions: false,
                 hiddenOffset: false,
-                interaction: interaction
+                interaction: interaction,
+                chatListItemTextLineCount: 2
             )
         }
 

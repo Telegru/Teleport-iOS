@@ -262,7 +262,8 @@ final class GreetingMessageListItemComponent: Component {
                 header: nil,
                 enableContextActions: false,
                 hiddenOffset: false,
-                interaction: chatListNodeInteraction
+                interaction: chatListNodeInteraction,
+                chatListItemTextLineCount: 2
             )
             var itemNode: ListViewItemNode?
             let params = ListViewItemLayoutParams(width: availableSize.width, leftInset: 0.0, rightInset: 0.0, availableHeight: 1000.0)

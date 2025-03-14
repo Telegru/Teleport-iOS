@@ -132,7 +132,9 @@ public final class ChatListTitleView: UIView, NavigationBarTitleView, Navigation
             
             let animateStatusTransition = !oldValue.text.isEmpty && oldValue.peerStatus != title.peerStatus
             
-            if let peerStatus = title.peerStatus {
+            let isPremiumStatusEnabled = self.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+            
+            if let peerStatus = title.peerStatus, isPremiumStatusEnabled {
                 let statusContent: EmojiStatusComponent.Content
                 var statusParticleColor: UIColor?
                 switch peerStatus {
@@ -378,8 +380,9 @@ public final class ChatListTitleView: UIView, NavigationBarTitleView, Navigation
         
         let activityIndicatorFrame = CGRect(origin: CGPoint(x: titleFrame.minX - indicatorSize.width - 4.0, y: titleFrame.minY - 1.0), size: indicatorSize)
         transition.updateFrame(node: self.activityIndicator, frame: activityIndicatorFrame)
+        let isPremiumStatusEnabled = self.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
         
-        if let peerStatus = self.title.peerStatus {
+        if let peerStatus = self.title.peerStatus, isPremiumStatusEnabled {
             let statusContent: EmojiStatusComponent.Content
             switch peerStatus {
             case .premium:

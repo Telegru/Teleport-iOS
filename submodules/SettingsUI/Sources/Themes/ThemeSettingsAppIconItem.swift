@@ -9,6 +9,8 @@ import ItemListUI
 import PresentationDataUtils
 import AppBundle
 
+import TPStrings
+
 private func generateBorderImage(theme: PresentationTheme, bordered: Bool, selected: Bool) -> UIImage? {
     return generateImage(CGSize(width: 30.0, height: 30.0), rotatedContext: { size, context in
         let bounds = CGRect(origin: CGPoint(), size: size)
@@ -113,6 +115,8 @@ private final class ThemeSettingsAppIconNode : ASDisplayNode {
         self.iconNode = ASImageNode()
         self.iconNode.frame = CGRect(origin: CGPoint(), size: CGSize(width: 63.0, height: 63.0))
         self.iconNode.isLayerBacked = true
+        self.iconNode.clipsToBounds = true
+        self.iconNode.cornerRadius = 14
         
         self.overlayNode = ASImageNode()
         self.overlayNode.frame = CGRect(origin: CGPoint(), size: CGSize(width: 63.0, height: 63.0))
@@ -352,39 +356,48 @@ class ThemeSettingsAppIconItemNode: ListViewItemNode, ItemListItemNode {
                         imageNode.lockNode.image = strongSelf.lockImage
                         
                         if let image = UIImage(named: icon.imageName, in: getAppBundle(), compatibleWith: nil) {
+                            let lang = item.strings.baseLanguageCode
                             let selected = icon.name == item.currentIconName
-
+                            
                             var name = "Icon"
-                            var bordered = true
+                            let bordered = true
                             switch icon.name {
-                                case "BlueIcon":
-                                    name = item.strings.Appearance_AppIconDefault
-                                case "BlackIcon":
-                                    name = item.strings.Appearance_AppIconDefaultX
-                                case "BlueClassicIcon":
-                                    name = item.strings.Appearance_AppIconClassic
-                                case "BlackClassicIcon":
-                                    name = item.strings.Appearance_AppIconClassicX
-                                case "BlueFilledIcon":
-                                    name = item.strings.Appearance_AppIconFilled
-                                    bordered = false
-                                case "BlackFilledIcon":
-                                    name = item.strings.Appearance_AppIconFilledX
-                                    bordered = false
-                                case "WhiteFilled":
-                                    name = "⍺ White"
-                                case "New1":
-                                    name = item.strings.Appearance_AppIconNew1
-                                case "New2":
-                                    name = item.strings.Appearance_AppIconNew2
-                                case "Premium":
-                                    name = item.strings.Appearance_AppIconPremium
-                                case "PremiumBlack":
-                                    name = item.strings.Appearance_AppIconBlack
-                                case "PremiumTurbo":
-                                    name = item.strings.Appearance_AppIconTurbo
-                                default:
-                                    name = icon.name
+                            case "Default":
+                                name = "Settings.AppIcon.Default".tp_loc(lang: lang)
+                            case "Classic":
+                                name = "Settings.AppIcon.Classic".tp_loc(lang: lang)
+                            case "Black":
+                                name = "Settings.AppIcon.Black".tp_loc(lang: lang)
+                            case "Metallic":
+                                name = "Settings.AppIcon.Metallic".tp_loc(lang: lang)
+                            case "Silver":
+                                name = "Settings.AppIcon.Silver".tp_loc(lang: lang)
+                            case "Inverted":
+                                name = "Settings.AppIcon.Inverted".tp_loc(lang: lang)
+                            case "White":
+                                name = "Settings.AppIcon.White".tp_loc(lang: lang)
+                            case "Outline":
+                                name = "Settings.AppIcon.Outline".tp_loc(lang: lang)
+                            case "Night":
+                                name = "Settings.AppIcon.Night".tp_loc(lang: lang)
+                            case "Sparkling":
+                                name = "Settings.AppIcon.Sparkling".tp_loc(lang: lang)
+                            case "Winter":
+                                name = "Settings.AppIcon.Winter".tp_loc(lang: lang)
+                            case "Unicorn":
+                                name = "Settings.AppIcon.Unicorn".tp_loc(lang: lang)
+                            case "Titanium":
+                                name = "Settings.AppIcon.Titanium".tp_loc(lang: lang)
+                            case "Triangle":
+                                name = "Settings.AppIcon.Triangle".tp_loc(lang: lang)
+                            case "Tatarstan":
+                                name = "Settings.AppIcon.Tatarstan".tp_loc(lang: lang)
+                            case "Russia":
+                                name = "Settings.AppIcon.Russia".tp_loc(lang: lang)
+                            case "Birch":
+                                name = "Settings.AppIcon.Birch".tp_loc(lang: lang)
+                            default:
+                                name = icon.name
                             }
                         
                             imageNode.setup(theme: item.theme, icon: image, title: NSAttributedString(string: name, font: selected ? selectedTextFont : textFont, textColor: selected  ? item.theme.list.itemAccentColor : item.theme.list.itemPrimaryTextColor, paragraphAlignment: .center), locked: !item.isPremium && icon.isPremium, color: item.theme.list.itemPrimaryTextColor, bordered: bordered, selected: selected, action: {

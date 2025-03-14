@@ -406,7 +406,7 @@ private final class ThemeCarouselThemeItemIconNode : ListViewItemNode {
                             let color = item.themeSpecificAccentColors[themeReference.index]
                             let wallpaper = item.themeSpecificChatWallpapers[themeReference.index]
                             
-                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: color, wallpaper: wallpaper ?? item.wallpaper, nightMode: item.nightMode, channelMode: item.channelMode, emoticon: true))
+                            strongSelf.imageNode.setSignal(themeIconImage(account: item.context.account, accountManager: item.context.sharedContext.accountManager, theme: themeReference, color: color, wallpaper: wallpaper ?? item.wallpaper, nightMode: item.nightMode, channelMode: item.channelMode, emoticon: true, squareStyle: item.theme.squareStyle))
                             strongSelf.imageNode.backgroundColor = nil
                         } else {
                             

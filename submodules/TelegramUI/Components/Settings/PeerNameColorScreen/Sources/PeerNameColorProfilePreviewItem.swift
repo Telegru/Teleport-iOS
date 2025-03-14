@@ -330,12 +330,13 @@ final class PeerNameColorProfilePreviewItemNode: ListViewItemNode {
                     statusColor = item.theme.list.itemCheckColors.fillColor
                 }
                 
+                let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
                 let emojiStatusContent: EmojiStatusComponent.Content
                 switch credibilityIcon {
                 case .none:
                     emojiStatusContent = .none
                 case .premium:
-                    emojiStatusContent = .premium(color: statusColor)
+                    emojiStatusContent = isPremiumStatusEnabled ? .premium(color: statusColor) : .none
                 case .verified:
                     emojiStatusContent = .verified(fillColor: statusColor, foregroundColor: .clear, sizeType: .large)
                 case .fake:
@@ -343,7 +344,7 @@ final class PeerNameColorProfilePreviewItemNode: ListViewItemNode {
                 case .scam:
                     emojiStatusContent = .text(color: item.theme.chat.message.incoming.scamColor, string: item.strings.Message_ScamAccount.uppercased())
                 case let .emojiStatus(emojiStatus):
-                    emojiStatusContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 80.0, height: 80.0), placeholderColor: item.theme.list.mediaPlaceholderColor, themeColor: statusColor, loopMode: .forever)
+                    emojiStatusContent = isPremiumStatusEnabled ? .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 80.0, height: 80.0), placeholderColor: item.theme.list.mediaPlaceholderColor, themeColor: statusColor, loopMode: .forever) : .none
                 }
                 
                 let backgroundColor: UIColor

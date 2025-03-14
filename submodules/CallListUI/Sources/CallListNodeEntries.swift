@@ -218,10 +218,10 @@ func callListNodeEntriesForView(view: EngineCallList, groupCalls: [EnginePeer], 
             }
         }
         
-        if showSettings {
-            result.append(.displayTabInfo(state.presentationData.theme, state.presentationData.strings.CallSettings_TabIconDescription))
-            result.append(.displayTab(state.presentationData.theme, state.presentationData.strings.CallSettings_TabIcon, showCallsTab))
-        }
+//        if showSettings {
+//            result.append(.displayTabInfo(state.presentationData.theme, state.presentationData.strings.CallSettings_TabIconDescription))
+//            result.append(.displayTab(state.presentationData.theme, state.presentationData.strings.CallSettings_TabIcon, showCallsTab))
+//        }
     }
     return result
 }

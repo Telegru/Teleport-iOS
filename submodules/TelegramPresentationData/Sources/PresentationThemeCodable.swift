@@ -2083,6 +2083,9 @@ extension PresentationTheme: Codable {
         case contextMenu
         case notification
         case chart
+        
+        case squareStyle
+        case vkIcons
     }
     
     public convenience init(from decoder: Decoder) throws {
@@ -2094,10 +2097,13 @@ extension PresentationTheme: Codable {
             referenceTheme = .dayClassic
         }
         
+        let squareStyle = try values.decode(Bool.self, forKey: .squareStyle)
+        let vkIcons = try values.decode(Bool.self, forKey: .vkIcons)
+        
         let index: Int64
         if let decoder = decoder as? PresentationThemeDecoding {
             let serviceBackgroundColor = decoder.serviceBackgroundColor ?? defaultServiceBackgroundColor
-            decoder.referenceTheme = makeDefaultPresentationTheme(reference: referenceTheme, serviceBackgroundColor: serviceBackgroundColor)
+            decoder.referenceTheme = makeDefaultPresentationTheme(reference: referenceTheme, serviceBackgroundColor: serviceBackgroundColor, squareStyle: squareStyle)
             index = decoder.reference?.index ?? Int64.random(in: Int64.min ... Int64.max)
         } else {
             index = Int64.random(in: Int64.min ... Int64.max)
@@ -2116,7 +2122,9 @@ extension PresentationTheme: Codable {
                   actionSheet: try values.decode(PresentationThemeActionSheet.self, forKey: .actionSheet),
                   contextMenu: try values.decode(PresentationThemeContextMenu.self, forKey: .contextMenu),
                   inAppNotification: try values.decode(PresentationThemeInAppNotification.self, forKey: .notification),
-                  chart: try values.decode(PresentationThemeChart.self, forKey: .chart)
+                  chart: try values.decode(PresentationThemeChart.self, forKey: .chart),
+                  squareStyle: squareStyle,
+                  vkIcons: vkIcons
         )
     }
     
@@ -2135,5 +2143,7 @@ extension PresentationTheme: Codable {
         try container.encode(self.contextMenu, forKey: .contextMenu)
         try container.encode(self.inAppNotification, forKey: .notification)
         try container.encode(self.chart, forKey: .chart)
+        try container.encode(self.squareStyle, forKey: .squareStyle)
+        try container.encode(self.vkIcons, forKey: .vkIcons)
     }
 }

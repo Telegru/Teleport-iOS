@@ -292,7 +292,8 @@ final class QuickReplySetupScreenComponent: Component {
                     header: nil,
                     enableContextActions: true,
                     hiddenOffset: false,
-                    interaction: chatListNodeInteraction
+                    interaction: chatListNodeInteraction,
+                    chatListItemTextLineCount: 2
                 )
             }
         }
@@ -826,6 +827,7 @@ final class QuickReplySetupScreenComponent: Component {
                     tabsNodeIsSearch: false,
                     accessoryPanelContainer: nil,
                     accessoryPanelContainerHeight: 0.0,
+                    recentChatsPanelNode: nil,
                     activateSearch: { [weak self] _ in
                         guard let self else {
                             return

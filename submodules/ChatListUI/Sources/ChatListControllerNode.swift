@@ -79,7 +79,7 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
     }
     
     private var filtersLimit: Int32? = nil
-    private var selectedId: ChatListFilterTabEntryId
+    private(set) var selectedId: ChatListFilterTabEntryId
     
     var hintUpdatedStoryExpansion: Bool = false
     var ignoreStoryUnlockedScrolling: Bool = false
@@ -489,7 +489,7 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
         self.applyItemNodeAsCurrent(id: .all, itemNode: itemNode)
         
         let panRecognizer = InteractiveTransitionGestureRecognizer(target: self, action: #selector(self.panGesture(_:)), allowedDirections: { [weak self] _ in
-            guard let self, self.availableFilters.count > 1 || (self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false)) else {
+            guard let self, self.availableFilters.count > 1 || (self.controller?.isStoriesPostingGestureAvailable == true && self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false)) else {
                 return []
             }
             guard case .chatList(.root) = self.location else {
@@ -587,7 +587,7 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
                     return bandingStart + (1.0 - (1.0 / ((bandedOffset * coefficient / range) + 1.0))) * range
                 }
                      
-                if case .compact = layout.metrics.widthClass, self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false) {
+                if case .compact = layout.metrics.widthClass, self.controller?.isStoriesPostingGestureAvailable == true, self.controller?.isStoryPostingAvailable == true && !(self.context.sharedContext.callManager?.hasActiveCall ?? false) {
                     let cameraIsAlreadyOpened = self.controller?.hasStoryCameraTransition ?? false
                     if selectedIndex <= 0 && translation.x > 0.0 {
                         transitionFraction = 0.0
@@ -775,9 +775,14 @@ public final class ChatListContainerNode: ASDisplayNode, ASGestureRecognizerDele
                 }
             }
             if !availableFilters.contains(where: { $0.id == self.selectedId }) {
-                self.switchToFilter(id: .all, completion: {
+                let set = Set(self.availableFilters.map { $0.id })
+                if let id = availableFilters.first(where: { set.contains($0.id) })?.id {
+                    self.switchToFilter(id: id, completion: {
+                        apply()
+                    })
+                }else{
                     apply()
-                })
+                }
             } else {
                 apply()
             }
@@ -1065,6 +1070,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
     private var tapRecognizer: UITapGestureRecognizer?
     var navigationBar: NavigationBar?
     let navigationBarView = ComponentView<Empty>()
+    let foldersBarView = ComponentView<Empty>()
     weak var controller: ChatListControllerImpl?
     
     var toolbar: Toolbar?
@@ -1339,9 +1345,14 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         if let value = self.controller?.searchTabsNode {
             tabsNode = value
             tabsNodeIsSearch = true
-        } else if let value = self.controller?.tabsNode, self.controller?.hasTabs == true {
+        } else if let value = self.controller?.tabsNode,
+                  self.controller?.hasTabs == true,
+                  self.controller?.foldersAtBottom != true {
             tabsNode = value
         }
+        
+        let withRecentChats = !tabsNodeIsSearch && self.controller?.showRecentChats == true
+        let recentChatsNode: ASDisplayNode? = withRecentChats ? self.controller?.recentChatsNode : nil
         
         var effectiveStorySubscriptions: EngineStorySubscriptions?
         if let controller = self.controller, case .forum = controller.location {
@@ -1374,6 +1385,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
                 tabsNodeIsSearch: tabsNodeIsSearch,
                 accessoryPanelContainer: self.controller?.accessoryPanelContainer,
                 accessoryPanelContainerHeight: self.controller?.accessoryPanelContainerHeight ?? 0.0,
+                recentChatsPanelNode: recentChatsNode,
                 activateSearch: { [weak self] searchContentNode in
                     guard let self, let controller = self.controller else {
                         return
@@ -1423,6 +1435,31 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         } else {
             return (0.0, 0.0)
         }
+    }
+    
+    private func updateBottomBar(layout: ContainerViewLayout, transition: ComponentTransition) -> CGFloat  {
+     
+        let showTabs =  controller?.searchTabsNode == nil && controller?.foldersAtBottom == true && self.controller?.hasTabs == true
+       
+        let tabsNode = showTabs ? controller?.tabsNode : nil
+        
+        let size = self.foldersBarView.update(
+            transition: transition,
+            component: AnyComponent(FoldersBar(tabsNode: tabsNode, theme: self.presentationData.theme)),
+            environment: {},
+            containerSize: layout.size
+        )
+        
+        if let view = self.foldersBarView.view as? FoldersBar.View {
+            if view.superview == nil {
+                self.view.addSubview(view)
+            }
+            transition.setFrame(view: view, frame: CGRect(origin: CGPoint(x: 0, y: layout.size.height - layout.intrinsicInsets.bottom - size.height), size: size))
+            
+            return size.height
+        }
+        
+        return 0.0
     }
     
     private func updateNavigationScrolling(navigationHeight: CGFloat, transition: ContainedViewLayoutTransition) {
@@ -1520,6 +1557,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         var storiesInset = storiesInset
         
         let navigationBarLayout = self.updateNavigationBar(layout: layout, deferScrollApplication: true, transition: ComponentTransition(transition))
+        let bottomFoldersHeight = self.updateBottomBar(layout: layout, transition: ComponentTransition(transition))
         self.mainContainerNode.initialScrollingOffset = ChatListNavigationBar.searchScrollHeight + navigationBarLayout.storiesInset
         
         navigationBarHeight = navigationBarLayout.navigationHeight
@@ -1533,6 +1571,7 @@ final class ChatListControllerNode: ASDisplayNode, ASGestureRecognizerDelegate {
         insets.top += navigationBarHeight
         insets.left += layout.safeInsets.left
         insets.right += layout.safeInsets.right
+        insets.bottom += bottomFoldersHeight
         
         if let toolbar = self.toolbar {
             var tabBarHeight: CGFloat

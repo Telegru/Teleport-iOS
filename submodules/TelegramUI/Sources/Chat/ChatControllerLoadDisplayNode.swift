@@ -576,8 +576,15 @@ extension ChatControllerImpl {
         
         if let peerId = self.chatLocation.peerId {
             self.chatThemeEmoticonPromise.set(self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.ThemeEmoticon(id: peerId)))
-            let chatWallpaper = self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Wallpaper(id: peerId))
-            |> take(1)
+            let chatWallpaper = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            |> mapToSignal { [weak self] sharedData -> Signal<TelegramWallpaper?, NoError> in
+                let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                guard let self, settings.appearanceSettings.showCustomWallpaperInChannels else {
+                    return .single(nil)
+                }
+                return self.context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Wallpaper(id: peerId))
+            } |> take(1)
+            
             self.chatWallpaperPromise.set(chatWallpaper)
         } else {
             self.chatThemeEmoticonPromise.set(.single(nil))
@@ -724,9 +731,11 @@ extension ChatControllerImpl {
                 isForum |> debug_measureTimeToFirstEvent(label: "cachedData_isForum"),
                 threadData |> debug_measureTimeToFirstEvent(label: "cachedData_threadData"),
                 forumTopicData |> debug_measureTimeToFirstEvent(label: "cachedData_forumTopicData"),
-                premiumGiftOptions |> debug_measureTimeToFirstEvent(label: "cachedData_premiumGiftOptions")
-            ).startStrict(next: { [weak self] cachedDataAndMessages, hasPendingMessages, isTopReplyThreadMessageShown, topPinnedMessage, customEmojiAvailable, isForum, threadData, forumTopicData, premiumGiftOptions in
+                premiumGiftOptions |> debug_measureTimeToFirstEvent(label: "cachedData_premiumGiftOptions"),
+				self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+            ).startStrict(next: { [weak self] cachedDataAndMessages, hasPendingMessages, isTopReplyThreadMessageShown, topPinnedMessage, customEmojiAvailable, isForum, threadData, forumTopicData, premiumGiftOptions, sharedData in
                 if let strongSelf = self {
+                    let dahlSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
                     let (cachedData, messages) = cachedDataAndMessages
                     
                     if cachedData != nil {
@@ -739,7 +748,9 @@ extension ChatControllerImpl {
                             themeEmoticon = cachedData.themeEmoticon
                         } else if let cachedData = cachedData as? CachedChannelData {
                             themeEmoticon = cachedData.themeEmoticon
-                            chatWallpaper = cachedData.wallpaper
+                            if dahlSettings.appearanceSettings.showCustomWallpaperInChannels {
+                                chatWallpaper = cachedData.wallpaper
+                            }
                         }
                         
                         strongSelf.chatThemeEmoticonPromise.set(.single(themeEmoticon))
@@ -2797,10 +2808,16 @@ extension ChatControllerImpl {
                 }) else {
                     return
                 }
+                
+                let dalSettings: Signal<DalSettings, NoError> = (strongSelf.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> map { sharedData -> DalSettings in
+                    return sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings
+                })
+                
                 let hasOngoingCall: Signal<Bool, NoError> = strongSelf.context.sharedContext.hasOngoingCall.get()
-                let _ = (hasOngoingCall
+                let _ = (combineLatest(hasOngoingCall, dalSettings)
                 |> take(1)
-                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall in
+                |> deliverOnMainQueue).startStandalone(next: { hasOngoingCall, dalSettings in
                     guard let strongSelf = self, strongSelf.beginMediaRecordingRequestId == requestId else {
                         return
                     }
@@ -2809,8 +2826,35 @@ extension ChatControllerImpl {
                         })]), in: .window(.root))
                     } else {
                         if isVideo {
-                            strongSelf.requestVideoRecorder()
+                            if dalSettings.videoMessageCamera != .undefined  {
+                                strongSelf.requestVideoRecorder(isFrontCamera: dalSettings.videoMessageCamera == CameraType.front)
+                            } else {
+                                let theme = ActionSheetControllerTheme(presentationData: strongSelf.presentationData)
+                                let actionSheet = ActionSheetController(theme: theme, allowInputInset: false)
+                                actionSheet.setItemGroups([
+                                    ActionSheetItemGroup(items: [
+                                        ActionSheetTextItem(title: "Chat.SelectCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode)),
+                                        ActionSheetButtonItem(title: "Chat.FrontCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                            self?.requestVideoRecorder(isFrontCamera: true)
+                                            self?.resumeMediaRecorder()
+                                        }),
+                                        ActionSheetButtonItem(title: "Chat.BackCamera".tp_loc(lang: strongSelf.presentationData.strings.baseLanguageCode), color: .accent, action: { [weak self, weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                            self?.requestVideoRecorder(isFrontCamera: false)
+                                            self?.resumeMediaRecorder()
+                                        })
+                                    ]),
+                                    ActionSheetItemGroup(items: [
+                                        ActionSheetButtonItem(title: strongSelf.presentationData.strings.Common_Cancel, color: .accent, font: .bold, action: { [weak actionSheet] in
+                                            actionSheet?.dismissAnimated()
+                                        })
+                                    ])
+                                ])
+                                strongSelf.present(actionSheet, in: .window(.root))
+                            }
                         } else {
+                            strongSelf.confirmSendAudioMessage = dalSettings.sendAudioConfirmation
                             strongSelf.requestAudioRecorder(beginWithTone: false)
                         }
                     }

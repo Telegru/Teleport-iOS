@@ -1,6 +1,7 @@
 import UIKit
 import AsyncDisplayKit
 import SwiftSignalKit
+import TPUI
 
 private var backArrowImageCache: [Int32: UIImage] = [:]
 
@@ -70,8 +71,9 @@ public final class NavigationBarTheme {
     public let badgeBackgroundColor: UIColor
     public let badgeStrokeColor: UIColor
     public let badgeTextColor: UIColor
-    
-    public init(buttonColor: UIColor, disabledButtonColor: UIColor, primaryTextColor: UIColor, backgroundColor: UIColor, opaqueBackgroundColor: UIColor? = nil, enableBackgroundBlur: Bool, separatorColor: UIColor, badgeBackgroundColor: UIColor, badgeStrokeColor: UIColor, badgeTextColor: UIColor) {
+    public let squareStyle: Bool
+
+    public init(buttonColor: UIColor, disabledButtonColor: UIColor, primaryTextColor: UIColor, backgroundColor: UIColor, opaqueBackgroundColor: UIColor? = nil, enableBackgroundBlur: Bool, separatorColor: UIColor, badgeBackgroundColor: UIColor, badgeStrokeColor: UIColor, badgeTextColor: UIColor, squareStyle: Bool = false) {
         self.buttonColor = buttonColor
         self.disabledButtonColor = disabledButtonColor
         self.primaryTextColor = primaryTextColor
@@ -82,14 +84,15 @@ public final class NavigationBarTheme {
         self.badgeBackgroundColor = badgeBackgroundColor
         self.badgeStrokeColor = badgeStrokeColor
         self.badgeTextColor = badgeTextColor
+        self.squareStyle = squareStyle
     }
     
     public func withUpdatedBackgroundColor(_ color: UIColor) -> NavigationBarTheme {
-        return NavigationBarTheme(buttonColor: self.buttonColor, disabledButtonColor: self.disabledButtonColor, primaryTextColor: self.primaryTextColor, backgroundColor: color, opaqueBackgroundColor: self.opaqueBackgroundColor, enableBackgroundBlur: false, separatorColor: self.separatorColor, badgeBackgroundColor: self.badgeBackgroundColor, badgeStrokeColor: self.badgeStrokeColor, badgeTextColor: self.badgeTextColor)
+        return NavigationBarTheme(buttonColor: self.buttonColor, disabledButtonColor: self.disabledButtonColor, primaryTextColor: self.primaryTextColor, backgroundColor: color, opaqueBackgroundColor: self.opaqueBackgroundColor, enableBackgroundBlur: false, separatorColor: self.separatorColor, badgeBackgroundColor: self.badgeBackgroundColor, badgeStrokeColor: self.badgeStrokeColor, badgeTextColor: self.badgeTextColor, squareStyle: self.squareStyle)
     }
     
     public func withUpdatedSeparatorColor(_ color: UIColor) -> NavigationBarTheme {
-        return NavigationBarTheme(buttonColor: self.buttonColor, disabledButtonColor: self.disabledButtonColor, primaryTextColor: self.primaryTextColor, backgroundColor: self.backgroundColor, opaqueBackgroundColor: self.opaqueBackgroundColor, enableBackgroundBlur: self.enableBackgroundBlur, separatorColor: color, badgeBackgroundColor: self.badgeBackgroundColor, badgeStrokeColor: self.badgeStrokeColor, badgeTextColor: self.badgeTextColor)
+        return NavigationBarTheme(buttonColor: self.buttonColor, disabledButtonColor: self.disabledButtonColor, primaryTextColor: self.primaryTextColor, backgroundColor: self.backgroundColor, opaqueBackgroundColor: self.opaqueBackgroundColor, enableBackgroundBlur: self.enableBackgroundBlur, separatorColor: color, badgeBackgroundColor: self.badgeBackgroundColor, badgeStrokeColor: self.badgeStrokeColor, badgeTextColor: self.badgeTextColor, squareStyle: self.squareStyle)
     }
 }
 
@@ -483,7 +486,7 @@ open class NavigationBar: ASDisplayNode {
         }
     }
     
-    public static let thinBackArrowImage = generateTintedImage(image: UIImage(bundleImageName: "Navigation/BackArrow"), color: .white)?.withRenderingMode(.alwaysTemplate)
+    public static let thinBackArrowImage = generateTintedImage(image: TPIconManager.shared.icon(.backArrow), color: .white)?.withRenderingMode(.alwaysTemplate)
 
     public static let titleFont = Font.with(size: 17.0, design: .regular, weight: .semibold, traits: [.monospacedNumbers])
     
@@ -1103,7 +1106,7 @@ open class NavigationBar: ASDisplayNode {
         self.backButtonNode = NavigationButtonNode()
         self.backButtonNode.hitTestSlop = UIEdgeInsets(top: 0.0, left: -20.0, bottom: 0.0, right: 0.0)
         
-        self.badgeNode = NavigationBarBadgeNode(fillColor: self.presentationData.theme.buttonColor, strokeColor: self.presentationData.theme.buttonColor, textColor: self.presentationData.theme.badgeTextColor)
+        self.badgeNode = NavigationBarBadgeNode(fillColor: self.presentationData.theme.buttonColor, strokeColor: self.presentationData.theme.buttonColor, textColor: self.presentationData.theme.badgeTextColor, isRectangleShape: self.presentationData.theme.squareStyle)
         self.badgeNode.isUserInteractionEnabled = false
         self.badgeNode.isHidden = true
         self.backButtonArrow = ASImageNode()
@@ -1229,7 +1232,7 @@ open class NavigationBar: ASDisplayNode {
             }
             self.stripeNode.backgroundColor = self.presentationData.theme.separatorColor
             
-            self.badgeNode.updateTheme(fillColor: self.presentationData.theme.buttonColor, strokeColor: self.presentationData.theme.buttonColor, textColor: self.presentationData.theme.badgeTextColor)
+            self.badgeNode.updateTheme(fillColor: self.presentationData.theme.buttonColor, strokeColor: self.presentationData.theme.buttonColor, textColor: self.presentationData.theme.badgeTextColor, isRectangleShape: self.presentationData.theme.squareStyle)
             
             self.updateLeftButton(animated: false)
             self.requestLayout()
@@ -1608,7 +1611,7 @@ open class NavigationBar: ASDisplayNode {
     
     public func makeTransitionBadgeNode() -> ASDisplayNode? {
         if self.badgeNode.supernode != nil && !self.badgeNode.isHidden {
-            let node = NavigationBarBadgeNode(fillColor: self.presentationData.theme.buttonColor, strokeColor: self.presentationData.theme.buttonColor, textColor: self.presentationData.theme.badgeTextColor)
+            let node = NavigationBarBadgeNode(fillColor: self.presentationData.theme.buttonColor, strokeColor: self.presentationData.theme.buttonColor, textColor: self.presentationData.theme.badgeTextColor, isRectangleShape: self.presentationData.theme.squareStyle)
             node.text = self.badgeNode.text
             let nodeSize = node.measure(CGSize(width: 200.0, height: 100.0))
             node.frame = CGRect(origin: CGPoint(), size: nodeSize)

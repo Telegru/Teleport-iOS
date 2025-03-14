@@ -520,7 +520,7 @@ final class ThemeAccentColorControllerNode: ASDisplayNode, ASScrollViewDelegate 
 
             if !updateOnlyWallpaper {
                 if let themeReference = mode.themeReference {
-                    updatedTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: accentColor.color, outgoingAccentColor: outgoingAccentColor?.color, backgroundColors: backgroundColors.map { $0.rgb }, bubbleColors: messagesColors.map { $0.rgb }, animateBubbleColors: state.animateMessageColors, serviceBackgroundColor: serviceBackgroundColor, preview: true) ?? defaultPresentationTheme
+                    updatedTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: accentColor.color, outgoingAccentColor: outgoingAccentColor?.color, backgroundColors: backgroundColors.map { $0.rgb }, bubbleColors: messagesColors.map { $0.rgb }, animateBubbleColors: state.animateMessageColors, serviceBackgroundColor: serviceBackgroundColor, preview: true, squareStyle: theme.squareStyle) ?? defaultPresentationTheme
                 } else if case let .edit(_, theme, _, _, _, _, _) = mode {
                     updatedTheme = customizePresentationTheme(theme, editing: false, accentColor: accentColor.color, outgoingAccentColor: outgoingAccentColor?.color, backgroundColors: backgroundColors.map { $0.rgb }, bubbleColors: messagesColors.map { $0.rgb }, animateBubbleColors: state.animateMessageColors)
                 } else {
@@ -954,7 +954,8 @@ final class ThemeAccentColorControllerNode: ASDisplayNode, ASScrollViewDelegate 
                 header: nil,
                 enableContextActions: false,
                 hiddenOffset: false,
-                interaction: interaction
+                interaction: interaction,
+                chatListItemTextLineCount: 2
             )
         }
 

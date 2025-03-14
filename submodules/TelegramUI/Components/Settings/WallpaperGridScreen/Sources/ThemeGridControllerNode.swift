@@ -18,6 +18,8 @@ import SearchUI
 import WallpaperResources
 import WallpaperGalleryScreen
 import BoostLevelIconComponent
+import LocalMediaResources
+import DWallpaper
 
 struct ThemeGridControllerNodeState: Equatable {
     var editing: Bool
@@ -49,6 +51,7 @@ struct ThemeGridControllerEntry: Comparable, Identifiable {
         case file(Int64, [UInt32], Int32)
         case image(String)
         case emoticon(String)
+        case dahl(String)
     }
 
     var index: Int
@@ -66,6 +69,8 @@ struct ThemeGridControllerEntry: Comparable, Identifiable {
     
     var stableId: StableId {
         switch self.wallpaper {
+        case let .dahl(name):
+            return .dahl(name)
         case .builtin:
             return .builtin
         case let .color(color):
@@ -404,6 +409,13 @@ final class ThemeGridControllerNode: ASDisplayNode {
         })
         self.controllerInteraction = interaction
         
+        let cityWallpapers: [TelegramWallpaper] = [
+            DWallpaper.kazan,
+            DWallpaper.moscow,
+            DWallpaper.saintPetersburg,
+            DWallpaper.russia
+        ].compactMap { $0.makeWallpaper(darkMode: presentationData.theme.overallDarkAppearance) }
+        
         let transition = combineLatest(self.wallpapersPromise.get(), self.themesPromise.get(), deletedWallpaperIdsPromise.get(), context.sharedContext.presentationData)
         |> map { wallpapers, themes, deletedWallpaperIds, presentationData -> (ThemeGridEntryTransition, Bool) in
             var entries: [ThemeGridControllerEntry] = []
@@ -477,6 +489,8 @@ final class ThemeGridControllerNode: ASDisplayNode {
                 } else {
                     sortedWallpapers = wallpapers.map(\.wallpaper)
                 }
+
+                sortedWallpapers = cityWallpapers + sortedWallpapers
                 
                 if let builtinIndex = sortedWallpapers.firstIndex(where: { wallpaper in
                     if case .builtin = wallpaper {
@@ -635,7 +649,7 @@ final class ThemeGridControllerNode: ASDisplayNode {
         switch self.mode {
         case .generic:
             self.wallpapersPromise.set(combineLatest(queue: .mainQueue(),
-                telegramWallpapers(postbox: self.context.account.postbox, network: self.context.account.network),
+                                                     telegramWallpapersWithDWallpapers(postbox: self.context.account.postbox, network: self.context.account.network),
                 self.context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.wallapersState])
             )
             |> map { remoteWallpapers, sharedData -> [Wallpaper] in

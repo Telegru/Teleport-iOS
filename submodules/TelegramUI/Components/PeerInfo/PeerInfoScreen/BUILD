@@ -1,5 +1,10 @@
 load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
+tpdeps = [
+    "//Teleport/TPSettings:TPSettings",
+    "//Teleport/TPStrings:TPStrings"
+]
+
 swift_library(
     name = "PeerInfoScreen",
     module_name = "PeerInfoScreen",
@@ -9,7 +14,7 @@ swift_library(
     copts = [
         "-warnings-as-errors",
     ],
-    deps = [
+    deps = tpdeps + [
         "//submodules/AccountContext",
         "//submodules/AccountUtils",
         "//submodules/ActionSheetPeerItem",
@@ -155,6 +160,8 @@ swift_library(
         "//submodules/TelegramUI/Components/CameraScreen",
         "//submodules/TelegramUI/Components/PeerInfo/VerifyAlertController",
         "//submodules/TelegramUI/Components/Gifts/GiftViewScreen",
+        
+        "//submodules/TelegramUI/Components/DSettings",
     ],
     visibility = [
         "//visibility:public",

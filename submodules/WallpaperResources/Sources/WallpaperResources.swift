@@ -812,8 +812,57 @@ private func builtinWallpaperData() -> Signal<UIImage, NoError> {
         } |> runOn(Queue.concurrentDefaultQueue())
 }
 
+private func dahlWallpaperData(name: String) -> Signal<UIImage, NoError> {
+    return Signal { subscriber in
+        if let filePath = getAppBundle().path(forResource: name, ofType: "jpg"), let image = UIImage(contentsOfFile: filePath) {
+            subscriber.putNext(image)
+        }
+        subscriber.putCompletion()
+        
+        return EmptyDisposable
+        } |> runOn(Queue.concurrentDefaultQueue())
+}
+
 public func settingsBuiltinWallpaperImage(account: Account, thumbnail: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
     return builtinWallpaperData() |> map { fullSizeImage in
+        return { arguments in
+            guard let context = DrawingContext(size: arguments.drawingSize, clear: true) else {
+                return nil
+            }
+            
+            let drawingRect = arguments.drawingRect
+            var fittedSize = fullSizeImage.size.aspectFilled(drawingRect.size)
+            if abs(fittedSize.width - arguments.boundingSize.width).isLessThanOrEqualTo(CGFloat(1.0)) {
+                fittedSize.width = arguments.boundingSize.width
+            }
+            if abs(fittedSize.height - arguments.boundingSize.height).isLessThanOrEqualTo(CGFloat(1.0)) {
+                fittedSize.height = arguments.boundingSize.height
+            }
+            
+            let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            
+            context.withFlippedContext { c in
+                c.setBlendMode(.copy)
+                if thumbnail {
+                    c.translateBy(x: fittedRect.midX, y: fittedRect.midY)
+                    c.scaleBy(x: 3.4, y: 3.4)
+                    c.translateBy(x: -fittedRect.midX, y: -fittedRect.midY)
+                }
+                if let fullSizeImage = fullSizeImage.cgImage {
+                    c.interpolationQuality = .medium
+                    drawImage(context: c, image: fullSizeImage, orientation: .up, in: fittedRect)
+                }
+            }
+            
+            addCorners(context, arguments: arguments)
+            
+            return context
+        }
+    }
+}
+
+public func settingsDahlWallpaperImage(account: Account, name: String, thumbnail: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+    return dahlWallpaperData(name: name) |> map { fullSizeImage in
         return { arguments in
             guard let context = DrawingContext(size: arguments.drawingSize, clear: true) else {
                 return nil
@@ -1128,7 +1177,7 @@ public enum ThemeImageSource {
     case settings(TelegramThemeSettings)
 }
 
-public func themeImage(account: Account, accountManager: AccountManager<TelegramAccountManagerTypes>, source: ThemeImageSource, synchronousLoad: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+public func themeImage(account: Account, accountManager: AccountManager<TelegramAccountManagerTypes>, source: ThemeImageSource, synchronousLoad: Bool = false, squareStyle: Bool) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
     let theme: Signal<(PresentationTheme?, Data?), NoError>
     
     switch source {
@@ -1208,7 +1257,7 @@ public func themeImage(account: Account, accountManager: AccountManager<Telegram
                 }
             }
         case let .settings(settings):
-            theme = .single((makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false), nil))
+        theme = .single((makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle, vkIcons: false), nil))
     }
 
     enum WallpaperImage {
@@ -1381,7 +1430,7 @@ private let messageImage: UIImage = {
     return messageBubbleImage(maxCornerRadius: 16.0, minCornerRadius: 16.0, incoming: true, fillColor: .white, strokeColor: .clear, neighbors: .none, shadow: nil, wallpaper: .color(0x000000), knockout: false)
 }()
 
-public func themeIconImage(account: Account, accountManager: AccountManager<TelegramAccountManagerTypes>, theme: PresentationThemeReference, color: PresentationThemeAccentColor?, wallpaper: TelegramWallpaper? = nil, nightMode: Bool? = nil, channelMode: Bool? = nil, emoticon: Bool = false, large: Bool = false, qr: Bool = false, message: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+public func themeIconImage(account: Account, accountManager: AccountManager<TelegramAccountManagerTypes>, theme: PresentationThemeReference, color: PresentationThemeAccentColor?, wallpaper: TelegramWallpaper? = nil, nightMode: Bool? = nil, channelMode: Bool? = nil, emoticon: Bool = false, large: Bool = false, qr: Bool = false, message: Bool = false, squareStyle: Bool) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
     let colorsSignal: Signal<((UIColor, UIColor?, [UInt32]), [UIColor], [UIColor], UIImage?, Bool, Bool, CGFloat, Int32?), NoError>
 
     var reference: MediaResourceReference?
@@ -1393,9 +1442,9 @@ public func themeIconImage(account: Account, accountManager: AccountManager<Tele
 
     let themeSignal: Signal<PresentationTheme?, NoError>
     if case let .cloud(theme) = theme, theme.theme.settings != nil, let nightMode = nightMode {
-        themeSignal = .single(makePresentationTheme(cloudTheme: theme.theme, dark: nightMode))
+        themeSignal = .single(makePresentationTheme(cloudTheme: theme.theme, squareStyle: squareStyle, dark: nightMode, vkIcons: false))
     } else if case let .builtin(theme) = theme {
-        var defaultTheme = makeDefaultPresentationTheme(reference: theme, serviceBackgroundColor: nil)
+        var defaultTheme = makeDefaultPresentationTheme(reference: theme, serviceBackgroundColor: nil, squareStyle: squareStyle)
         if let color = color {
             let editing = color.accentColor == nil
             let accentColor: UIColor = color.accentColor.flatMap { UIColor(rgb: $0) } ?? color.colorFor(baseTheme: theme.baseTheme)
@@ -1406,7 +1455,7 @@ public func themeIconImage(account: Account, accountManager: AccountManager<Tele
         themeSignal = .single(defaultTheme)
     } else if case let .cloud(theme) = theme, let settings = theme.theme.settings?.first {
         themeSignal = Signal { subscriber in
-            let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false)
+            let theme = makePresentationTheme(mediaBox: accountManager.mediaBox, themeReference: .builtin(PresentationBuiltinThemeReference(baseTheme: settings.baseTheme)), accentColor: UIColor(argb: settings.accentColor), backgroundColors: [], bubbleColors: settings.messageColors, wallpaper: settings.wallpaper, serviceBackgroundColor: nil, preview: false, squareStyle: squareStyle, vkIcons: false)
             subscriber.putNext(theme)
             subscriber.putCompletion()
             
@@ -1435,7 +1484,7 @@ public func themeIconImage(account: Account, accountManager: AccountManager<Tele
             let outgoingColors = theme.chat.message.outgoing.bubble.withoutWallpaper.fill
             let wallpaper = wallpaper ?? theme.chat.defaultWallpaper
             switch wallpaper {
-                case .builtin, .emoticon:
+                case .builtin, .emoticon, .dahl:
                     backgroundColor = (UIColor(rgb: 0xd6e2ee), nil, [])
                 case let .color(color):
                     backgroundColor = (UIColor(rgb: color), nil, [])

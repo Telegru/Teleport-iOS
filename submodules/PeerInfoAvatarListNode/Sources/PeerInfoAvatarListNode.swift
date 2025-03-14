@@ -228,6 +228,10 @@ public final class PeerInfoAvatarListItemNode: ASDisplayNode {
     public let isReady = Promise<Bool>()
     private var didSetReady: Bool = false
     
+    private var isVideoAvatarEnabled: Bool {
+        context.currentDahlSettings.with { $0 }.premiumSettings.showAnimatedAvatar
+    }
+    
     public var item: PeerInfoAvatarListItem?
         
     private var statusPromise = Promise<(MediaPlayerStatus?, Double?)?>()
@@ -361,7 +365,7 @@ public final class PeerInfoAvatarListItemNode: ASDisplayNode {
     }
     
     private func setupVideoPlayback() {
-        guard let videoContent = self.videoContent, let isCentral = self.isCentral, isCentral, self.videoNode == nil else {
+        guard isVideoAvatarEnabled, let videoContent = self.videoContent, let isCentral = self.isCentral, isCentral, self.videoNode == nil else {
             return
         }
         

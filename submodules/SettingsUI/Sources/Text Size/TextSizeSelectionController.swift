@@ -312,7 +312,8 @@ private final class TextSizeSelectionControllerNode: ASDisplayNode, ASScrollView
                 header: nil,
                 enableContextActions: false,
                 hiddenOffset: false,
-                interaction: interaction
+                interaction: interaction,
+                chatListItemTextLineCount: 2
             )
         }
 

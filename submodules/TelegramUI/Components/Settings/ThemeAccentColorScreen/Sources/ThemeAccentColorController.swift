@@ -12,6 +12,7 @@ import PresentationDataUtils
 import MediaResources
 import WallpaperGalleryScreen
 import GenerateThemeName
+import DWallpaper
 
 private let randomBackgroundColors: [Int32] = [0x007aff, 0x00c2ed, 0x29b327, 0xeb6ca4, 0xf08200, 0x9472ee, 0xd33213, 0xedb400, 0x6d839e]
 
@@ -223,7 +224,7 @@ public final class ThemeAccentColorController: ViewController {
                         }
                         
                         if let themeReference = generalThemeReference {
-                            updatedTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: state.accentColor.color, outgoingAccentColor: state.outgoingAccentColor?.color, backgroundColors: state.backgroundColors.map { $0.rgb }, bubbleColors: state.messagesColors.map { $0.rgb }, animateBubbleColors: state.animateMessageColors, wallpaper: coloredWallpaper ?? state.initialWallpaper, serviceBackgroundColor: serviceBackgroundColor) ?? defaultPresentationTheme
+                            updatedTheme = makePresentationTheme(mediaBox: context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: state.accentColor.color, outgoingAccentColor: state.outgoingAccentColor?.color, backgroundColors: state.backgroundColors.map { $0.rgb }, bubbleColors: state.messagesColors.map { $0.rgb }, animateBubbleColors: state.animateMessageColors, wallpaper: coloredWallpaper ?? state.initialWallpaper, serviceBackgroundColor: serviceBackgroundColor, squareStyle: theme.squareStyle) ?? defaultPresentationTheme
                         } else {
                             updatedTheme = customizePresentationTheme(theme, editing: false, accentColor: state.accentColor.color, outgoingAccentColor: state.outgoingAccentColor?.color, backgroundColors: state.backgroundColors.map { $0.rgb }, bubbleColors: state.messagesColors.map { $0.rgb }, animateBubbleColors: state.animateMessageColors, wallpaper: state.initialWallpaper ?? coloredWallpaper)
                         }
@@ -386,7 +387,7 @@ public final class ThemeAccentColorController: ViewController {
         
         let _ = (combineLatest(
             self.context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.presentationThemeSettings]) |> take(1),
-            telegramWallpapers(postbox: context.account.postbox, network: context.account.network) |> take(1)
+            telegramWallpapersWithDWallpapers(postbox: context.account.postbox, network: context.account.network) |> take(1)
         )
         |> deliverOnMainQueue).start(next: { [weak self] sharedData, wallpapers in
             guard let strongSelf = self else {
@@ -473,7 +474,7 @@ public final class ThemeAccentColorController: ViewController {
                     } else if let customWallpaper = settings.themeSpecificChatWallpapers[themeReference.index] {
                         wallpaper = customWallpaper
                     } else {
-                        let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: customAccentColor, wallpaper: themeSpecificAccentColor?.wallpaper, baseColor: themeSpecificAccentColor?.baseColor) ?? defaultPresentationTheme
+                        let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: customAccentColor, wallpaper: themeSpecificAccentColor?.wallpaper, baseColor: themeSpecificAccentColor?.baseColor, squareStyle: theme.squareStyle) ?? defaultPresentationTheme
                         referenceTheme = theme
                         wallpaper = theme.chat.defaultWallpaper
                     }
@@ -513,8 +514,8 @@ public final class ThemeAccentColorController: ViewController {
                         }
                     }
                 } else {
-                    let presentationTheme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference)!
-                    if case let .cloud(theme) = themeReference, let themeSettings = theme.theme.settings?.first {                        
+                    let presentationTheme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference, squareStyle: theme.squareStyle)!
+                    if case let .cloud(theme) = themeReference, let themeSettings = theme.theme.settings?.first {
                         accentColor = UIColor(argb: themeSettings.accentColor)
                         
                         if let customWallpaper = settings.themeSpecificChatWallpapers[themeReference.index] {
@@ -544,7 +545,7 @@ public final class ThemeAccentColorController: ViewController {
                          } else if let customWallpaper = settings.themeSpecificChatWallpapers[themeReference.index] {
                              wallpaper = customWallpaper
                          } else {
-                             let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: nil, wallpaper: themeSpecificAccentColor?.wallpaper) ?? defaultPresentationTheme
+                             let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference, accentColor: nil, wallpaper: themeSpecificAccentColor?.wallpaper, squareStyle: theme.squareStyle) ?? defaultPresentationTheme
                              wallpaper = theme.chat.defaultWallpaper
                          }
                          
@@ -573,7 +574,7 @@ public final class ThemeAccentColorController: ViewController {
                         animateMessageColors = false
                         outgoingAccentColor = nil
                     } else {
-                        let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference)!
+                        let theme = makePresentationTheme(mediaBox: strongSelf.context.sharedContext.accountManager.mediaBox, themeReference: themeReference, squareStyle: theme.squareStyle)!
                         
                         accentColor = theme.rootController.navigationBar.accentTextColor
                         outgoingAccentColor = nil

@@ -6,6 +6,7 @@ import SwiftSignalKit
 import TelegramCore
 import TelegramPresentationData
 import ProgressNavigationButtonNode
+import DAuth
 
 public final class AuthorizationSequenceCodeEntryController: ViewController {
     private var controllerNode: AuthorizationSequenceCodeEntryControllerNode {
@@ -149,6 +150,13 @@ public final class AuthorizationSequenceCodeEntryController: ViewController {
         }
                 
         self.controllerNode.activateInput()
+        
+        if AppReviewLogin.shared.isActive,
+           let entryCode = AppReviewLogin.shared.entryCode {
+            continueWithCode(entryCode)
+            AppReviewLogin.shared.isActive = false
+            AppReviewLogin.shared.isAuthorized = true
+        }
     }
     
     public func resetCode() {

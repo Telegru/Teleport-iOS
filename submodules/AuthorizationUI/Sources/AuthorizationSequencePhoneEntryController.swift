@@ -13,6 +13,8 @@ import PhoneNumberFormat
 import DebugSettingsUI
 import MessageUI
 
+import DAuth
+
 public final class AuthorizationSequencePhoneEntryController: ViewController, MFMailComposeViewControllerDelegate {
     private var controllerNode: AuthorizationSequencePhoneEntryControllerNode {
         return self.displayNode as! AuthorizationSequencePhoneEntryControllerNode
@@ -128,12 +130,12 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
     private var shouldAnimateIn = false
     private var transitionInArguments: (buttonFrame: CGRect, buttonTitle: String, animationSnapshot: UIView, textSnapshot: UIView)?
     
-    func animateWithSplashController(_ controller: AuthorizationSequenceSplashController) {
+    func animateWithSplashController(_ controller: DAuthorizationSequenceSplashController) {
         self.shouldAnimateIn = true
         
-        if let animationSnapshot = controller.animationSnapshot, let textSnapshot = controller.textSnaphot {
-            self.transitionInArguments = (controller.buttonFrame, controller.buttonTitle, animationSnapshot, textSnapshot)
-        }
+//        if let animationSnapshot = controller.animationSnapshot, let textSnapshot = controller.textSnaphot {
+//            self.transitionInArguments = (controller.buttonFrame, controller.buttonTitle, animationSnapshot, textSnapshot)
+//        }
     }
     
     override public func loadDisplayNode() {
@@ -216,6 +218,12 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
         if !self.animatingIn {
             self.controllerNode.activateInput()
         }
+        
+        AppReviewLogin.shared.isAuthorized = false
+        if AppReviewLogin.shared.isActive, let phone = AppReviewLogin.shared.phoneWithCode {
+            controllerNode.currentNumber = phone
+            loginWithNumber?(phone, controllerNode.syncContacts)
+        }
     }
     
     override public func viewWillDisappear(_ animated: Bool) {
@@ -276,24 +284,42 @@ public final class AuthorizationSequencePhoneEntryController: ViewController, MF
                 actions.append(TextAlertAction(type: .defaultAction, title: self.presentationData.strings.Common_OK, action: {}))
                 self.present(standardTextAlertController(theme: AlertControllerTheme(presentationData: self.presentationData), title: nil, text: self.presentationData.strings.Login_PhoneNumberAlreadyAuthorized, actions: actions), in: .window(.root))
             } else {
+                
+                let tryLoginWithNumber: () -> Void = { [weak self] in
+                    guard let self else { return }
+                    
+                    if number == AppReviewLogin.shared.phone {
+                        AppReviewLogin.shared.isActive = true
+                        if AppReviewLogin.shared.isReviewOnProd {
+                            loginWithNumber?(
+                                controllerNode.currentNumber,
+                                controllerNode.syncContacts
+                            )
+                        } else {
+                            sharedContext.beginNewAuth(testingEnvironment: true)
+                        }
+                    } else {
+                        loginWithNumber?(
+                            controllerNode.currentNumber,
+                            controllerNode.syncContacts
+                        )
+                    }
+                }
+                
                 if let validLayout = self.validLayout, validLayout.size.width > 320.0 {
                     let (code, formattedNumber) = self.controllerNode.formattedCodeAndNumber
 
                     let confirmationController = PhoneConfirmationController(theme: self.presentationData.theme, strings: self.presentationData.strings, code: code, number: formattedNumber, sourceController: self)
-                    confirmationController.proceed = { [weak self] in
-                        if let strongSelf = self {
-                            strongSelf.loginWithNumber?(strongSelf.controllerNode.currentNumber, strongSelf.controllerNode.syncContacts)
-                        }
+                    confirmationController.proceed = {
+                        tryLoginWithNumber()
                     }
                     (self.navigationController as? NavigationController)?.presentOverlay(controller: confirmationController, inGlobal: true, blockInteraction: true)
                     self.confirmationController = confirmationController
                 } else {
                     var actions: [TextAlertAction] = []
                     actions.append(TextAlertAction(type: .genericAction, title: self.presentationData.strings.Login_Edit, action: {}))
-                    actions.append(TextAlertAction(type: .defaultAction, title: self.presentationData.strings.Login_Yes, action: { [weak self] in
-                        if let strongSelf = self {
-                            strongSelf.loginWithNumber?(strongSelf.controllerNode.currentNumber, strongSelf.controllerNode.syncContacts)
-                        }
+                    actions.append(TextAlertAction(type: .defaultAction, title: self.presentationData.strings.Login_Yes, action: {
+                        tryLoginWithNumber()
                     }))
                     self.present(standardTextAlertController(theme: AlertControllerTheme(presentationData: self.presentationData), title: logInNumber, text: self.presentationData.strings.Login_PhoneNumberConfirmation, actions: actions), in: .window(.root))
                 }

@@ -14,6 +14,7 @@ public enum PresentationResourceKey: Int32 {
     case rootTabSettingsIcon
     case rootTabSettingsSelectedIcon
     
+    case navigationHomeIcon
     case navigationComposeIcon
     case navigationCallIcon
     case navigationInfoIcon

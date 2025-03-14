@@ -146,25 +146,27 @@ minimum_watchos_version="9.0"
 notificationServiceExtensionVersion = "v1"
 
 empty_languages = [
-    "ar",
-    "be",
-    "ca",
-    "de",
-    "es",
-    "fa",
-    "fr",
-    "id",
-    "it",
-    "ko",
-    "ms",
-    "nl",
-    "pl",
-    "pt",
+    #"ar",
+    #"be",
+    #"ca",
+    #"de",
+    #"es",
+    #"fa",
+    #"fr",
+    #"id",
+    #"it",
+    #"ko",
+    #"ms",
+    #"nl",
+    #"pl",
+    #"pt",
     "ru",
-    "tr",
-    "uk",
-    "uz",
+    #"tr",
+    #"uk",
+    #"uz",
 ]
+
+supported_languages = empty_languages + ["en"]
 
 [
     genrule(
@@ -250,6 +252,7 @@ filegroup(
     name = "AppStringResources",
     srcs = [
         "Telegram-iOS/en.lproj/Localizable.strings",
+        "//Teleport/TPStrings:TPLocalizableStrings",
     ] + [
         "{}.lproj/Localizable.strings".format(language) for language in empty_languages
     ],
@@ -258,21 +261,22 @@ filegroup(
 filegroup(
     name = "WatchAppStringResources",
     srcs = glob([
-        "Telegram-iOS/*.lproj/Localizable.strings",
-    ], exclude = ["Telegram-iOS/*.lproj/**/.*"]),
+        "Telegram-iOS/{}.lproj/Localizable.strings".format(language) for language in supported_languages
+    ], 
+    exclude = ["Telegram-iOS/*.lproj/**/.*"]) + ["//Teleport/TPStrings:TPLocalizableStrings"],
 )
 
 filegroup(
     name = "AppIntentVocabularyResources",
     srcs = glob([
-        "Telegram-iOS/*.lproj/AppIntentVocabulary.plist",
+        "Telegram-iOS/{}.lproj/AppIntentVocabulary.strings".format(language) for language in supported_languages
     ], exclude = ["Telegram-iOS/*.lproj/**/.*"]),
 )
 
 filegroup(
     name = "InfoPlistStringResources",
     srcs = glob([
-        "Telegram-iOS/*.lproj/InfoPlist.strings",
+        "Telegram-iOS/{}.lproj/InfoPlist.strings".format(language) for language in supported_languages
     ], exclude = ["Telegram-iOS/*.lproj/**/.*"]),
 )
 
@@ -319,18 +323,23 @@ filegroup(
 )
 
 alternate_icon_folders = [
-    "BlackIcon",
-    "BlackClassicIcon",
-    "BlackFilledIcon",
-    "BlueIcon",
-    "BlueClassicIcon",
-    "BlueFilledIcon",
-    "WhiteFilledIcon",
-    "New1",
-    "New2",
-    "Premium",
-    "PremiumBlack",
-    "PremiumTurbo",
+    "Default",
+    "Classic",
+    "Black",
+    "Metallic",
+    "Silver",
+    "Inverted",
+    "White",
+    "Outline",
+    "Night",
+    "Sparkling",
+    "Winter",
+    "Unicorn",
+    "Titanium",
+    "Triangle",
+    "Tatarstan",
+    "Russia",
+    "Birch",
 ]
 
 [
@@ -376,6 +385,9 @@ swift_library(
         "//submodules/TelegramUI:TelegramUIResources",
         "//submodules/TelegramUI:TelegramUIAssets",
         "//submodules/TelegramUI/Components/Calls/CallScreen:Assets",
+        "//Teleport/TPOnboarding:TPOnboardingAssets",
+        "//Teleport/TPSettings:TPSettingsAssets",
+        "//Teleport/TPUI:TPUIAssets",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [
@@ -502,7 +514,7 @@ icloud_fragment = "" if not telegram_enable_icloud else """
     telegram_icloud_environment="Production" if telegram_aps_environment == "production" else "Development"
 )
 
-associated_domains_fragment = "" if telegram_bundle_id not in official_bundle_ids else """
+associated_domains_fragment =  """
 <key>com.apple.developer.associated-domains</key>
 <array>
     <string>applinks:telegram.me</string>
@@ -537,7 +549,7 @@ official_communication_notifications_fragment = """
 <key>com.apple.developer.usernotifications.communication</key>
 <true/>
 """
-communication_notifications_fragment = official_communication_notifications_fragment if telegram_bundle_id in official_bundle_ids else ""
+communication_notifications_fragment = official_communication_notifications_fragment # if telegram_bundle_id in official_bundle_ids else ""
 
 store_signin_fragment = """
 <key>com.apple.developer.applesignin</key>
@@ -626,7 +638,9 @@ plist_fragment(
     template =
     """
     <key>CFBundleShortVersionString</key>
-    <string>{telegramVersion}</string>
+    <string>{appVersion}</string>
+    <key>TGAppVersion</key>
+    <string>{tgAppVersion}</string>
     """
 )
 
@@ -648,7 +662,7 @@ plist_fragment(
     template =
     """
     <key>CFBundleDisplayName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     """
 )
 
@@ -696,7 +710,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.watchkitapp.watchkitextension</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>WKExtensionDelegateClassName</key>
@@ -716,7 +730,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.watchkitapp</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>UISupportedInterfaceOrientations</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
@@ -1160,7 +1174,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.Share</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1252,7 +1266,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.NotificationContent</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1359,7 +1373,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.Widget</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1472,7 +1486,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.SiriIntents</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1527,7 +1541,7 @@ swift_library(
         "-warnings-as-errors",
     ],
     data = glob([
-        "SiriIntents/*.lproj/Intents.intentdefinition"
+        "SiriIntents/{}.lproj/Intents.intentdefinition".format(language) for language in supported_languages
     ]) + [
         ":IntentsAssets"
     ],
@@ -1603,7 +1617,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.BroadcastUpload</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1697,7 +1711,7 @@ plist_fragment(
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}.NotificationService</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>XPC!</string>
     <key>NSExtension</key>
@@ -1765,11 +1779,11 @@ plist_fragment(
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleDisplayName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundleIdentifier</key>
     <string>{telegram_bundle_id}</string>
     <key>CFBundleName</key>
-    <string>Telegram</string>
+    <string>Dahl</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
@@ -1822,17 +1836,17 @@ plist_fragment(
     <key>NSCameraUsageDescription</key>
     <string>We need this so that you can take and share photos and videos.</string>
     <key>NSContactsUsageDescription</key>
-    <string>Telegram stores your contacts heavily encrypted in the cloud to let you connect with your friends across all your devices.</string>
+    <string>Dahl stores your contacts heavily encrypted in the cloud to let you connect with your friends across all your devices.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>You can use Face ID to unlock the app.</string>
     <key>NSLocationAlwaysUsageDescription</key>
-    <string>When you send your location to your friends, Telegram needs access to show them a map. You also need this to send locations from an Apple Watch.</string>
+    <string>When you send your location to your friends, Dahl needs access to show them a map. You also need this to send locations from an Apple Watch.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
-    <string>When you send your location to your friends, Telegram needs access to show them a map.</string>
+    <string>When you send your location to your friends, Dahl needs access to show them a map.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>We need this so that you can record and share voice messages and videos with sound.</string>
     <key>NSMotionUsageDescription</key>
-    <string>When you send your location to your friends, Telegram needs access to show them a map.</string>
+    <string>When you send your location to your friends, Dahl needs access to show them a map.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
     <string>We need this so that you can share photos and videos from your photo library.</string>
     <key>NSPhotoLibraryUsageDescription</key>
@@ -1848,9 +1862,11 @@ plist_fragment(
     </array>
     <key>UIAppFonts</key>
     <array>
+        <string>ST-Nizhegorodsky.otf</string>
         <string>SFCompactRounded-Semibold.otf</string>
         <string>AremacFS-Regular.otf</string>
         <string>AremacFS-Semibold.otf</string>
+        <string>Playfair-Bold.ttf</string>
     </array>
     <key>UIBackgroundModes</key>
     <array>

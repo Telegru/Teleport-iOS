@@ -198,6 +198,30 @@ API_AVAILABLE(ios(10))
     return APP_CONFIG_IS_SIRI_ENABLED;
 }
 
+- (NSString * _Nullable)dAppReviewerPhone {
+    return @(D_CONFIG_APP_REVIEWER_PHONE);
+}
+
+- (NSString * _Nullable)dAppReviewerCode {
+    return @(D_CONFIG_APP_REVIEWER_CODE);
+}
+
+- (BOOL)dIsAppReviewerProdEnv {
+    return @(D_CONFIG_APP_REVIEWER_ENV) != nil && [@(D_CONFIG_APP_REVIEWER_ENV) isEqual:@"prod"];
+}
+
+- (NSString * _Nonnull)dProxyServer {
+    return @(D_CONFIG_PROXY_SERVER);
+}
+
+- (int32_t)dProxyPort {
+    return D_CONFIG_PROXY_PORT;
+}
+
+- (NSString * _Nonnull)dProxySecret {
+    return @(D_CONFIG_PROXY_SECRET);
+}
+
 + (NSString * _Nullable)bundleSeedId {
     NSDictionary *query = [NSDictionary dictionaryWithObjectsAndKeys:
        (__bridge NSString *)kSecClassGenericPassword, (__bridge NSString *)kSecClass,

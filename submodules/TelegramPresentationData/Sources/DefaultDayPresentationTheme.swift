@@ -5,6 +5,7 @@ import TelegramCore
 import TelegramUIPreferences
 import Postbox
 import SwiftSignalKit
+import DWallpaper
 
 public func selectDateFillStaticColor(theme: PresentationTheme, wallpaper: TelegramWallpaper) -> UIColor {
     if case .color(0xffffff) = wallpaper {
@@ -53,7 +54,7 @@ public func dateFillNeedsBlur(theme: PresentationTheme, wallpaper: TelegramWallp
 }
 
 public let defaultServiceBackgroundColor = UIColor(rgb: 0x000000, alpha: 0.2)
-public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false)
+public let defaultPresentationTheme = makeDefaultDayPresentationTheme(serviceBackgroundColor: defaultServiceBackgroundColor, day: false, preview: false, squareStyle: false, vkIcons: false)
 public let defaultDayAccentColor = UIColor(rgb: 0x007aff)
 
 public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, title: String?, accentColor: UIColor?, outgoingAccentColor: UIColor?, backgroundColors: [UInt32], bubbleColors: [UInt32], animateBubbleColors: Bool?, wallpaper forcedWallpaper: TelegramWallpaper? = nil, serviceBackgroundColor: UIColor?) -> PresentationTheme {
@@ -385,11 +386,13 @@ public func customizeDefaultDayTheme(theme: PresentationTheme, editing: Bool, ti
         contextMenu: theme.contextMenu,
         inAppNotification: theme.inAppNotification,
         chart: theme.chart,
-        preview: theme.preview
+        preview: theme.preview,
+        squareStyle: theme.squareStyle,
+        vkIcons: theme.vkIcons
     )
 }
 
-public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool) -> PresentationTheme {
+public func makeDefaultDayPresentationTheme(extendingThemeReference: PresentationThemeReference? = nil, serviceBackgroundColor: UIColor?, day: Bool, preview: Bool, squareStyle: Bool, vkIcons: Bool) -> PresentationTheme {
     var serviceBackgroundColor = serviceBackgroundColor ?? defaultServiceBackgroundColor
 
     if !day {
@@ -599,7 +602,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -615,7 +618,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -654,7 +657,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -670,7 +673,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -711,7 +714,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                 reactionActiveForeground: UIColor(white: 0.0, alpha: 0.1),
                 reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                 reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                 reactionStarsActiveForeground: .white,
                 reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                 reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -727,7 +730,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                 reactionActiveForeground: UIColor(white: 0.0, alpha: 0.1),
                 reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                 reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                 reactionStarsActiveForeground: .white,
                 reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                 reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -763,7 +766,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -779,7 +782,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -821,7 +824,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -837,7 +840,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                     reactionActiveForeground: .clear,
                     reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                     reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                    reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                    reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                     reactionStarsActiveForeground: .white,
                     reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                     reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -878,7 +881,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                 reactionActiveForeground: .clear,
                 reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                 reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                 reactionStarsActiveForeground: .white,
                 reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                 reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -894,7 +897,7 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
                 reactionActiveForeground: .clear,
                 reactionStarsInactiveBackground: UIColor(rgb: 0xFEF1D4, alpha: 1.0),
                 reactionStarsInactiveForeground: UIColor(rgb: 0xD3720A),
-                reactionStarsActiveBackground: UIColor(rgb: 0xFFBC2E, alpha: 1.0),
+                reactionStarsActiveBackground: UIColor(rgb: 0xD3720A, alpha: 1.0),
                 reactionStarsActiveForeground: .white,
                 reactionInactiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2),
                 reactionActiveMediaPlaceholder: UIColor(rgb: 0xffffff, alpha: 0.2)
@@ -1005,10 +1008,21 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         badgeTextColor: UIColor(rgb: 0xffffff)
     )
 
-    let defaultPatternWallpaper: TelegramWallpaper = defaultBuiltinWallpaper(data: .default, colors: defaultBuiltinWallpaperGradientColors.map(\.rgb))
+//    let defaultPatternWallpaper: TelegramWallpaper = defaultBuiltinWallpaper(data: .default, colors: defaultBuiltinWallpaperGradientColors.map(\.rgb))
 
+//    let chat = PresentationThemeChat(
+//        defaultWallpaper: day ? .color(0xffffff) : defaultPatternWallpaper,
+//        animateMessageColors: false,
+//        message: day ? messageDay : message,
+//        serviceMessage: day ? serviceMessageDay : serviceMessage,
+//        inputPanel: inputPanel,
+//        inputMediaPanel: inputMediaPanel,
+//        inputButtonPanel: inputButtonPanel,
+//        historyNavigation: historyNavigation
+//    )
+    
     let chat = PresentationThemeChat(
-        defaultWallpaper: day ? .color(0xffffff) : defaultPatternWallpaper,
+        defaultWallpaper: DWallpaper.russia.makeWallpaper(darkMode: false) ?? .builtin(WallpaperSettings()),
         animateMessageColors: false,
         message: day ? messageDay : message,
         serviceMessage: day ? serviceMessageDay : serviceMessage,
@@ -1099,7 +1113,9 @@ public func makeDefaultDayPresentationTheme(extendingThemeReference: Presentatio
         contextMenu: contextMenu,
         inAppNotification: inAppNotification,
         chart: chart,
-        preview: preview
+        preview: preview,
+        squareStyle: squareStyle,
+        vkIcons: vkIcons
     )
 }
 

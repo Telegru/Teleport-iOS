@@ -3313,7 +3313,8 @@ public final class StandaloneReactionAnimation: ASDisplayNode {
     public var currentDismissAnimation: (() -> Void)?
     
     public func animateReactionSelection(context: AccountContext, theme: PresentationTheme, animationCache: AnimationCache, reaction: ReactionItem, customEffectResource: MediaResource? = nil, avatarPeers: [EnginePeer], playHaptic: Bool, isLarge: Bool, playCenterReaction: Bool = true, forceSmallEffectAnimation: Bool = false, hideCenterAnimation: Bool = false, targetView: UIView, addStandaloneReactionAnimation: ((StandaloneReactionAnimation) -> Void)?, currentItemNode: ReactionNode?, onHit: (() -> Void)? = nil, completion: @escaping () -> Void) {
-        guard let sourceSnapshotView = targetView.snapshotContentTree() else {
+        let isAnimatedReactionsEnabled = context.currentDahlSettings.with { $0 }.premiumSettings.showAnimatedReactions
+        guard let sourceSnapshotView = targetView.snapshotContentTree(), isAnimatedReactionsEnabled else {
             completion()
             return
         }

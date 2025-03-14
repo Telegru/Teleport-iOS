@@ -840,7 +840,8 @@ public final class ChatInlineSearchResultsListComponent: Component {
                             header: displayMessagesHeader ? ChatListSearchItemHeader(type: .messages(location: nil), theme: listPresentationData.theme, strings: listPresentationData.strings) : nil,
                             enableContextActions: false,
                             hiddenOffset: false,
-                            interaction: chatListNodeInteraction
+                            interaction: chatListNodeInteraction,
+                            chatListItemTextLineCount: 2
                         )
                     }
                 }

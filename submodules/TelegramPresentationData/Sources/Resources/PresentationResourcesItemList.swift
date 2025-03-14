@@ -2,6 +2,7 @@ import Foundation
 import UIKit
 import Display
 import AppBundle
+import TPUI
 
 public func generateItemListCheckIcon(color: UIColor) -> UIImage? {
     return generateImage(CGSize(width: 12.0, height: 10.0), rotatedContext: { size, context in
@@ -278,7 +279,7 @@ public struct PresentationResourcesItemList {
     
     public static func addDeviceIcon(_ theme: PresentationTheme) -> UIImage? {
         return theme.image(PresentationResourceKey.itemListAddDeviceIcon.rawValue, { theme in
-            return generateTintedImage(image: UIImage(bundleImageName: "Settings/QrIcon"), color: theme.list.itemAccentColor)
+            return generateTintedImage(image: TPIconManager.shared.icon(.qrIcon), color: theme.list.itemAccentColor)
         })
     }
     

@@ -268,15 +268,20 @@ public final class ChatTitleView: UIView, NavigationBarTitleView {
                                         segments = [.text(0, NSAttributedString(string: EnginePeer(peer).displayTitle(strings: self.strings, displayOrder: self.nameDisplayOrder), font: titleFont, textColor: titleTheme.rootController.navigationBar.primaryTextColor))]
                                     }
                                 }
+                                
+                                let isPremiumStatusEnabled = self.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
+                                
                                 if peer.id != self.context.account.peerId {
                                     let premiumConfiguration = PremiumConfiguration.with(appConfiguration: self.context.currentAppConfiguration.with { $0 })
                                     if peer.isFake {
                                         titleCredibilityIcon = .fake
                                     } else if peer.isScam {
                                         titleCredibilityIcon = .scam
-                                    } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled {
+                                    } else if let emojiStatus = peer.emojiStatus, !premiumConfiguration.isPremiumDisabled,
+                                        isPremiumStatusEnabled {
                                         titleStatusIcon = .emojiStatus(emojiStatus)
-                                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled &&
+                                        isPremiumStatusEnabled {
                                         titleCredibilityIcon = .premium
                                     }
                                     
@@ -828,11 +833,12 @@ public final class ChatTitleView: UIView, NavigationBarTitleView {
         }
         
         let titleCredibilityContent: EmojiStatusComponent.Content
+        let isPremiumStatusEnabled = self.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
         switch self.titleCredibilityIcon {
         case .none:
             titleCredibilityContent = .none
         case .premium:
-            titleCredibilityContent = .premium(color: self.theme.list.itemAccentColor)
+            titleCredibilityContent = isPremiumStatusEnabled ? .premium(color: self.theme.list.itemAccentColor) : .none
         case .verified:
             titleCredibilityContent = .verified(fillColor: self.theme.list.itemCheckColors.fillColor, foregroundColor: self.theme.list.itemCheckColors.foregroundColor, sizeType: .large)
         case .fake:
@@ -840,7 +846,7 @@ public final class ChatTitleView: UIView, NavigationBarTitleView {
         case .scam:
             titleCredibilityContent = .text(color: self.theme.chat.message.incoming.scamColor, string: self.strings.Message_ScamAccount.uppercased())
         case let .emojiStatus(emojiStatus):
-            titleCredibilityContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: self.theme.list.mediaPlaceholderColor, themeColor: self.theme.list.itemAccentColor, loopMode: .count(2))
+            titleCredibilityContent = isPremiumStatusEnabled ? .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: self.theme.list.mediaPlaceholderColor, themeColor: self.theme.list.itemAccentColor, loopMode: .count(2)) : .none
         }
         
         let titleVerifiedContent: EmojiStatusComponent.Content
@@ -848,7 +854,7 @@ public final class ChatTitleView: UIView, NavigationBarTitleView {
         case .none:
             titleVerifiedContent = .none
         case .premium:
-            titleVerifiedContent = .premium(color: self.theme.list.itemAccentColor)
+            titleVerifiedContent = isPremiumStatusEnabled ? .premium(color: self.theme.list.itemAccentColor) : .none
         case .verified:
             titleVerifiedContent = .verified(fillColor: self.theme.list.itemCheckColors.fillColor, foregroundColor: self.theme.list.itemCheckColors.foregroundColor, sizeType: .large)
         case .fake:
@@ -856,15 +862,15 @@ public final class ChatTitleView: UIView, NavigationBarTitleView {
         case .scam:
             titleVerifiedContent = .text(color: self.theme.chat.message.incoming.scamColor, string: self.strings.Message_ScamAccount.uppercased())
         case let .emojiStatus(emojiStatus):
-            titleVerifiedContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: self.theme.list.mediaPlaceholderColor, themeColor: self.theme.list.itemAccentColor, loopMode: .count(2))
+            titleVerifiedContent = isPremiumStatusEnabled ? .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: self.theme.list.mediaPlaceholderColor, themeColor: self.theme.list.itemAccentColor, loopMode: .count(2)) : .none
         }
         
         let titleStatusContent: EmojiStatusComponent.Content
         var titleStatusParticleColor: UIColor?
         switch self.titleStatusIcon {
         case let .emojiStatus(emojiStatus):
-            titleStatusContent = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: self.theme.list.mediaPlaceholderColor, themeColor: self.theme.list.itemAccentColor, loopMode: .count(2))
-            if let color = emojiStatus.color {
+            titleStatusContent = isPremiumStatusEnabled ? .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 32.0, height: 32.0), placeholderColor: self.theme.list.mediaPlaceholderColor, themeColor: self.theme.list.itemAccentColor, loopMode: .count(2)) : .none
+			if let color = emojiStatus.color, isPremiumStatusEnabled {
                 titleStatusParticleColor = UIColor(rgb: UInt32(bitPattern: color))
             }
         default:

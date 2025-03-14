@@ -217,7 +217,7 @@ public final class ChatListShimmerNode: ASDisplayNode {
                     requiresPremiumForMessaging: false,
                     displayAsTopicList: false,
                     tags: []
-                )), editing: false, hasActiveRevealControls: false, selected: false, header: nil, enableContextActions: false, hiddenOffset: false, interaction: interaction)
+                )), editing: false, hasActiveRevealControls: false, selected: false, header: nil, enableContextActions: false, hiddenOffset: false, interaction: interaction, chatListItemTextLineCount: 2)
             }
             
             var itemNodes: [ChatListItemNode] = []

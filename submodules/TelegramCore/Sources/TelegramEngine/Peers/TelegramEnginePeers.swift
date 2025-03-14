@@ -1727,6 +1727,18 @@ public extension TelegramEngine {
         public func getPossibleStarRefBotTargets() -> Signal<[EnginePeer], NoError> {
             return _internal_getPossibleStarRefBotTargets(account: self.account)
         }
+        
+        public func addRecentChat(peerId: PeerId) {
+            let _ = _internal_addRecentChat(postbox: account.postbox, peerId: peerId).startStandalone()
+        }
+
+        public func removeRecentChat(peerId: PeerId){
+            let _ = _internal_removeRecentChat(account: account, peerId: peerId).startStandalone()
+        }
+
+        public func clearRecentChats(){
+            let _ = _internal_clearRecentChats(account: account).startStandalone()
+        }
     }
 }
 

@@ -42,6 +42,8 @@ swift_library(
         "//submodules/ReactionSelectionNode",
         "//submodules/TelegramUI/Components/Chat/TopMessageReactions",
         "//submodules/TelegramUI/Components/MinimizedContainer",
+        
+        "//Teleport/TPUI:TPUI",
     ],
     visibility = [
         "//visibility:public",

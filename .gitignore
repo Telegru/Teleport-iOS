@@ -56,6 +56,7 @@ bazel-genfiles/*
 bazel-out
 bazel-out/*
 bazel-telegram-ios
+bazel-Teleport-ios
 bazel-telegram-ios/*
 bazel-testlogs
 bazel-testlogs/*
@@ -70,3 +71,7 @@ submodules/FFMpegBinding/SharedHeaders/*
 submodules/OpenSSLEncryptionProvider/SharedHeaders/*
 submodules/TelegramCore/FlatSerialization/Sources/*
 buildServer.json
+
+ci/Gemfile.lock
+ci/.env.default
+ci/fastlane/report.xml

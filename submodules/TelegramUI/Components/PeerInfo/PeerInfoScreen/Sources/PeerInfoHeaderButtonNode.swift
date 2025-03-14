@@ -7,6 +7,7 @@ import Display
 import TelegramPresentationData
 import ComponentFlow
 import LottieComponent
+import TPUI
 
 enum PeerInfoHeaderButtonKey: Hashable {
     case message
@@ -151,32 +152,8 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
                 context.clear(CGRect(origin: CGPoint(), size: size))
                 context.setBlendMode(.normal)
                 context.setFillColor(iconColor.cgColor)
-                let imageName: String?
-                switch icon {
-                case .message:
-                    imageName = "Peer Info/ButtonMessage"
-                case .call:
-                    imageName = "Peer Info/ButtonCall"
-                case .videoCall:
-                    imageName = "Peer Info/ButtonVideo"
-                case .voiceChat:
-                    imageName = nil
-                case .mute:
-                    imageName = nil
-                case .unmute:
-                    imageName = nil
-                case .more:
-                    imageName = nil
-                case .addMember:
-                    imageName = "Peer Info/ButtonAddMember"
-                case .search:
-                    imageName = "Peer Info/ButtonSearch"
-                case .leave:
-                    imageName = nil
-                case .stop:
-                    imageName = "Peer Info/ButtonStop"
-                }
-                if let imageName = imageName, let image = generateTintedImage(image: UIImage(bundleImageName: imageName), color: .white) {
+                let iconRef = icon.iconRef
+                if let uiImage = iconRef?.image, let image = generateTintedImage(image: uiImage, color: .white) {
                     let imageRect = CGRect(origin: CGPoint(x: floor((size.width - image.size.width) / 2.0), y: floor((size.height - image.size.height) / 2.0)), size: image.size)
                     context.clip(to: imageRect, mask: image.cgImage!)
                     context.fill(imageRect)
@@ -187,28 +164,33 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         let animationName: String?
         var playOnce = false
         var seekToEnd = false
-        switch icon {
-        case .voiceChat:
-            animationName = "anim_profilevc"
-        case .mute:
-            animationName = "anim_profileunmute"
-            if previousIcon == .unmute {
-                playOnce = true
-            } else {
-                seekToEnd = true
+        
+        if icon.iconRef?.image == nil {
+            switch icon {
+            case .voiceChat:
+                animationName = "anim_profilevc"
+            case .mute:
+                animationName = "anim_profileunmute"
+                if previousIcon == .unmute {
+                    playOnce = true
+                } else {
+                    seekToEnd = true
+                }
+            case .unmute:
+                animationName = "anim_profilemute"
+                if previousIcon == .mute {
+                    playOnce = true
+                } else {
+                    seekToEnd = true
+                }
+            case .more:
+                animationName = "anim_profilemore"
+            case .leave:
+                animationName = "anim_profileleave"
+            default:
+                animationName = nil
             }
-        case .unmute:
-            animationName = "anim_profilemute"
-            if previousIcon == .mute {
-                playOnce = true
-            } else {
-                seekToEnd = true
-            }
-        case .more:
-            animationName = "anim_profilemore"
-        case .leave:
-            animationName = "anim_profileleave"
-        default:
+        } else {
             animationName = nil
         }
         
@@ -282,5 +264,34 @@ final class PeerInfoHeaderButtonNode: HighlightableButtonNode {
         transition.updateFrameAdditiveToCenter(node: self.textNode, frame: CGRect(origin: CGPoint(x: floor((size.width - titleSize.width) / 2.0), y: size.height - titleSize.height - 9.0), size: titleSize))
         
         self.referenceNode.frame = self.containerNode.bounds
+    }
+}
+
+private extension PeerInfoHeaderButtonIcon {
+    var iconRef: IconRef? {
+        switch self {
+        case .message:
+            return .name(name: "Peer Info/ButtonMessage")
+        case .call:
+            return .iconType(iconType: .peerButtonCall)
+        case .videoCall:
+            return .iconType(iconType: .peerVideoCall)
+        case .voiceChat:
+            return nil
+        case .mute:
+            return .iconType(iconType: .peerMute)
+        case .unmute:
+            return .iconType(iconType: .peerUnmute)
+        case .more:
+            return .iconType(iconType: .peerMore)
+        case .addMember:
+            return .iconType(iconType: .peerAddMember)
+        case .search:
+            return .iconType(iconType: .peerSearch)
+        case .leave:
+            return .iconType(iconType: .peerLeave)
+        case .stop:
+            return .name(name: "Peer Info/ButtonStop")
+        }
     }
 }

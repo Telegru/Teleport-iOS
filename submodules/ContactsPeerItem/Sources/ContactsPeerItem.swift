@@ -797,6 +797,7 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
             }
             
             let premiumConfiguration = PremiumConfiguration.with(appConfiguration: item.context.currentAppConfiguration.with { $0 })
+            let isPremiumStatusEnabled = item.context.currentDahlSettings.with { $0 }.premiumSettings.showStatusIcon
             
             var credibilityIcon: EmojiStatusComponent.Content?
             var credibilityParticleColor: UIColor?
@@ -808,12 +809,12 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_ScamAccount.uppercased())
                     } else if peer.isFake {
                         credibilityIcon = .text(color: item.presentationData.theme.chat.message.incoming.scamColor, string: item.presentationData.strings.Message_FakeAccount.uppercased())
-                    } else if let emojiStatus = peer.emojiStatus {
+                    } else if let emojiStatus = peer.emojiStatus, isPremiumStatusEnabled {
                         credibilityIcon = .animation(content: .customEmoji(fileId: emojiStatus.fileId), size: CGSize(width: 20.0, height: 20.0), placeholderColor: item.presentationData.theme.list.mediaPlaceholderColor, themeColor: item.presentationData.theme.list.itemAccentColor, loopMode: .count(2))
                         if let color = emojiStatus.color {
                             credibilityParticleColor = UIColor(rgb: UInt32(bitPattern: color))
                         }
-                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled {
+                    } else if peer.isPremium && !premiumConfiguration.isPremiumDisabled && isPremiumStatusEnabled {
                         credibilityIcon = .premium(color: item.presentationData.theme.list.itemAccentColor)
                     }
                     
@@ -1214,7 +1215,7 @@ public class ContactsPeerItemNode: ItemListRevealOptionsItemNode {
                                         } else if case let .channel(channel) = peer, channel.flags.contains(.isForum) {
                                             clipStyle = .roundedRect
                                         } else {
-                                            clipStyle = .round
+                                            clipStyle = item.presentationData.theme.squareStyle ? .rect : .round
                                         }
                                         
                                         strongSelf.avatarNode.setPeer(context: item.context, theme: item.presentationData.theme, peer: peer, overrideImage: overrideImage, emptyColor: item.presentationData.theme.list.mediaPlaceholderColor, clipStyle: clipStyle, synchronousLoad: synchronousLoads, displayDimensions: displayDimensions)

@@ -11,9 +11,11 @@ import PresentationDataUtils
 import AccountContext
 import UrlEscaping
 import ShareController
+import BuildConfig
 
 private final class ProxySettingsControllerArguments {
     let toggleEnabled: (Bool) -> Void
+    let toggleDahlEnabled: (Bool) -> Void
     let addNewServer: () -> Void
     let activateServer: (ProxyServerSettings) -> Void
     let editServer: (ProxyServerSettings) -> Void
@@ -22,8 +24,9 @@ private final class ProxySettingsControllerArguments {
     let toggleUseForCalls: (Bool) -> Void
     let shareProxyList: () -> Void
     
-    init(toggleEnabled: @escaping (Bool) -> Void, addNewServer: @escaping () -> Void, activateServer: @escaping (ProxyServerSettings) -> Void, editServer: @escaping (ProxyServerSettings) -> Void, removeServer: @escaping (ProxyServerSettings) -> Void, setServerWithRevealedOptions: @escaping (ProxyServerSettings?, ProxyServerSettings?) -> Void, toggleUseForCalls: @escaping (Bool) -> Void, shareProxyList: @escaping () -> Void) {
+    init(toggleEnabled: @escaping (Bool) -> Void, toggleDahlEnabled: @escaping (Bool) -> Void, addNewServer: @escaping () -> Void, activateServer: @escaping (ProxyServerSettings) -> Void, editServer: @escaping (ProxyServerSettings) -> Void, removeServer: @escaping (ProxyServerSettings) -> Void, setServerWithRevealedOptions: @escaping (ProxyServerSettings?, ProxyServerSettings?) -> Void, toggleUseForCalls: @escaping (Bool) -> Void, shareProxyList: @escaping () -> Void) {
         self.toggleEnabled = toggleEnabled
+        self.toggleDahlEnabled = toggleDahlEnabled
         self.addNewServer = addNewServer
         self.activateServer = activateServer
         self.editServer = editServer
@@ -59,17 +62,20 @@ private enum ProxySettingsControllerEntryId: Equatable, Hashable {
 }
 
 private enum ProxySettingsControllerEntry: ItemListNodeEntry {
+    case proxyTogglesHeader(PresentationTheme, String)
+    case dahlEnabled(PresentationTheme, String, Bool)
     case enabled(PresentationTheme, String, Bool, Bool)
+    case proxyTogglesFooter(PresentationTheme, String)
     case serversHeader(PresentationTheme, String)
     case addServer(PresentationTheme, String, Bool)
-    case server(Int, PresentationTheme, PresentationStrings, ProxyServerSettings, Bool, DisplayProxyServerStatus, ProxySettingsServerItemEditing, Bool)
+    case server(Int, PresentationTheme, PresentationStrings, String?, ProxyServerSettings, Bool, DisplayProxyServerStatus, ProxySettingsServerItemEditing, Bool)
     case shareProxyList(PresentationTheme, String)
     case useForCalls(PresentationTheme, String, Bool)
     case useForCallsInfo(PresentationTheme, String)
     
     var section: ItemListSectionId {
         switch self {
-            case .enabled:
+            case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter:
                 return ProxySettingsControllerSection.enabled.rawValue
             case .serversHeader, .addServer, .server:
                 return ProxySettingsControllerSection.servers.rawValue
@@ -82,27 +88,51 @@ private enum ProxySettingsControllerEntry: ItemListNodeEntry {
     
     var stableId: ProxySettingsControllerEntryId {
         switch self {
-            case .enabled:
+            case .proxyTogglesHeader:
                 return .index(0)
-            case .serversHeader:
+            case .dahlEnabled:
                 return .index(1)
-            case .addServer:
+            case .enabled:
                 return .index(2)
-            case let .server(_, _, _, settings, _, _, _, _):
+            case .proxyTogglesFooter:
+                return .index(3)
+            case .serversHeader:
+                return .index(4)
+            case .addServer:
+                return .index(5)
+            case let .server(_, _, _, _, settings, _, _, _, _):
                 return .server(settings.host, settings.port, settings.connection)
             case .shareProxyList:
-                return .index(3)
+                return .index(6)
             case .useForCalls:
-                return .index(4)
+                return .index(7)
             case .useForCallsInfo:
-                return .index(5)
+                return .index(8)
         }
     }
     
     static func ==(lhs: ProxySettingsControllerEntry, rhs: ProxySettingsControllerEntry) -> Bool {
         switch lhs {
+            case let .proxyTogglesHeader(lhsTheme, lhsText):
+                if case let .proxyTogglesHeader(rhsTheme, rhsText) = rhs, lhsTheme === rhsTheme, lhsText == rhsText {
+                    return true
+                } else {
+                    return false
+                }
             case let .enabled(lhsTheme, lhsText, lhsValue, lhsCreatesNew):
                 if case let .enabled(rhsTheme, rhsText, rhsValue, rhsCreatesNew) = rhs, lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue, lhsCreatesNew == rhsCreatesNew {
+                    return true
+                } else {
+                    return false
+                }
+            case let .dahlEnabled(lhsTheme, lhsText, lhsValue):
+                if case let .dahlEnabled(rhsTheme, rhsText, rhsValue) = rhs, lhsTheme === rhsTheme, lhsText == rhsText, lhsValue == rhsValue {
+                    return true
+                } else {
+                    return false
+                }
+            case let .proxyTogglesFooter(lhsTheme, lhsText):
+                if case let .proxyTogglesFooter(rhsTheme, rhsText) = rhs, lhsTheme === rhsTheme, lhsText == rhsText {
                     return true
                 } else {
                     return false
@@ -119,8 +149,8 @@ private enum ProxySettingsControllerEntry: ItemListNodeEntry {
                 } else {
                     return false
                 }
-            case let .server(lhsIndex, lhsTheme, lhsStrings, lhsSettings, lhsActive, lhsStatus, lhsEditing, lhsEnabled):
-                if case let .server(rhsIndex, rhsTheme, rhsStrings, rhsSettings, rhsActive, rhsStatus, rhsEditing, rhsEnabled) = rhs, lhsIndex == rhsIndex, lhsTheme === rhsTheme, lhsStrings === rhsStrings, lhsSettings == rhsSettings, lhsActive == rhsActive, lhsStatus == rhsStatus, lhsEditing == rhsEditing, lhsEnabled == rhsEnabled {
+            case let .server(lhsIndex, lhsTheme, lhsStrings, lhsTitle, lhsSettings, lhsActive, lhsStatus, lhsEditing, lhsEnabled):
+                if case let .server(rhsIndex, rhsTheme, rhsStrings, rhsTitle, rhsSettings, rhsActive, rhsStatus, rhsEditing, rhsEnabled) = rhs, lhsIndex == rhsIndex, lhsTheme === rhsTheme, lhsStrings == rhsStrings, lhsSettings == rhsSettings, lhsTitle == rhsTitle, lhsActive == rhsActive, lhsStatus == rhsStatus, lhsEditing == rhsEditing, lhsEnabled == rhsEnabled {
                     return true
                 } else {
                     return false
@@ -148,46 +178,67 @@ private enum ProxySettingsControllerEntry: ItemListNodeEntry {
     
     static func <(lhs: ProxySettingsControllerEntry, rhs: ProxySettingsControllerEntry) -> Bool {
         switch lhs {
+            case .proxyTogglesHeader:
+                switch rhs {
+                    case .proxyTogglesHeader:
+                        return false
+                    default:
+                        return true
+                }
+            case .dahlEnabled:
+                switch rhs {
+                    case .proxyTogglesHeader, .dahlEnabled:
+                        return false
+                    default:
+                        return true
+                }
             case .enabled:
                 switch rhs {
-                    case .enabled:
+                    case .proxyTogglesHeader, .dahlEnabled, .enabled:
+                        return false
+                    default:
+                        return true
+                }
+            case .proxyTogglesFooter:
+                switch rhs {
+                    case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter:
                         return false
                     default:
                         return true
                 }
             case .serversHeader:
                 switch rhs {
-                    case .enabled, .serversHeader:
+                    case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter, .serversHeader:
                         return false
                     default:
                         return true
                 }
             case .addServer:
                 switch rhs {
-                    case .enabled, .serversHeader, .addServer:
+                    case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter, .serversHeader, .addServer:
                         return false
                     default:
                         return true
                 }
-            case let .server(lhsIndex, _, _, _, _, _, _, _):
+            case let .server(lhsIndex, _, _, _, _, _, _, _, _):
                 switch rhs {
-                    case .enabled, .serversHeader, .addServer:
+                    case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter:
                         return false
-                    case let .server(rhsIndex, _, _, _, _, _, _, _):
+                    case let .server(rhsIndex, _, _, _, _, _, _, _, _):
                         return lhsIndex < rhsIndex
                     default:
                         return true
                 }
             case .shareProxyList:
                 switch rhs {
-                    case .enabled, .serversHeader, .addServer, .server, .shareProxyList:
+                    case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter, .serversHeader, .addServer, .server, .shareProxyList:
                         return false
                     default:
                         return true
             }
             case .useForCalls:
                 switch rhs {
-                    case .enabled, .serversHeader, .addServer, .server, .shareProxyList, .useForCalls:
+                    case .proxyTogglesHeader, .enabled, .dahlEnabled, .proxyTogglesFooter, .serversHeader, .addServer, .server, .shareProxyList, .useForCalls:
                         return false
                     default:
                         return true
@@ -200,6 +251,8 @@ private enum ProxySettingsControllerEntry: ItemListNodeEntry {
     func item(presentationData: ItemListPresentationData, arguments: Any) -> ListViewItem {
         let arguments = arguments as! ProxySettingsControllerArguments
         switch self {
+            case let .proxyTogglesHeader(_, text):
+                return ItemListSectionHeaderItem(presentationData: presentationData, text: text, sectionId: self.section)
             case let .enabled(_, text, value, createsNew):
                 return ItemListSwitchItem(presentationData: presentationData, title: text, value: value, enableInteractiveChanges: !createsNew, enabled: true, sectionId: self.section, style: .blocks, updated: { value in
                     if createsNew {
@@ -208,14 +261,20 @@ private enum ProxySettingsControllerEntry: ItemListNodeEntry {
                         arguments.toggleEnabled(value)
                     }
                 })
+            case let .dahlEnabled(_, text, value):
+                return ItemListSwitchItem(presentationData: presentationData, title: text, value: value, enableInteractiveChanges: false, enabled: true, sectionId: self.section, style: .blocks, updated: { value in
+                    arguments.toggleDahlEnabled(value)
+                })
+            case let .proxyTogglesFooter(_, text):
+                return ItemListTextItem(presentationData: presentationData, text: .plain(text), sectionId: self.section)
             case let .serversHeader(_, text):
                 return ItemListSectionHeaderItem(presentationData: presentationData, text: text, sectionId: self.section)
             case let .addServer(_, text, _):
                 return ProxySettingsActionItem(presentationData: presentationData, title: text, icon: .add, sectionId: self.section, editing: false, action: {
                     arguments.addNewServer()
                 })
-            case let .server(_, theme, strings, settings, active, status, editing, enabled):
-                return ProxySettingsServerItem(theme: theme, strings: strings, server: settings, activity: status.activity, active: active, color: enabled ? .accent : .secondary, label: status.text, labelAccent: status.textActive, editing: editing, sectionId: self.section, action: {
+            case let .server(_, theme, strings, title, settings, active, status, editing, enabled):
+            return ProxySettingsServerItem(theme: theme, strings: strings, title: title, server: settings, activity: status.activity, active: active, color: enabled ? .accent : .secondary, label: status.text, labelAccent: status.textActive, editing: editing, sectionId: self.section, action: {
                     arguments.activateServer(settings)
                 }, infoAction: {
                     arguments.editServer(settings)
@@ -238,10 +297,16 @@ private enum ProxySettingsControllerEntry: ItemListNodeEntry {
     }
 }
 
-private func proxySettingsControllerEntries(theme: PresentationTheme, strings: PresentationStrings, state: ProxySettingsControllerState, proxySettings: ProxySettings, statuses: [ProxyServerSettings: ProxyServerStatus], connectionStatus: ConnectionStatus) -> [ProxySettingsControllerEntry] {
+private func proxySettingsControllerEntries(theme: PresentationTheme, strings: PresentationStrings, state: ProxySettingsControllerState, proxySettings: ProxySettings, statuses: [ProxyServerSettings: ProxyServerStatus], connectionStatus: ConnectionStatus, buildConfig: BuildConfig) -> [ProxySettingsControllerEntry] {
     var entries: [ProxySettingsControllerEntry] = []
 
-    entries.append(.enabled(theme, strings.ChatSettings_ConnectionType_UseProxy, proxySettings.enabled, proxySettings.servers.isEmpty))
+    let savedProxyServers = proxySettings.servers.filter { $0.host != buildConfig.dProxyServer }
+    let proxyEnabled = proxySettings.enabled && proxySettings.activeServer?.host != buildConfig.dProxyServer
+    let dahlProxyEnabled = proxySettings.enabled && proxySettings.activeServer?.host == buildConfig.dProxyServer
+    entries.append(.proxyTogglesHeader(theme, strings.ChatSettings_ConnectionType_Title.uppercased()))
+    entries.append(.dahlEnabled(theme, "DahlSettings.Proxy".tp_loc(lang: strings.baseLanguageCode), dahlProxyEnabled))
+    entries.append(.enabled(theme, "ChatSettings.ConnectionType.UseProxy".tp_loc(lang: strings.baseLanguageCode), proxyEnabled, savedProxyServers.isEmpty))
+    entries.append(.proxyTogglesFooter(theme, "DahlSettings.General.Network.Footer".tp_loc(lang: strings.baseLanguageCode)))
     entries.append(.serversHeader(theme, strings.SocksProxySetup_SavedProxies))
     entries.append(.addServer(theme, strings.SocksProxySetup_AddProxy, state.editing))
     var index = 0
@@ -283,10 +348,12 @@ private func proxySettingsControllerEntries(theme: PresentationTheme, strings: P
                     displayStatus = DisplayProxyServerStatus(activity: false, text: text, textActive: false)
             }
         }
-        entries.append(.server(index, theme, strings, server, server == proxySettings.activeServer, displayStatus, ProxySettingsServerItemEditing(editable: true, editing: state.editing, revealed: state.revealedServer == server), proxySettings.enabled))
+        let isDahlProxy = server.host == buildConfig.dProxyServer
+        let title = isDahlProxy ? "DahlSettings.Proxy".tp_loc(lang: strings.baseLanguageCode) : nil
+        entries.append(.server(index, theme, strings, title, server, server == proxySettings.activeServer, displayStatus, ProxySettingsServerItemEditing(editable: !isDahlProxy, editing: !isDahlProxy && state.editing, revealed: !isDahlProxy && state.revealedServer == server, infoAvailable: !isDahlProxy), proxySettings.enabled))
         index += 1
     }
-    if !proxySettings.servers.isEmpty {
+    if !savedProxyServers.isEmpty {
         entries.append(.shareProxyList(theme, strings.SocksProxySetup_ShareProxyList))
     }
     
@@ -332,11 +399,38 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
         }
     }
     
+    let baseAppBundleId = Bundle.main.bundleIdentifier!
+    let buildConfig = BuildConfig(baseAppBundleId: baseAppBundleId)
+    
     var shareProxyListImpl: (() -> Void)?
     
     let arguments = ProxySettingsControllerArguments(toggleEnabled: { value in
         let _ = updateProxySettingsInteractively(accountManager: accountManager, { current in
             var current = current
+            if value && current.activeServer?.host == buildConfig.dProxyServer {
+                let savedServers = current.servers.filter { $0.host != buildConfig.dProxyServer }
+                current.activeServer = savedServers.first
+            }
+            current.enabled = value
+            return current
+        }).start()
+    }, toggleDahlEnabled: { value in
+        let _ = updateProxySettingsInteractively(accountManager: accountManager, { current in
+            var current = current
+            if value {
+                if let dahlServer = current.servers.first(where: { $0.host == buildConfig.dProxyServer }) {
+                    current.activeServer = dahlServer
+                } else {
+                    let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret)
+                    let dahlServer = ProxyServerSettings(
+                        host: buildConfig.dProxyServer,
+                        port: buildConfig.dProxyPort,
+                        connection: .mtp(secret: parsedSecret!.serialize())
+                    )
+                    current.servers.insert(dahlServer, at: 0)
+                    current.activeServer = dahlServer
+                }
+            }
             current.enabled = value
             return current
         }).start()
@@ -410,7 +504,8 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
         }
         
         let rightNavigationButton: ItemListNavigationButton?
-        if proxySettings.servers.isEmpty {
+        let savedProxies = proxySettings.servers.filter { $0.host != buildConfig.dProxyServer }
+        if savedProxies.isEmpty {
             rightNavigationButton = nil
         } else if state.editing {
             rightNavigationButton = ItemListNavigationButton(content: .text(presentationData.strings.Common_Done), style: .bold, enabled: true, action: {
@@ -431,7 +526,7 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
         }
         
         let controllerState = ItemListControllerState(presentationData: ItemListPresentationData(presentationData), title: .text(presentationData.strings.SocksProxySetup_Title), leftNavigationButton: leftNavigationButton, rightNavigationButton: rightNavigationButton, backNavigationButton: ItemListBackButton(title: presentationData.strings.Common_Back))
-        let listState = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: proxySettingsControllerEntries(theme: presentationData.theme, strings: presentationData.strings, state: state, proxySettings: proxySettings, statuses: statuses, connectionStatus: connectionStatus), style: .blocks)
+        let listState = ItemListNodeState(presentationData: ItemListPresentationData(presentationData), entries: proxySettingsControllerEntries(theme: presentationData.theme, strings: presentationData.strings, state: state, proxySettings: proxySettings, statuses: statuses, connectionStatus: connectionStatus, buildConfig: buildConfig), style: .blocks)
         
         return (controllerState, (listState, arguments))
     }
@@ -446,7 +541,7 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
     }
     controller.setReorderEntry({ (fromIndex: Int, toIndex: Int, entries: [ProxySettingsControllerEntry]) -> Signal<Bool, NoError> in
         let fromEntry = entries[fromIndex]
-        guard case let .server(_, _, _, fromServer, _, _, _, _) = fromEntry else {
+        guard case let .server(_, _, _, _, fromServer, _, _, _, _) = fromEntry else {
             return .single(false)
         }
         var referenceServer: ProxyServerSettings?
@@ -454,7 +549,7 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
         var afterAll = false
         if toIndex < entries.count {
             switch entries[toIndex] {
-                case let .server(_, _, _, toServer, _, _, _, _):
+                case let .server(_, _, _, _, toServer, _, _, _, _):
                     referenceServer = toServer
                 default:
                     if entries[toIndex] < fromEntry {
@@ -469,6 +564,8 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
 
         return updateProxySettingsInteractively(accountManager: accountManager, { current in
             var current = current
+            
+            let isPinnedServerExists = current.servers.firstIndex { $0.host != buildConfig.dProxyServer } != nil
             if let index = current.servers.firstIndex(of: fromServer) {
                 current.servers.remove(at: index)
             }
@@ -479,7 +576,7 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
                         if fromIndex < toIndex {
                             current.servers.insert(fromServer, at: i + 1)
                         } else {
-                            current.servers.insert(fromServer, at: i)
+                            current.servers.insert(fromServer, at: isPinnedServerExists && i != 0 ? i : 1)
                         }
                         inserted = true
                         break
@@ -489,7 +586,7 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
                     current.servers.append(fromServer)
                 }
             } else if beforeAll {
-                current.servers.insert(fromServer, at: 0)
+                current.servers.insert(fromServer, at: isPinnedServerExists ? 1 : 0)
             } else if afterAll {
                 current.servers.append(fromServer)
             }
@@ -505,7 +602,7 @@ public func proxySettingsController(accountManager: AccountManager<TelegramAccou
             |> take(1)
             |> deliverOnMainQueue).start(next: { settings in
                 var result = ""
-                for server in settings.servers {
+                for server in settings.servers.filter( { $0.host != buildConfig.dProxyServer }) {
                     if !result.isEmpty {
                         result += "\n\n"
                     }
