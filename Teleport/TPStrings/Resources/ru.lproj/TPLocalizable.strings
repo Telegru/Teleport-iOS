@@ -87,6 +87,7 @@
 
 "DahlSettings.Appearance.Chats.Header" = "Включить в чатах и каналах";
 "DahlSettings.Appearance.Chats.CustomChannelWallpapers" = "Кастомные обои в каналах";
+"DahlSettings.Appearance.Chats.ChannelBottomPanel" = "Нижняя панель в каналах";
 
 "DahlSettings.Appearance.ChatsList.Header" = "Вид списка чатов";
 

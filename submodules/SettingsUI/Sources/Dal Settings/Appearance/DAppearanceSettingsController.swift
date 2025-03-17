@@ -17,7 +17,9 @@ import TPStrings
 
 private final class DAppearanceSettingsArguments {
     let context: AccountContext
+    
     let updateShowCustomWallpaperInChannels: (Bool) -> Void
+    let updateChannelBottomPanel: (Bool) -> Void
     let updateChatsListViewType: (ListViewType) -> Void
     let openSettingsItemsConfiguration: () -> Void
     let openTabBarSettings: () -> Void
@@ -28,6 +30,7 @@ private final class DAppearanceSettingsArguments {
     init(
         context: AccountContext,
         updateShowCustomWallpaperInChannels: @escaping (Bool) -> Void,
+        updateChannelBottomPanel: @escaping (Bool) -> Void,
         updateChatsListViewType: @escaping (ListViewType) -> Void,
         openSettingsItemsConfiguration: @escaping () -> Void,
         openTabBarSettings: @escaping () -> Void,
@@ -37,6 +40,7 @@ private final class DAppearanceSettingsArguments {
     ) {
         self.context = context
         self.updateShowCustomWallpaperInChannels = updateShowCustomWallpaperInChannels
+        self.updateChannelBottomPanel = updateChannelBottomPanel
         self.updateChatsListViewType = updateChatsListViewType
         self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
         self.openTabBarSettings = openTabBarSettings
@@ -59,6 +63,7 @@ private enum DAppearanceSettingsSection: Int32 {
 private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     case chatsAppearanceHeader(title: String)
     case showCustomWallpaperInChannels(title: String, isActive: Bool)
+    case showChannelBottomPanel(title: String, isActive: Bool)
     
     case listViewTypeHeader(title: String)
     case listViewTypeOption(title: String, type: ListViewType, isSelected: Bool)
@@ -79,7 +84,7 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     var section: ItemListSectionId {
         switch self {
-        case .chatsAppearanceHeader, .showCustomWallpaperInChannels:
+        case .chatsAppearanceHeader, .showCustomWallpaperInChannels, .showChannelBottomPanel:
             return DAppearanceSettingsSection.chatsAppearance.rawValue
             
         case .listViewTypeHeader, .listViewTypeOption:
@@ -108,8 +113,10 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 0
         case .showCustomWallpaperInChannels:
             return 1
-        case .listViewTypeHeader:
+        case .showChannelBottomPanel:
             return 2
+        case .listViewTypeHeader:
+            return 3
         case let .listViewTypeOption(_, type, _):
             return Int32(type.rawValue + 100)
         case .menuItemsHeader:
@@ -147,6 +154,12 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             
         case let .showCustomWallpaperInChannels(lhsTitle, lhsIsActive):
             if case let .showCustomWallpaperInChannels(rhsTitle, rhsIsActive) = rhs {
+                return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+            
+        case let .showChannelBottomPanel(lhsTitle, lhsIsActive):
+            if case let .showChannelBottomPanel(rhsTitle, rhsIsActive) = rhs {
                 return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
             }
             return false
@@ -254,6 +267,18 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                 style: .blocks,
                 updated: { value in
                     arguments.updateShowCustomWallpaperInChannels(value)
+                }
+            )
+            
+        case let .showChannelBottomPanel(title, isActive):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: isActive,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { value in
+                    arguments.updateChannelBottomPanel(value)
                 }
             )
             
@@ -395,6 +420,14 @@ public func dAppearanceSettingsController(
             }
             .start()
         },
+        updateChannelBottomPanel: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.appearanceSettings.showChannelBottomPanel = value
+                return updatedSettings
+            }
+            .start()
+        },
         updateChatsListViewType: { selectedType in
             let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
                 var updatedSettings = settings
@@ -465,6 +498,12 @@ public func dAppearanceSettingsController(
             .showCustomWallpaperInChannels(
                 title: "DahlSettings.Appearance.Chats.CustomChannelWallpapers".tp_loc(lang: lang),
                 isActive: dahlSettings.appearanceSettings.showCustomWallpaperInChannels
+            )
+        )
+        entries.append(
+            .showChannelBottomPanel(
+                title: "DahlSettings.Appearance.Chats.ChannelBottomPanel".tp_loc(lang: lang),
+                isActive: dahlSettings.appearanceSettings.showChannelBottomPanel
             )
         )
         

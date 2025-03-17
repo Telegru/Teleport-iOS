@@ -1599,6 +1599,19 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
         var dismissedOverlayContextPanelNode: ChatInputContextPanelNode?
         
         let inputPanelNodes = inputPanelForChatPresentationIntefaceState(self.chatPresentationInterfaceState, context: self.context, currentPanel: self.inputPanelNode, currentSecondaryPanel: self.secondaryInputPanelNode, textInputPanelNode: self.textInputPanelNode, interfaceInteraction: self.interfaceInteraction)
+        if !self.context.currentDahlSettings.with({ $0 }).appearanceSettings.showChannelBottomPanel {
+            if self.chatPresentationInterfaceState.interfaceState.selectionState != nil || self.chatPresentationInterfaceState.search != nil {
+                self.inputPanelBackgroundNode.isHidden = false
+                self.inputPanelBackgroundSeparatorNode.isHidden = false
+                self.inputPanelBottomBackgroundSeparatorNode.isHidden = false
+            } else if inputPanelNodes.primary != nil || inputPanelNodes.secondary != nil {
+                if inputPanelNodes.primary == nil && inputPanelNodes.secondary == nil {
+                    self.inputPanelBackgroundNode.isHidden = true
+                    self.inputPanelBackgroundSeparatorNode.isHidden = true
+                    self.inputPanelBottomBackgroundSeparatorNode.isHidden = true
+                }
+            }
+        }
         
         let inputPanelBottomInset = max(insets.bottom, inputPanelBottomInsetTerm)
         
