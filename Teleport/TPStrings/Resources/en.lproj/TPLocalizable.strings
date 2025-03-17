@@ -87,6 +87,7 @@
 
 "DahlSettings.Appearance.Chats.Header" = "Enable in chats and channels";
 "DahlSettings.Appearance.Chats.CustomChannelWallpapers" = "Custom wallpapers in channels";
+"DahlSettings.Appearance.Chats.ChannelBottomPanel" = "Channel bottom panel";
 
 "DahlSettings.Appearance.ChatsList.Header" = "View of the chat list";
 

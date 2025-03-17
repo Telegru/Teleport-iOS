@@ -6,17 +6,20 @@ public struct DAppearanceSettings: Codable, Equatable {
     public var vkIcons: Bool
     public var alternativeAvatarFont: Bool
     public var showCustomWallpaperInChannels: Bool
+    public var showChannelBottomPanel: Bool
     
     public init(
         squareStyle: Bool,
         vkIcons: Bool,
         alternativeAvatarFont: Bool,
-        showCustomWallpaperInChannels: Bool
+        showCustomWallpaperInChannels: Bool,
+        showChannelBottomPanel: Bool
     ) {
         self.squareStyle = squareStyle
         self.vkIcons = vkIcons
         self.alternativeAvatarFont = alternativeAvatarFont
         self.showCustomWallpaperInChannels = showCustomWallpaperInChannels
+        self.showChannelBottomPanel = showChannelBottomPanel
     }
     
     public init(from decoder: any Decoder) throws {
@@ -25,6 +28,7 @@ public struct DAppearanceSettings: Codable, Equatable {
         self.vkIcons = try container.decode(Bool.self, forKey: .vkIcons)
         self.alternativeAvatarFont = try container.decode(Bool.self, forKey: .alternativeAvatarFont)
         self.showCustomWallpaperInChannels = try container.decodeIfPresent(Bool.self, forKey: .showCustomWallpaperInChannels) ?? true
+        self.showChannelBottomPanel = try container.decodeIfPresent(Bool.self, forKey: .showChannelBottomPanel) ?? true
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -33,6 +37,7 @@ public struct DAppearanceSettings: Codable, Equatable {
         try container.encode(vkIcons, forKey: .vkIcons)
         try container.encode(alternativeAvatarFont, forKey: .alternativeAvatarFont)
         try container.encode(showCustomWallpaperInChannels, forKey: .showCustomWallpaperInChannels)
+        try container.encode(showChannelBottomPanel, forKey: .showChannelBottomPanel)
     }
     
     enum CodingKeys: CodingKey {
@@ -40,6 +45,7 @@ public struct DAppearanceSettings: Codable, Equatable {
         case vkIcons
         case alternativeAvatarFont
         case showCustomWallpaperInChannels
+        case showChannelBottomPanel
     }
 }
 
@@ -50,7 +56,8 @@ extension DAppearanceSettings {
             squareStyle: false,
             vkIcons: false,
             alternativeAvatarFont: false,
-            showCustomWallpaperInChannels: true
+            showCustomWallpaperInChannels: true,
+            showChannelBottomPanel: true
         )
     }
 }
