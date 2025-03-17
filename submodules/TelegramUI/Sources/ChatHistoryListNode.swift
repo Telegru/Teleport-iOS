@@ -545,7 +545,6 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         break
                     }
                     
-                    // Если у нас есть messageIndex, вызываем loadMoreAt
                     if let messageIndex = messageIndex {
                         customChatContents.loadMoreAt(messageIndex: messageIndex)
                     }
@@ -3297,8 +3296,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                                 }
                             }
                         default:
-                            if self.chatHistoryLocationValue == nil {
-                                let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
+                            let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
+                            if self.chatHistoryLocationValue?.content != locationInput {
                                 self.chatHistoryLocationValue = ChatHistoryLocationInput(content: locationInput, id: self.takeNextHistoryLocationId())
                             }
                     }

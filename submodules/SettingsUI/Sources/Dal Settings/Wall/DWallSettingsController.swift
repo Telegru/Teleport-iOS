@@ -577,11 +577,14 @@ public func dWallSettingsController(
             let presentationData = context.sharedContext.currentPresentationData.with { $0 }
             let lang = presentationData.strings.baseLanguageCode
             
-            let alertController = standardTextAlertController(
-                theme: AlertControllerTheme(presentationData: presentationData), title: nil,
-                text: "DahlSettings.Wall.Excluded.RemoveAllConfirmation".tp_loc(lang: lang),
-                actions: [
-                    TextAlertAction(type: .destructiveAction, title: presentationData.strings.Common_Delete, action: {
+            let actionSheet = ActionSheetController(presentationData: presentationData)
+            
+            actionSheet.setItemGroups([
+                ActionSheetItemGroup(items: [
+                    ActionSheetTextItem(title: "DahlSettings.Wall.Excluded.RemoveAllConfirmation".tp_loc(lang: lang)),
+                    ActionSheetButtonItem(title: presentationData.strings.Common_Delete, color: .destructive, action: { [weak actionSheet] in
+                        actionSheet?.dismissAnimated()
+                        
                         let _ = updateDalSettingsInteractively(
                             accountManager: context.sharedContext.accountManager,
                             { settings in
@@ -592,11 +595,16 @@ public func dWallSettingsController(
                                 return updatedSettings
                             }
                         ).start()
-                    }),
-                    TextAlertAction(type: .defaultAction, title: presentationData.strings.Common_Cancel, action: {})
-                ]
-            )
-            presentControllerImpl?(alertController, nil)
+                    })
+                ]),
+                ActionSheetItemGroup(items: [
+                    ActionSheetButtonItem(title: presentationData.strings.Common_Cancel, color: .accent, font: .bold, action: { [weak actionSheet] in
+                        actionSheet?.dismissAnimated()
+                    })
+                ])
+            ])
+            
+            presentControllerImpl?(actionSheet, nil)
         },
         setPeerIdWithRevealedOptions: { peerId, fromPeerId in
             updateState { state in
