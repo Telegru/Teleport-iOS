@@ -262,11 +262,7 @@ public final class WallpaperPatternPanelNode: ASDisplayNode {
         |> map { wallpapers -> [TelegramWallpaper] in
             var existingIds = Set<MediaId>()
             
-            let dWallpapers = DWallpaper.allCases.compactMap {
-                $0.makeWallpaper()
-            }
-            
-            return dWallpapers + wallpapers.filter { wallpaper in
+            return wallpapers.filter { wallpaper in
                 if case let .file(file) = wallpaper, wallpaper.isPattern, file.file.mimeType != "image/webp" {
                     if file.id == 0 {
                         return true
