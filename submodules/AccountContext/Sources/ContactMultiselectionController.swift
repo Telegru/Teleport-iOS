@@ -48,14 +48,10 @@ public enum ContactMultiselectionControllerMode {
         public var onlyUsers: Bool
         public var disableChannels: Bool
         public var disableBots: Bool
-<<<<<<< HEAD
         public var disableContacts: Bool
-        
-=======
         public var onlyChannels: Bool
         public var disableArchived: Bool
 
->>>>>>> 57ee35cd2d (DAHL-53 Add wall settings)
         public init(
             title: String,
             searchPlaceholder: String,

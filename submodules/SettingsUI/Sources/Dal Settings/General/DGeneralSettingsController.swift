@@ -37,7 +37,7 @@ private final class DGeneralSettingsArguments {
         updateHidePhone: @escaping (Bool) -> Void,
         openPremiumSettings: @escaping () -> Void,
         openSettingsItemsConfiguration: @escaping () -> Void,
-        openTabBarSettings: @escaping () -> Void
+        openTabBarSettings: @escaping () -> Void,
         openWallSettings: @escaping () -> Void
     ) {
         self.context = context
@@ -145,16 +145,12 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             return 9
         case .profileFooter:
             return 10
-        case .premiumSettings:
-            return 11
-        case .premiumSettingsFooter:
-            return 12
         case .wallSettings:
-            return 8
+            return 11
         case .premiumSettings:
-            return 9
+            return 12
         case .premiumSettingsFooter:
-            return 10
+            return 13
         }
     }
     
@@ -168,7 +164,7 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             return DGeneralSettingsEntryTag.wallSettings
         case .premiumSettings:
             return DGeneralSettingsEntryTag.premiumSettings
-        case .server, .serversHeader, .connectionHeader, .connectionFooter, .profileHeader, .profileFooter, .premiumSettingsFooter:
+        case .server, .serversHeader, .connectionHeader, .connectionFooter, .profileHeader, .profileFooter, .premiumSettingsFooter, .menuItemsHeader, .menuItems, .tabBar:
             return nil
         }
     }

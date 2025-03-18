@@ -135,9 +135,10 @@ extension DWallChatContent {
         
         var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
         private var pageAnchor: MessageIndex?
+        private var currentMessageIndex: MessageIndex?
         private var filterBefore: [PeerId: MessageIndex]?
         private var currentAnchors: [PeerId: MessageIndex]?
-        private let messagesPerPage = 44
+        private let messagesPerPage = 30
         
         init(
             queue: Queue,
@@ -315,13 +316,11 @@ extension DWallChatContent {
             let messagesPerPage = self.messagesPerPage
             let filterBefore = self.filterBefore!
             let context = self.context
-            
+            showLoading()
+
             loadMaxCountDisposable?.dispose()
             
-            //FIXME: Тут вероятно перестанет работать подгрузка обновлений, по лайкам
             historyViewDisposable?.dispose()
-            //FIXME: Тут вероятно перестанет работать подгрузка обновлений, по подпискам
-//            anchorsDisposable?.dispose()
             
             loadMaxCountDisposable = (context.account.viewTracker.tailChatListView(
                 groupId: .root,
@@ -346,26 +345,53 @@ extension DWallChatContent {
                         peerIds: Array(topAnchors.keys),
                         anchors: topAnchors,
                         filterBofore: filterBefore,
-                        count: messagesPerPage * 4,
+                        count: messagesPerPage,
                         clipHoles: false,
                         takeTail: true
                     )
-                    |> map { result in
-                        return (result, topAnchors)
-                    }
                 })
             } |> take(1))
-            .startStrict(next: { [weak self] (view, topAnchors) in
+            .startStrict(next: { [weak self] (view) in
                 guard let self = self else { return }
-                
-                if topAnchors.isEmpty || view.0.entries.isEmpty {
-                    self.checkAndMarkAsReadIfNeeded(view: view.0)
-                    return
+
+                var updatedAnchors: [PeerId: MessageIndex] = [:]
+
+                var oldestMessageByPeer: [PeerId: MessageIndex] = [:]
+                for entry in view.0.entries {
+                    let peerId = entry.message.id.peerId
+                    if let existing = oldestMessageByPeer[peerId] {
+                        if entry.index < existing {
+                            oldestMessageByPeer[peerId] = entry.index
+                        }
+                    } else {
+                        oldestMessageByPeer[peerId] = entry.index
+                    }
                 }
-                self.currentAnchors = topAnchors
-                self.mergedHistoryView = view.0
-                self.historyViewStream.putNext((view.0, self.mergedHistoryView?.entries.isEmpty == true ? view.1 : .Generic))
-                self.checkAndMarkAsReadIfNeeded(view: view.0)
+
+                for (peerId, messageIndex) in oldestMessageByPeer {
+                    updatedAnchors[peerId] = messageIndex
+                }
+                
+                let sortedEntries = view.0.entries.sorted(by: { $0.index < $1.index })
+
+                if let oldestMessage = sortedEntries.first {
+                    self.pageAnchor = oldestMessage.index
+                }
+
+                self.currentAnchors = updatedAnchors
+                self.updateHistoryViewRequest()
+
+                if let newestMessage = sortedEntries.last {
+                    for peerId in originalPeers {
+                        let location = ChatLocation.peer(id: peerId)
+                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                        self.context.applyMaxReadIndex(
+                            for: location,
+                            contextHolder: contextHolder,
+                            messageIndex: newestMessage
+                        )
+                    }
+                }
             })
         }
         
@@ -483,6 +509,27 @@ extension DWallChatContent {
             
             self.historyViewDisposable?.dispose()
             let context = self.context
+            
+            #if DEBUG
+            let previousEntryCount = self.mergedHistoryView?.entries.count ?? 0
+            
+            if let mergedHistoryView, !mergedHistoryView.entries.isEmpty {
+                if let pageAnchor = self.pageAnchor, let currentMessageIndex = self.currentMessageIndex {
+                    let pageAnchorPositions = mergedHistoryView.entries.enumerated()
+                        .filter { $0.element.index >= pageAnchor }
+                        .prefix(1)
+                        .map { $0.offset }
+                    
+                    let currentMessageIndexPositions = mergedHistoryView.entries.enumerated()
+                        .filter { $0.element.index >= currentMessageIndex }
+                        .prefix(1)
+                        .map { $0.offset }
+                    
+                    print("📌📌📌 PAGE ANCHOR BEFORE REQUEST: \(pageAnchor)")
+                    print("📌📌📌 Position in list before request: \(pageAnchorPositions.first.map { "[\($0)]" } ?? "not found")/\(mergedHistoryView.entries.count) \(currentMessageIndexPositions.first.map { "[\($0)]" } ?? "not found") ")
+                }
+            }
+            #endif
 
             self.historyViewDisposable = ((context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
                 peerIds: Array(currentAnchors.keys),
@@ -496,57 +543,100 @@ extension DWallChatContent {
             .start(next: { [weak self] result in
                 guard let self = self else { return }
 
-                let (view, updateType, _) = result
+                let (view, _, _) = result
+                #if DEBUG
+                print("📌📌📌 HISTORY VIEW LOADED: \(view.entries.count) entries =====")
+                
+                let newCount = view.entries.count
+                let diff = newCount - previousEntryCount
+                
+                if let oldView = self.mergedHistoryView {
+                    let oldMessageIds = Set(oldView.entries.map { $0.message.id })
+                    let newMessageIds = Set(view.entries.map { $0.message.id })
+                    
+                    let addedIds = newMessageIds.subtracting(oldMessageIds)
+                    let removedIds = oldMessageIds.subtracting(newMessageIds)
+                    
+                    print("📌📌📌 ENTRIES CHANGES: total diff \(diff > 0 ? "+" : "")\(diff), added \(addedIds.count), removed \(removedIds.count)")
+                } else {
+                    print("📌📌📌 ENTRIES CHANGES: initial load of \(newCount) entries")
+                }
 
+                if !view.entries.isEmpty {
+                    if let pageAnchor = self.pageAnchor, let currentMessageIndex = self.currentMessageIndex {
+                        let pageAnchorPositions = view.entries.enumerated()
+                            .filter { $0.element.index >= pageAnchor }
+                            .prefix(1)
+                            .map { $0.offset }
+                        
+                        let currentMessageIndexPositions = view.entries.enumerated()
+                            .filter { $0.element.index >= currentMessageIndex }
+                            .prefix(1)
+                            .map { $0.offset }
+                        
+                        print("📌📌📌 PAGE ANCHOR: \(pageAnchor)")
+                        print("📌📌📌 Position in list: \(pageAnchorPositions.first.map { "[\($0)]" } ?? "not found")/\(view.entries.count) \(currentMessageIndexPositions.first.map { "[\($0)]" } ?? "not found") ")
+                    }
+                }
+                #endif
+
+                self.historyViewStream.putNext((view, .Generic))
                 self.mergedHistoryView = view
-                self.historyViewStream.putNext((view, self.mergedHistoryView?.entries.isEmpty == true ? updateType : .Generic))
                 self.checkAndMarkAsReadIfNeeded(view: view)
             })
         }
         
         private func updateAnchorsForPagination(from view: MessageHistoryView) {
-            var messagesByPeer: [PeerId: [MessageHistoryEntry]] = [:]
+            guard let currentAnchors, view.entries.count >= messagesPerPage else {
+                return
+            }
+            let centerEntry = view.entries[Int(Double(view.entries.count) * 0.2)]
+            self.currentAnchors = getConsistentAnchorsForAllPeers(currentEntries: view.entries, peerIds: Array(currentAnchors.keys), centerEntry: centerEntry)
+            self.pageAnchor = centerEntry.message.index
+        }
+        
+        private func getConsistentAnchorsForAllPeers(
+            currentEntries: [MessageHistoryEntry],
+            peerIds: [PeerId],
+            centerEntry: MessageHistoryEntry?
+        ) -> [PeerId: MessageIndex] {
+            let centerTimestamp = centerEntry?.message.timestamp ?? Int32(Date().timeIntervalSince1970)
             
-            for entry in view.entries {
-                let peerId = entry.message.id.peerId
-                if messagesByPeer[peerId] == nil {
-                    messagesByPeer[peerId] = []
+            var anchors: [PeerId: MessageIndex] = [:]
+            
+            for peerId in peerIds {
+                let peerEntries = currentEntries.filter { $0.message.id.peerId == peerId }
+                
+                if let closestEntry = peerEntries.min(by: { entry1, entry2 in
+                    abs(entry1.message.timestamp - centerTimestamp) < abs(entry2.message.timestamp - centerTimestamp)
+                }) {
+                    anchors[peerId] = closestEntry.index
+                } else if let centerEntry = centerEntry {
+                    anchors[peerId] = MessageIndex(
+                        id: MessageId(peerId: peerId, namespace: centerEntry.index.id.namespace, id: 0),
+                        timestamp: centerTimestamp
+                    )
                 }
-                messagesByPeer[peerId]?.append(entry)
             }
-            for (peerId, entries) in messagesByPeer {
-                if entries.count > 22 {
-                    let middleIndex = entries.count / 2
-                    let anchor = entries[middleIndex].index
-                    self.currentAnchors?[peerId] = anchor
-                }
-            }
-            if view.entries.count > 22 {
-                self.pageAnchor = view.entries[view.entries.count / 2].message.index
-            }
+            
+            return anchors
         }
         
         
         func loadMoreAt(messageIndex: MessageIndex) {
-            guard let currentView = self.mergedHistoryView, !currentView.entries.isEmpty else {
+            guard let currentView = self.mergedHistoryView, !currentView.entries.isEmpty, currentMessageIndex != messageIndex else {
                 return
             }
-            
-            let totalEntries = currentView.entries.count
-            let position = findPositionForMessageIndex(messageIndex: messageIndex, in: currentView)
-            
-            if position > totalEntries * 2 / 3 {
-                updateAnchorsForPagination(from: currentView)
-                updateHistoryViewRequest()
-            }
+            currentMessageIndex = messageIndex
+            updateAnchorsForPagination(from: currentView)
+            updateHistoryViewRequest()
             
             // TODO: настроить скрол вверх
-
-//            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
-//
-//                updateAnchorsForPreviousPage(from: currentView)
-//                updateHistoryViewRequest()
-//            }
+            //            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
+            //
+            //                updateAnchorsForPreviousPage(from: currentView)
+            //                updateHistoryViewRequest()
+            //            }
         }
                 
         private func findPositionForMessageIndex(messageIndex: MessageIndex, in view: MessageHistoryView) -> Int {
