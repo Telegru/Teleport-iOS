@@ -58,6 +58,13 @@ http_archive(
     build_file = "@//third-party/AppCenter:AppCenter.BUILD",
 )
 
+http_archive(
+    name = "FirebaseSDK",
+    urls = ["https://github.com/firebase/firebase-ios-sdk/releases/download/11.10.0/Firebase.zip"],
+    build_file = "@//third-party/Firebase:BUILD",
+	sha256 = "9726794e1e82072e416aa96587bfd48cc4a3ce2b8a8fd1c509fb4d5ac07a980b",
+)
+
 load(
     "@rules_xcodeproj//xcodeproj:repositories.bzl",
     "xcodeproj_rules_dependencies",

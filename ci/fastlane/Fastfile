@@ -27,6 +27,8 @@ lane :deploy_tf do
     ipa: ipa_path,
     skip_waiting_for_build_processing: true,
   )
+
+  upload_dsyms
 end
 
 lane :deploy_ad do
@@ -68,6 +70,8 @@ lane :deploy_ad do
     release_notes: release_notes,
     groups: "qa-team"
   )
+
+  upload_dsyms
 end
 
 lane :generate_proj do |options|
@@ -198,6 +202,13 @@ lane :generate_new_certificates do |options|
       readonly: false
     )
   end
+end
+
+private_lane :upload_dsyms
+  upload_symbols_to_crashlytics(
+    dsym_path: "#{ENV['BUILD_WORKING_DIR']}/artifacts/Telegram.DSYMs.zip",
+    gsp_path: "#{ENV['SOURCE_PATH']}/Telegram/Telegram-iOS/GoogleService-Info.plist"
+  )
 end
 
 private_lane :generate_app_store_connect_api_key do |options|

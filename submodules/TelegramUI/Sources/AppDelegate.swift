@@ -44,6 +44,7 @@ import ContextMenuScreen
 import MetalEngine
 import RecaptchaEnterprise
 import TPOnboarding
+import FirebaseCore
 
 #if canImport(AppCenter)
 import AppCenter
@@ -340,6 +341,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         })
         
         let launchStartTime = CFAbsoluteTimeGetCurrent()
+        
+        FirebaseApp.configure()
         
         let statusBarHost = ApplicationStatusBarHost()
         let (window, hostView) = nativeWindowHostView()
