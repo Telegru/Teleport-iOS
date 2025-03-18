@@ -20,6 +20,7 @@ private final class DChatsSettingsArguments {
     let updateBottomFolders: (Bool) -> Void
     let updateFolderInfiniteScrolling: (Bool) -> Void
     let updateHideAllChats: (Bool) -> Void
+    let updateChatFolderVisibility: (Bool) -> Void
 
     init(
         context: AccountContext,
@@ -29,7 +30,8 @@ private final class DChatsSettingsArguments {
         updateRecentChatsEnabled: @escaping (Bool) -> Void,
         updateBottomFolders: @escaping (Bool) -> Void,
         updateFolderInfiniteScrolling: @escaping (Bool) -> Void,
-        updateHideAllChats: @escaping (Bool) -> Void
+        updateHideAllChats: @escaping (Bool) -> Void,
+        updateChatFolderVisibility: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.updateCallConfirmation = updateCallConfirmation
@@ -39,6 +41,7 @@ private final class DChatsSettingsArguments {
         self.updateBottomFolders = updateBottomFolders
         self.updateFolderInfiniteScrolling = updateFolderInfiniteScrolling
         self.updateHideAllChats = updateHideAllChats
+        self.updateChatFolderVisibility = updateChatFolderVisibility
     }
 }
 
@@ -61,7 +64,8 @@ private enum DChatsSettingsEntry: ItemListNodeEntry {
     case foldersHeader(title: String)
     case bottomFolder(title: String, value: Bool)
     case folderInfiniteScroll(title: String, value: Bool)
-    case hideAllChats(title: String, value: Bool)
+    case showChatFolders(title: String, value: Bool)
+    case hideAllChats(title: String, value: Bool, enabled: Bool)
     
     var section: ItemListSectionId {
         switch self {
@@ -71,7 +75,7 @@ private enum DChatsSettingsEntry: ItemListNodeEntry {
         case .recentChatsHeader, .recentChats, .recentChatsFooter:
             return DChatsSettingsSection.recentChats.rawValue
             
-        case .foldersHeader, .bottomFolder, .folderInfiniteScroll, .hideAllChats:
+        case .foldersHeader, .bottomFolder, .folderInfiniteScroll, .showChatFolders, .hideAllChats:
             return DChatsSettingsSection.folders.rawValue
         }
     }
@@ -88,7 +92,8 @@ private enum DChatsSettingsEntry: ItemListNodeEntry {
         case .foldersHeader: return 7
         case .bottomFolder: return 8
         case .folderInfiniteScroll: return 9
-        case .hideAllChats: return 10
+        case .showChatFolders: return 10
+        case .hideAllChats: return 11
         }
     }
 
@@ -153,10 +158,16 @@ private enum DChatsSettingsEntry: ItemListNodeEntry {
                 return lhsTitle == rhsTitle && lhsValue == rhsValue
             }
             return false
-            
-        case let .hideAllChats(lhsTitle, lhsValue):
-            if case let .hideAllChats(rhsTitle, rhsValue) = rhs {
+        
+        case let .showChatFolders(lhsTitle, lhsValue):
+            if case let .showChatFolders(rhsTitle, rhsValue) = rhs {
                 return lhsTitle == rhsTitle && lhsValue == rhsValue
+            }
+            return false
+            
+        case let .hideAllChats(lhsTitle, lhsValue, lhsEnabled):
+            if case let .hideAllChats(rhsTitle, rhsValue, rhsEnabled) = rhs {
+                return lhsTitle == rhsTitle && lhsValue == rhsValue && lhsEnabled == rhsEnabled
             }
             return false
         }
@@ -251,14 +262,25 @@ private enum DChatsSettingsEntry: ItemListNodeEntry {
                     arguments.updateFolderInfiniteScrolling(updatedValue)
                 }
             
-        case let .hideAllChats(title, value):
+        case let .hideAllChats(title, value, enabled):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: value,
+                enabled: enabled,
+                sectionId: section,
+                style: .blocks) { updatedValue in
+                    arguments.updateHideAllChats(updatedValue)
+                }
+        
+        case let .showChatFolders(title, value):
             return ItemListSwitchItem(
                 presentationData: presentationData,
                 title: title,
                 value: value,
                 sectionId: section,
                 style: .blocks) { updatedValue in
-                    arguments.updateHideAllChats(updatedValue)
+                    arguments.updateChatFolderVisibility(updatedValue)
                 }
             
         case let .recentChatsFooter(title):
@@ -339,6 +361,19 @@ public func dChatsSettingsController(
                 { settings in
                     var settings = settings
                     settings.hideAllChatsFolder = updatedValue
+                    return settings
+                }
+            ).start()
+        },
+        updateChatFolderVisibility: { updatedValue in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var settings = settings
+                    if !updatedValue {
+                        settings.hideAllChatsFolder = false
+                    }
+                    settings.showChatFolders = updatedValue
                     return settings
                 }
             ).start()
@@ -444,9 +479,17 @@ public func dChatsSettingsController(
         )
         
         entries.append(
+            .showChatFolders(
+                title: "DahlSettings.Chats.Folders.ShowChatFolders".tp_loc(lang: lang),
+                value: dahlSettings.showChatFolders
+            )
+        )
+        
+        entries.append(
             .hideAllChats(
                 title: "DahlSettings.Chats.Folders.HideAllChats".tp_loc(lang: lang),
-                value: dahlSettings.hideAllChatsFolder
+                value: dahlSettings.hideAllChatsFolder,
+                enabled: dahlSettings.showChatFolders
             )
         )
         
