@@ -382,13 +382,13 @@ extension DWallChatContent {
                 self.updateHistoryViewRequest()
 
                 if let newestMessage = sortedEntries.last {
-                    for peerId in originalPeers {
+                    for peerId in filterBefore.keys {
                         let location = ChatLocation.peer(id: peerId)
                         let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
                         self.context.applyMaxReadIndex(
                             for: location,
                             contextHolder: contextHolder,
-                            messageIndex: newestMessage
+                            messageIndex: newestMessage.index
                         )
                     }
                 }

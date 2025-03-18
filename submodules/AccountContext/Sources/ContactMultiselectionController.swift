@@ -87,7 +87,7 @@ public enum ContactMultiselectionControllerMode {
     }
     
     case groupCreation
-    case peerSelection(searchChatList: Bool, searchGroups: Bool, searchChannels: Bool, selectedPears: Set<EnginePeer.Id>)
+    case peerSelection(searchChatList: Bool, searchGroups: Bool, searchChannels: Bool)
     case channelCreation
     case chatSelection(ChatSelection)
     case premiumGifting(birthdays: [EnginePeer.Id: TelegramBirthday]?, selectToday: Bool, hasActions: Bool)

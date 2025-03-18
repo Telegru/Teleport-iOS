@@ -36,7 +36,7 @@ extension DWallSettings {
     
     public static var `default`: DWallSettings {
         DWallSettings(
-            showArchivedChannels: true,
+            showArchivedChannels: false,
             excludedChannels: []
         )
     }

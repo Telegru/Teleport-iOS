@@ -101,7 +101,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
         var shortPlaceholder: String?
         var includeChatList = false
         switch mode {
-        case let .peerSelection(_, searchGroups, searchChannels, _):
+        case let .peerSelection(_, searchGroups, searchChannels):
             includeChatList = searchGroups || searchChannels
             if searchGroups {
                 placeholder = self.presentationData.strings.Contacts_SearchUsersAndGroupsLabel
@@ -247,11 +247,6 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                 }
             } else if case .requestedUsersSelection = mode {
                 displayTopPeers = .recent
-            } else if case let .peerSelection(_, _, _, selectedPeersIds) = mode {
-                for peerId in selectedPeersIds {
-                    selectedPeers.append(peerId)
-                }
-                displayTopPeers = .none
             } else {
                 displayTopPeers = .none
             }
@@ -365,7 +360,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                         switch mode {
                         case .groupCreation, .channelCreation:
                             globalSearch = true
-                        case let .peerSelection(searchChatListValue, searchGroupsValue, searchChannelsValue, _):
+                        case let .peerSelection(searchChatListValue, searchGroupsValue, searchChannelsValue):
                             searchChatList = searchChatListValue
                             searchGroups = searchGroupsValue
                             searchChannels = searchChannelsValue
