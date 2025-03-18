@@ -204,7 +204,7 @@ lane :generate_new_certificates do |options|
   end
 end
 
-private_lane :upload_dsyms
+private_lane :upload_dsyms do
   upload_symbols_to_crashlytics(
     dsym_path: "#{ENV['BUILD_WORKING_DIR']}/artifacts/Telegram.DSYMs.zip",
     gsp_path: "#{ENV['SOURCE_PATH']}/Telegram/Telegram-iOS/GoogleService-Info.plist"
