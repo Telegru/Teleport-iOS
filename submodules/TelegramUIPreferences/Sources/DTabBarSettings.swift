@@ -61,5 +61,5 @@ extension DTabBarSettings {
             ],
             showTabTitles: true
         )
-
+    }
 }

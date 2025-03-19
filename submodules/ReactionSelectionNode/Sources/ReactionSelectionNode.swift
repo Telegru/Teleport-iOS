@@ -241,6 +241,7 @@ public final class ReactionNode: ASDisplayNode, ReactionItemNode {
         self.fetchStickerDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: item.appearAnimation._parse().resource)).start()
         self.fetchStickerDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: item.stillAnimation._parse().resource)).start()
         self.fetchStickerDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: item.listAnimation._parse().resource)).start()
+
         if let applicationAnimation = item.applicationAnimation {
             self.fetchFullAnimationDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .sticker, reference: .standalone(resource: applicationAnimation._parse().resource)).start()
         }

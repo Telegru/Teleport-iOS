@@ -5,6 +5,7 @@ import Postbox
 import TelegramCore
 import AccountContext
 import ChatListUI
+import TelegramUIPreferences
 
 final class DWallChatContent: ChatCustomContentsProtocol {
     
@@ -13,6 +14,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     var isLoadingSignal: Signal<Bool, NoError> {
         impl.syncWith { impl in
             impl.isLoadingPromise.get()
+        }
+    }
+    
+    var filterSignal: Signal<ChatListFilterPredicate, NoError> {
+        return impl.syncWith { impl in
+            impl.filterPredicatePromise.get()
         }
     }
     
@@ -38,25 +45,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         let queue = Queue()
         self.queue = queue
         
-        let filterData = ChatListFilterData(
-            isShared: false,
-            hasSharedLinks: false,
-            categories: .channels,
-            excludeMuted: false,
-            excludeRead: true,
-            excludeArchived: false,
-            includePeers: ChatListFilterIncludePeers(),
-            excludePeers: [],
-            color: nil
-        )
-        
         let tailChatsCount = 100
-        let filterPredicate = chatListFilterPredicate(filter: filterData, accountPeerId: context.account.peerId)
         
-        kind = .wall(tailChatsCount: tailChatsCount, filter: filterPredicate)
+        kind = .wall(tailChatsCount: tailChatsCount)
         
         self.impl = QueueLocalObject(queue: queue, generate: {
-            return Impl(queue: queue, context: context, filterPredicate: filterPredicate, tailChatsCount: tailChatsCount)
+            return Impl(queue: queue, context: context, tailChatsCount: tailChatsCount)
         })
     }
     
@@ -108,8 +102,19 @@ extension DWallChatContent {
         let context: AccountContext
         let historyViewStream = ValuePipe<(MessageHistoryView, ViewUpdateType)>()
         let isLoadingPromise = ValuePromise<Bool>(true)
-        let filterPredicate: ChatListFilterPredicate
         let tailChatsCount: Int
+        
+        var filterPredicate: ChatListFilterPredicate {
+            didSet {
+                filterPredicatePromise.set(filterPredicate)
+            }
+        }
+        
+        let filterPredicatePromise: ValuePromise<ChatListFilterPredicate>
+
+        var excludedPeerIds: Set<PeerId> = Set()
+        var showArchivedChannels: Bool = true
+        private var settingsDisposable: Disposable?
         
         var mergedHistoryView: MessageHistoryView?
         private var historyViewDisposable: Disposable?
@@ -130,20 +135,61 @@ extension DWallChatContent {
         
         var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
         private var pageAnchor: MessageIndex?
+        private var currentMessageIndex: MessageIndex?
         private var filterBefore: [PeerId: MessageIndex]?
         private var currentAnchors: [PeerId: MessageIndex]?
-        private let messagesPerPage = 44
+        private let messagesPerPage = 30
         
         init(
             queue: Queue,
             context: AccountContext,
-            filterPredicate: ChatListFilterPredicate,
             tailChatsCount: Int
         ) {
             self.queue = queue
             self.context = context
             self.tailChatsCount = tailChatsCount
+            
+            let filterData = ChatListFilterData(
+                isShared: false,
+                hasSharedLinks: false,
+                categories: .channels,
+                excludeMuted: false,
+                excludeRead: true,
+                excludeArchived: false,
+                includePeers: ChatListFilterIncludePeers(),
+                excludePeers: [],
+                color: nil
+            )
+            
+            let filterPredicate = chatListFilterPredicate(
+                filter: filterData,
+                accountPeerId: context.account.peerId
+            )
             self.filterPredicate = filterPredicate
+            self.filterPredicatePromise = ValuePromise<ChatListFilterPredicate>(filterPredicate)
+            
+            self.settingsDisposable = (context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+                |> deliverOn(self.queue)).start(next: { [weak self] sharedData in
+                    guard let self = self else { return }
+                    
+                    let dalSettings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings
+                    let wallSettings = dalSettings.wallSettings
+                    
+                    let showArchivedChannelsChanged = self.showArchivedChannels != wallSettings.showArchivedChannels
+                    let excludedPeerIdsChanged = Set(wallSettings.excludedChannels) != self.excludedPeerIds
+                    
+                    if showArchivedChannelsChanged || excludedPeerIdsChanged {
+                        self.showArchivedChannels = wallSettings.showArchivedChannels
+                        self.excludedPeerIds = Set(wallSettings.excludedChannels)
+                        
+                        self.updateFilterPredicate()
+                        
+                        self.reloadData()
+                    }
+                })
+            
+            self.updateFilterPredicate()
+            
             self.loadInitialData()
             self.loadingDisposable = (self.historyViewStream.signal()
                                       |> map { $0.0.isLoading })
@@ -159,6 +205,26 @@ extension DWallChatContent {
             self.readViewDisposable?.dispose()
             self.loadMaxCountDisposable?.dispose()
             self.autoMarkReadDisposable?.dispose()
+            self.settingsDisposable?.dispose()
+        }
+        
+        private func updateFilterPredicate() {
+            let filterData = ChatListFilterData(
+                isShared: false,
+                hasSharedLinks: false,
+                categories: .channels,
+                excludeMuted: false,
+                excludeRead: true,
+                excludeArchived: !self.showArchivedChannels,
+                includePeers: ChatListFilterIncludePeers(),
+                excludePeers: Array(self.excludedPeerIds),
+                color: nil
+            )
+            
+            self.filterPredicate = chatListFilterPredicate(
+                filter: filterData,
+                accountPeerId: self.context.account.peerId
+            )
         }
         
         func loadInitialData() {
@@ -196,7 +262,8 @@ extension DWallChatContent {
             .start(next: { [weak self] anchors in
                 guard let self = self else { return }
                 
-                guard !anchors.isEmpty else {
+                
+                if anchors.isEmpty && currentAnchors == nil {
                     let historyView = MessageHistoryView(
                         tag: nil,
                         namespaces: .all,
@@ -217,10 +284,10 @@ extension DWallChatContent {
                     }
                 }
                 
-                if newPeerAdded  {
+                if newPeerAdded || self.mergedHistoryView?.entries.isEmpty == true  {
                     self.filterBefore = anchors
                     self.currentAnchors = anchors
-                    
+
                     self.showLoading()
                     self.updateHistoryViewRequest()
                 }
@@ -229,6 +296,8 @@ extension DWallChatContent {
         }
         
         func reloadData() {
+            currentAnchors = nil
+            pageAnchor = nil
             showLoading()
             loadInitialData()
         }
@@ -247,13 +316,11 @@ extension DWallChatContent {
             let messagesPerPage = self.messagesPerPage
             let filterBefore = self.filterBefore!
             let context = self.context
-            
+            showLoading()
+
             loadMaxCountDisposable?.dispose()
             
-            //FIXME: Тут вероятно перестанет работать подгрузка обновлений, по лайкам
             historyViewDisposable?.dispose()
-            //FIXME: Тут вероятно перестанет работать подгрузка обновлений, по подпискам
-            anchorsDisposable?.dispose()
             
             loadMaxCountDisposable = (context.account.viewTracker.tailChatListView(
                 groupId: .root,
@@ -278,18 +345,53 @@ extension DWallChatContent {
                         peerIds: Array(topAnchors.keys),
                         anchors: topAnchors,
                         filterBofore: filterBefore,
-                        count: messagesPerPage * 4,
+                        count: messagesPerPage,
                         clipHoles: false,
                         takeTail: true
                     )
-                } )
+                })
             } |> take(1))
-            .startStrict(next: { [weak self] view in
+            .startStrict(next: { [weak self] (view) in
                 guard let self = self else { return }
+
+                var updatedAnchors: [PeerId: MessageIndex] = [:]
+
+                var oldestMessageByPeer: [PeerId: MessageIndex] = [:]
+                for entry in view.0.entries {
+                    let peerId = entry.message.id.peerId
+                    if let existing = oldestMessageByPeer[peerId] {
+                        if entry.index < existing {
+                            oldestMessageByPeer[peerId] = entry.index
+                        }
+                    } else {
+                        oldestMessageByPeer[peerId] = entry.index
+                    }
+                }
+
+                for (peerId, messageIndex) in oldestMessageByPeer {
+                    updatedAnchors[peerId] = messageIndex
+                }
                 
-                self.mergedHistoryView = view.0
-                self.historyViewStream.putNext((view.0, self.mergedHistoryView?.entries.isEmpty == true ? view.1 : .Generic))
-                self.checkAndMarkAsReadIfNeeded(view: view.0)
+                let sortedEntries = view.0.entries.sorted(by: { $0.index < $1.index })
+
+                if let oldestMessage = sortedEntries.first {
+                    self.pageAnchor = oldestMessage.index
+                }
+
+                self.currentAnchors = updatedAnchors
+                self.updateHistoryViewRequest()
+
+                if let newestMessage = sortedEntries.last {
+                    for peerId in filterBefore.keys {
+                        let location = ChatLocation.peer(id: peerId)
+                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                        self.context.applyMaxReadIndex(
+                            for: location,
+                            contextHolder: contextHolder,
+                            messageIndex: newestMessage.index
+                        )
+                    }
+                }
             })
         }
         
@@ -331,6 +433,40 @@ extension DWallChatContent {
                     contextHolder: contextHolder,
                     messageIndex: entry.message.index
                 )
+            } else if view.entries.count > 1 {
+                var currentGroupKey: Int64? = nil
+                var isMultipleGroups = false
+                
+                for entryIndex in (0..<view.entries.count).reversed() {
+                    let entry = view.entries[entryIndex]
+                    let groupKey = entry.message.groupingKey
+                    
+                    if groupKey == nil {
+                        isMultipleGroups = true
+                        break
+                    }
+                    
+                    if currentGroupKey == nil {
+                        currentGroupKey = groupKey
+                    }
+                    else if currentGroupKey != groupKey {
+                        isMultipleGroups = true
+                        break
+                    }
+                }
+                
+                if !isMultipleGroups && currentGroupKey != nil {
+                    if let latestEntry = view.entries.first {
+                        let location = ChatLocation.peer(id: latestEntry.message.id.peerId)
+                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                        
+                        self.context.applyMaxReadIndex(
+                            for: location,
+                            contextHolder: contextHolder,
+                            messageIndex: latestEntry.message.index
+                        )
+                    }
+                }
             }
         }
         
@@ -374,70 +510,133 @@ extension DWallChatContent {
             self.historyViewDisposable?.dispose()
             let context = self.context
             
-            self.historyViewDisposable = (context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
+            #if DEBUG
+            let previousEntryCount = self.mergedHistoryView?.entries.count ?? 0
+            
+            if let mergedHistoryView, !mergedHistoryView.entries.isEmpty {
+                if let pageAnchor = self.pageAnchor, let currentMessageIndex = self.currentMessageIndex {
+                    let pageAnchorPositions = mergedHistoryView.entries.enumerated()
+                        .filter { $0.element.index >= pageAnchor }
+                        .prefix(1)
+                        .map { $0.offset }
+                    
+                    let currentMessageIndexPositions = mergedHistoryView.entries.enumerated()
+                        .filter { $0.element.index >= currentMessageIndex }
+                        .prefix(1)
+                        .map { $0.offset }
+                    
+                    print("📌📌📌 PAGE ANCHOR BEFORE REQUEST: \(pageAnchor)")
+                    print("📌📌📌 Position in list before request: \(pageAnchorPositions.first.map { "[\($0)]" } ?? "not found")/\(mergedHistoryView.entries.count) \(currentMessageIndexPositions.first.map { "[\($0)]" } ?? "not found") ")
+                }
+            }
+            #endif
+
+            self.historyViewDisposable = ((context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
                 peerIds: Array(currentAnchors.keys),
                 anchors: currentAnchors,
                 anchor: self.pageAnchor,
                 filterBofore: filterBefore,
                 count: self.messagesPerPage,
                 clipHoles: false
-            ))
-            .start(next: { [weak self] view in
+            )
+            |> distinctUntilChanged(isEqual: areHistoryViewsEqual)))
+            .start(next: { [weak self] result in
                 guard let self = self else { return }
-                self.mergedHistoryView = view.0
-                self.historyViewStream.putNext((view.0, self.mergedHistoryView?.entries.isEmpty == true ? view.1 : .Generic))
-                self.checkAndMarkAsReadIfNeeded(view: view.0)
-                if self.mergedHistoryView?.entries.isEmpty == false {
-                    debugPrint("---||| locationInput_\(self.mergedHistoryView!.entries.first!.index.timestamp) \(self.mergedHistoryView!.entries.last!.index.timestamp)")
 
+                let (view, _, _) = result
+                #if DEBUG
+                print("📌📌📌 HISTORY VIEW LOADED: \(view.entries.count) entries =====")
+                
+                let newCount = view.entries.count
+                let diff = newCount - previousEntryCount
+                
+                if let oldView = self.mergedHistoryView {
+                    let oldMessageIds = Set(oldView.entries.map { $0.message.id })
+                    let newMessageIds = Set(view.entries.map { $0.message.id })
+                    
+                    let addedIds = newMessageIds.subtracting(oldMessageIds)
+                    let removedIds = oldMessageIds.subtracting(newMessageIds)
+                    
+                    print("📌📌📌 ENTRIES CHANGES: total diff \(diff > 0 ? "+" : "")\(diff), added \(addedIds.count), removed \(removedIds.count)")
+                } else {
+                    print("📌📌📌 ENTRIES CHANGES: initial load of \(newCount) entries")
                 }
 
+                if !view.entries.isEmpty {
+                    if let pageAnchor = self.pageAnchor, let currentMessageIndex = self.currentMessageIndex {
+                        let pageAnchorPositions = view.entries.enumerated()
+                            .filter { $0.element.index >= pageAnchor }
+                            .prefix(1)
+                            .map { $0.offset }
+                        
+                        let currentMessageIndexPositions = view.entries.enumerated()
+                            .filter { $0.element.index >= currentMessageIndex }
+                            .prefix(1)
+                            .map { $0.offset }
+                        
+                        print("📌📌📌 PAGE ANCHOR: \(pageAnchor)")
+                        print("📌📌📌 Position in list: \(pageAnchorPositions.first.map { "[\($0)]" } ?? "not found")/\(view.entries.count) \(currentMessageIndexPositions.first.map { "[\($0)]" } ?? "not found") ")
+                    }
+                }
+                #endif
+
+                self.historyViewStream.putNext((view, .Generic))
+                self.mergedHistoryView = view
+                self.checkAndMarkAsReadIfNeeded(view: view)
             })
         }
         
         private func updateAnchorsForPagination(from view: MessageHistoryView) {
-            var messagesByPeer: [PeerId: [MessageHistoryEntry]] = [:]
+            guard let currentAnchors, view.entries.count >= messagesPerPage else {
+                return
+            }
+            let centerEntry = view.entries[Int(Double(view.entries.count) * 0.2)]
+            self.currentAnchors = getConsistentAnchorsForAllPeers(currentEntries: view.entries, peerIds: Array(currentAnchors.keys), centerEntry: centerEntry)
+            self.pageAnchor = centerEntry.message.index
+        }
+        
+        private func getConsistentAnchorsForAllPeers(
+            currentEntries: [MessageHistoryEntry],
+            peerIds: [PeerId],
+            centerEntry: MessageHistoryEntry?
+        ) -> [PeerId: MessageIndex] {
+            let centerTimestamp = centerEntry?.message.timestamp ?? Int32(Date().timeIntervalSince1970)
             
-            for entry in view.entries {
-                let peerId = entry.message.id.peerId
-                if messagesByPeer[peerId] == nil {
-                    messagesByPeer[peerId] = []
+            var anchors: [PeerId: MessageIndex] = [:]
+            
+            for peerId in peerIds {
+                let peerEntries = currentEntries.filter { $0.message.id.peerId == peerId }
+                
+                if let closestEntry = peerEntries.min(by: { entry1, entry2 in
+                    abs(entry1.message.timestamp - centerTimestamp) < abs(entry2.message.timestamp - centerTimestamp)
+                }) {
+                    anchors[peerId] = closestEntry.index
+                } else if let centerEntry = centerEntry {
+                    anchors[peerId] = MessageIndex(
+                        id: MessageId(peerId: peerId, namespace: centerEntry.index.id.namespace, id: 0),
+                        timestamp: centerTimestamp
+                    )
                 }
-                messagesByPeer[peerId]?.append(entry)
             }
-            for (peerId, entries) in messagesByPeer {
-                if entries.count > 2 {
-                    let middleIndex = entries.count / 2
-                    let anchor = entries[middleIndex].index
-                    self.currentAnchors?[peerId] = anchor
-                }
-            }
-            if view.entries.count > 2 {
-                self.pageAnchor = view.entries[view.entries.count / 2].message.index
-            }
+            
+            return anchors
         }
         
         
         func loadMoreAt(messageIndex: MessageIndex) {
-            guard let currentView = self.mergedHistoryView, !currentView.entries.isEmpty else {
+            guard let currentView = self.mergedHistoryView, !currentView.entries.isEmpty, currentMessageIndex != messageIndex else {
                 return
             }
-            
-            let totalEntries = currentView.entries.count
-            let position = findPositionForMessageIndex(messageIndex: messageIndex, in: currentView)
-            
-            if position > totalEntries * 2 / 3 {
-                updateAnchorsForPagination(from: currentView)
-                updateHistoryViewRequest()
-            }
+            currentMessageIndex = messageIndex
+            updateAnchorsForPagination(from: currentView)
+            updateHistoryViewRequest()
             
             // TODO: настроить скрол вверх
-
-//            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
-//
-//                updateAnchorsForPreviousPage(from: currentView)
-//                updateHistoryViewRequest()
-//            }
+            //            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
+            //
+            //                updateAnchorsForPreviousPage(from: currentView)
+            //                updateHistoryViewRequest()
+            //            }
         }
                 
         private func findPositionForMessageIndex(messageIndex: MessageIndex, in view: MessageHistoryView) -> Int {
@@ -473,5 +672,93 @@ extension DWallChatContent {
                 }
             }
         }
+        
+        private func areHistoryViewsEqual(_ lhs: (MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?),
+                                          _ rhs: (MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?)) -> Bool {
+            if lhs.1 != rhs.1 {
+                return false
+            }
+            
+            if lhs.0.entries.count != rhs.0.entries.count {
+                return false
+            }
+            
+            for i in 0..<lhs.0.entries.count {
+                let lhsEntry = lhs.0.entries[i]
+                let rhsEntry = rhs.0.entries[i]
+                
+                if lhsEntry.index != rhsEntry.index {
+                    return false
+                }
+                
+                if lhsEntry.location != rhsEntry.location {
+                    return false
+                }
+                
+                if lhsEntry.monthLocation != rhsEntry.monthLocation {
+                    return false
+                }
+                
+                if lhsEntry.attributes != rhsEntry.attributes {
+                    return false
+                }
+                
+                let lhsMsg = lhsEntry.message
+                let rhsMsg = rhsEntry.message
+                
+                if lhsMsg.stableId != rhsMsg.stableId  {
+                    return false
+                }
+                
+                if lhsMsg.id != rhsMsg.id ||
+                    lhsMsg.timestamp != rhsMsg.timestamp ||
+                    lhsMsg.flags != rhsMsg.flags {
+                    return false
+                }
+                
+                if lhsMsg.text != rhsMsg.text {
+                    return false
+                }
+                
+                if lhsMsg.tags != rhsMsg.tags ||
+                    lhsMsg.globalTags != rhsMsg.globalTags ||
+                    lhsMsg.localTags != rhsMsg.localTags {
+                    return false
+                }
+                
+                if lhsMsg.customTags.count != rhsMsg.customTags.count {
+                    return false
+                }
+                
+                for j in 0..<lhsMsg.customTags.count {
+                    if lhsMsg.customTags[j] != rhsMsg.customTags[j] {
+                        return false
+                    }
+                }
+                
+                if lhsMsg.attributes.count != rhsMsg.attributes.count {
+                    return false
+                }
+                
+                if lhsMsg.media.count != rhsMsg.media.count {
+                    return false
+                }
+                
+                if let lhsThreadInfo = lhsMsg.associatedThreadInfo,
+                   let rhsThreadInfo = rhsMsg.associatedThreadInfo {
+                    if lhsThreadInfo.title != rhsThreadInfo.title ||
+                        lhsThreadInfo.icon != rhsThreadInfo.icon ||
+                        lhsThreadInfo.iconColor != rhsThreadInfo.iconColor ||
+                        lhsThreadInfo.isClosed != rhsThreadInfo.isClosed {
+                        return false
+                    }
+                } else if (lhsMsg.associatedThreadInfo == nil) != (rhsMsg.associatedThreadInfo == nil) {
+                    return false
+                }
+            }
+            
+            return true
+        }
+                                          
     }
 }

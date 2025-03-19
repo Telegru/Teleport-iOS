@@ -476,7 +476,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     }
     
     private let historyDisposable = MetaDisposable()
-    private let readHistoryDisposable = MetaDisposable()
+    private var readHistoryDisposable: Disposable?
     private var scrollDisposable: Disposable?
 
     private var dequeuedInitialTransitionOnLayout = false
@@ -504,11 +504,13 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         return self._buttonKeyboardMessage.get()
     }
     
-    private let maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
+    private var maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
     let canReadHistory = Promise<Bool>()
+    let resetReadHistory = Promise<Bool>()
     private var canReadHistoryValue: Bool = false
     private var canReadHistoryDisposable: Disposable?
-    
+    private var resetReadHistoryDisposable: Disposable?
+
     var suspendReadingReactions: Bool = false {
         didSet {
             if self.suspendReadingReactions != oldValue {
@@ -526,28 +528,6 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         didSet {
             if let chatHistoryLocationValue = self.chatHistoryLocationValue, chatHistoryLocationValue != oldValue {
                 chatHistoryLocationPromise.set(chatHistoryLocationValue)
-                
-                if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
-                    var messageIndex: MessageIndex?
-                    
-                    switch chatHistoryLocationValue.content {
-                    case let .Navigation(index, _, _, _):
-                        if case let .message(idx) = index {
-                            messageIndex = idx
-                        }
-                    case let .Scroll(subject, _, _, _, _, _, _):
-                        if case let .message(idx) = subject.index {
-                            messageIndex = idx
-                        }
-                    default:
-                        break
-                    }
-                    
-                    // Если у нас есть messageIndex, вызываем loadMoreAt
-                    if let messageIndex = messageIndex {
-                        customChatContents.loadMoreAt(messageIndex: messageIndex)
-                    }
-                }
             }
         }
     }
@@ -1221,7 +1201,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     
     deinit {
         self.historyDisposable.dispose()
-        self.readHistoryDisposable.dispose()
+        self.readHistoryDisposable?.dispose()
         self.interactiveReadActionDisposable?.dispose()
         self.interactiveReadReactionsDisposable?.dispose()
         self.canReadHistoryDisposable?.dispose()
@@ -1246,6 +1226,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     
     public func resetScrolling() {
 //        self.beginChatHistoryTransitions(resetScrolling: true)
+        self.maxVisibleIncomingMessageIndex = ValuePromise<MessageIndex>(ignoreRepeated: true)
+        self.beginReadHistoryManagement()
         self.scrollToStartOfHistory()
     }
     
@@ -2316,7 +2298,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
 
         let readHistory = combineLatest( self.maxVisibleIncomingMessageIndex.get(), (self.canReadHistory.get())|>distinctUntilChanged(isEqual: { $0 == $1 }))
         
-        self.readHistoryDisposable.set((readHistory |> deliverOnMainQueue).startStrict(next: { [weak self] messageIndex, canRead in
+        self.readHistoryDisposable?.dispose()
+        self.readHistoryDisposable = (readHistory |> deliverOnMainQueue).startStrict(next: { [weak self] messageIndex, canRead in
             guard let strongSelf = self else {
                 return
             }
@@ -2353,8 +2336,9 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                     break
                 }
             }
-        }).strict())
+        }).strict()
         
+        self.canReadHistoryDisposable?.dispose()
         self.canReadHistoryDisposable = (self.canReadHistory.get() |> deliverOnMainQueue).startStrict(next: { [weak self, weak context] value in
             if let strongSelf = self {
                 if strongSelf.canReadHistoryValue != value {
@@ -3239,6 +3223,12 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         
         if let loaded = displayedRange.visibleRange, let firstEntry = historyView.filteredEntries.first, let lastEntry = historyView.filteredEntries.last {
             var mathesFirst = false
+            var mathesCenter = false
+
+            let totalEntries = historyView.filteredEntries.count
+            let centerLowerBound = Int(Double(totalEntries) * 0.25)
+            let centerUpperBound = Int(Double(totalEntries) * 0.75)
+            
             if loaded.firstIndex <= 5 {
                 var firstHasGroups = false
                 for index in (max(0, historyView.filteredEntries.count - 5) ..< historyView.filteredEntries.count).reversed() {
@@ -3278,13 +3268,34 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                 }
             }
             
+            if loaded.firstIndex >= centerLowerBound && loaded.lastIndex <= centerUpperBound {
+                mathesCenter = true
+            } else {
+                var centerItemVisible = false
+                let centerIndex = totalEntries / 2
+                
+                if loaded.firstIndex <= centerIndex && loaded.lastIndex >= centerIndex {
+                    centerItemVisible = true
+                }
+                
+                if centerItemVisible && (loaded.lastIndex - loaded.firstIndex) >= min(10, totalEntries / 4) {
+                    mathesCenter = true
+                }
+            }
+            
+            if mathesCenter {
+                if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
+                    let currentEntry = historyView.filteredEntries[totalEntries / 2]
+                    customChatContents.loadMoreAt(messageIndex: currentEntry.index)
+                }
+            }
+            
             if mathesFirst {
                 if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
                         switch self.chatHistoryLocationValue?.content {
                         case .Initial(_):
                             self.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: false, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
                         case .Scroll:
-                            // TODO: оставить только для скролла вверх это правило
                             if lastEntry.index != lastVisbleMesssage()?.index {
                                 let locationInput: ChatHistoryLocation = .Navigation(index: .message(lastEntry.index), anchorIndex: .message(lastEntry.index), count: historyMessageCount, highlight: false)
                                 if self.chatHistoryLocationValue?.content != locationInput {
@@ -3393,21 +3404,18 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             break
         default:
             if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
-                beginChatHistoryTransitions(resetScrolling: true)
+                customChatContents.loadAll()
                 scrollDisposable?.dispose()
-                // TODO: проверить работу без scrollDisposable
-
                 scrollDisposable = (
-                    customChatContents.historyView
+                    customChatContents.isLoadingSignal
                     |> deliverOnMainQueue
-                    |> filter { !$0.0.isLoading }
+                    |> filter { !$0 }
                     |> take(1)
-                ).start(next: { [weak self] _ in
+                ).start(next: { [weak self] isLoading in
                     guard let self else { return }
                     let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
                     self.chatHistoryLocationValue = locationInput
                 })
-                customChatContents.loadAll()
             } else {
                 let locationInput = ChatHistoryLocationInput(content: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false), id: self.takeNextHistoryLocationId())
                 self.chatHistoryLocationValue = locationInput

@@ -4841,7 +4841,7 @@ public class Postbox {
                     
                     if let fromIndex = filterBofore[peerId] {
                         let passedGroupingKeys = Set(entries
-                            .filter { $0.index > fromIndex && $0.index > anchor ?? fromIndex }
+                            .filter { $0.index > fromIndex }
                             .compactMap { entry in
                                 if let groupingKey = entry.message.groupingKey {
                                     return groupingKey
@@ -4850,9 +4850,11 @@ public class Postbox {
                             })
 
                         entries = entries.filter { entry in
-                            if entry.index > anchor ?? fromIndex {
+                            
+                            if  entry.index > fromIndex {
                                 return true
                             }
+                            
                             if let groupingKey = entry.message.groupingKey,
                                passedGroupingKeys.contains(groupingKey) {
                                 return true
@@ -4878,11 +4880,18 @@ public class Postbox {
                 allEntries.sort { $0.message.timestamp < $1.message.timestamp }
 
                 if let anchor = anchor {
-                    allEntries = allEntries.filter { $0.index >= anchor }
+                    var groupsToInclude = Set<Int64>()
+                    for entry in allEntries {
+                        if let key = entry.message.groupingKey, entry.index >= anchor {
+                            groupsToInclude.insert(key)
+                        }
+                    }
+                    allEntries = allEntries.filter { entry in
+                        return entry.index >= anchor
+                    }
                 }
                 
-                allEntries = Array(takeTail ? allEntries.suffix(count) : allEntries.prefix(count))
-
+                allEntries = self.getEntriesPreservingGroups(entries: allEntries, count: count, takeTail: takeTail)
                 
                 let namespaceSet = Set(allEntries.map { $0.index.id.namespace })
                 let aggregatedView = MessageHistoryView(
@@ -4900,6 +4909,56 @@ public class Postbox {
             let disposable = combinedSignal.start(next: subscriber.putNext, completed: subscriber.putCompletion)
             return disposable
         }
+    }
+    
+    private func getEntriesPreservingGroups(entries: [MessageHistoryEntry], count: Int, takeTail: Bool) -> [MessageHistoryEntry] {
+        guard !entries.isEmpty else { return [] }
+        
+        if entries.count <= count {
+            return entries
+        }
+        
+        var result: [MessageHistoryEntry] = []
+        var counter = Set<Int32>()
+
+        var seenGroupingKeys = Set<Int64?>()
+        
+        if takeTail {
+            for i in stride(from: entries.count - 1, through: 0, by: -1)  {
+                let entry = entries[i]
+                let groupKey = entry.message.groupingKey
+                
+                if seenGroupingKeys.contains(groupKey) || counter.count < count {
+                    result.insert(entry, at: 0)
+                    counter.insert(entry.message.index.timestamp)
+                    if let key = groupKey {
+                        seenGroupingKeys.insert(key)
+                    }
+                }
+                
+                if counter.count >= count && (groupKey == nil || !seenGroupingKeys.contains(groupKey)) {
+                    break
+                }
+            }
+        } else {
+            for entry in entries {
+                let groupKey = entry.message.groupingKey
+                
+                if seenGroupingKeys.contains(groupKey) || counter.count < count {
+                    result.append(entry)
+                    counter.insert(entry.message.index.timestamp)
+                    if let key = groupKey {
+                        seenGroupingKeys.insert(key)
+                    }
+                }
+                
+                if counter.count >= count && (groupKey == nil || !seenGroupingKeys.contains(groupKey)) {
+                    break
+                }
+            }
+        }
+        
+        return result
     }
     
 //    public func aggregatedGlobalMessagesHistoryViewForPeerIds(
