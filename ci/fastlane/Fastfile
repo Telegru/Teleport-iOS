@@ -206,6 +206,7 @@ end
 
 private_lane :upload_dsyms do
   upload_symbols_to_crashlytics(
+    binary_path: "#{ENV['SOURCE_PATH']}/ci/upload-symbols",
     dsym_path: "#{ENV['BUILD_WORKING_DIR']}/artifacts/Telegram.DSYMs.zip",
     gsp_path: "#{ENV['SOURCE_PATH']}/Telegram/Telegram-iOS/GoogleService-Info.plist"
   )
