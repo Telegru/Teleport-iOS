@@ -116,6 +116,7 @@
 "DahlSettings.Chats.Folders.BottomFolders" = "Move to bottom";
 "DahlSettings.Chats.Folders.InfiniteScroll" = "Scroll around in a circle";
 "DahlSettings.Chats.Folders.HideAllChats" = "Hide folder “All chats”";
+"DahlSettings.Chats.Folders.ShowChatFolders" = "Show all folders";
 
 "DahlSettings.Support.Title" = "Support";
 "DahlSettings.Support.Alert.Title" = "Please note that volunteers are responsible for supporting Dahl. We will try to help as soon as possible, but waiting may take time.";

@@ -116,6 +116,7 @@
 "DahlSettings.Chats.Folders.BottomFolders" = "Переместить вниз";
 "DahlSettings.Chats.Folders.InfiniteScroll" = "Листать по кругу";
 "DahlSettings.Chats.Folders.HideAllChats" = "Скрыть папку “Все чаты”";
+"DahlSettings.Chats.Folders.ShowChatFolders" = "Показывать все папки";
 
 "DahlSettings.Support.Title" = "Поддержка";
 "DahlSettings.Support.Alert.Title" = "Пожалуйста, обратите внимание, что в поддержке Даль отвечают волонтеры. Мы постараемся помочь, как можно скорее, но ожидание может занять время.";

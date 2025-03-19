@@ -175,6 +175,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     private let storyPostingAvailabilityValue = ValuePromise<StoriesConfiguration.PostingAvailability>(.disabled)
     
     private var dalSettingsDisposable: Disposable?
+    private var folderVisibilityDisposable: Disposable?
     private(set) var storyPostingHidden: Bool = false
     private let storyPostingHiddenValue = ValuePromise<Bool>(false)
     
@@ -818,6 +819,19 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             }
         })
         
+        self.folderVisibilityDisposable = (
+            self.context.sharedContext.accountManager.sharedData(
+                keys: [ApplicationSpecificSharedDataKeys.dalSettings]
+            )
+            |> map { sharedData -> Bool in
+                return (sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings).showChatFolders
+            }
+            |> distinctUntilChanged
+            |> deliverOnMainQueue
+        ).startStrict(next: { [weak self] _ in
+            self?.reloadFilters()
+        })
+        
         self.updateNavigationMetadata()
     }
 
@@ -850,6 +864,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.storiesPostingAvailabilityDisposable?.dispose()
         self.sharedOpenStoryProgressDisposable.dispose()
         self.dalSettingsDisposable?.dispose()
+        self.folderVisibilityDisposable?.dispose()
         for (_, disposable) in self.preloadStoryResourceDisposables {
             disposable.dispose()
         }
@@ -3968,7 +3983,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     
     private var initializedFilters = false
     private func reloadFilters(firstUpdate: (() -> Void)? = nil) {
-        let filterItems = chatListFilterItems(context: self.context)
+        let filterItems = context.currentDahlSettings.with({ $0 }).showChatFolders ? chatListFilterItems(context: self.context) : .single((0, []))
         var notifiedFirstUpdate = false
         self.filterDisposable.set((combineLatest(queue: .mainQueue(),
             filterItems,
@@ -4002,6 +4017,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             var resolvedItems = filterItems
             if case .chatList(.root) = strongSelf.location {
             } else {
+                resolvedItems = []
+            }
+            
+            if !strongSelf.context.currentDahlSettings.with({ $0 }).showChatFolders {
                 resolvedItems = []
             }
             
