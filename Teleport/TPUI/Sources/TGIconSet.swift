@@ -90,6 +90,15 @@ public struct TGIconSet: IconSet {
             return UIImage(bundleImageName: "Chat List/Tabs/IconChats")
         case .settingsTab:
             return UIImage(bundleImageName: "Chat List/Tabs/IconSettings")
+        case .wallTab:
+            return UIImage(bundleImageName: "Wall/WallTabTG")
+        case .chatAdd:
+            return UIImage(bundleImageName: "Chat List/AddIcon")
+        case .chatDelete:
+            return UIImage(bundleImageName: "Chat/Input/Accessory Panels/MessageSelectionTrash")
+        case .wallGear:
+            return UIImage(bundleImageName: "Wall/WallGear")
         }
     }
+    
 }

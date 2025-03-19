@@ -90,6 +90,14 @@ public struct DahlIconSet: IconSet {
             return UIImage(bundleImageName: "Chat List/Tabs/DIconChats")
         case .settingsTab:
             return UIImage(bundleImageName: "Chat List/Tabs/DIconSettings")
+        case .wallTab:
+            return UIImage(bundleImageName: "Chat List/Tabs/IconWall")
+        case .chatAdd:
+            return UIImage(bundleImageName: "TPChat List/Add")!
+        case .chatDelete:
+            return UIImage(bundleImageName: "TPChat List/Delete")!
+        case .wallGear:
+            return UIImage(bundleImageName: "Wall/WallGear")!
         }
     }
 }

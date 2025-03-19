@@ -1334,9 +1334,9 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
             }
             
             if let subject, case let .customChatContents(contents) = subject, case .wall = contents.kind {
-                return context.sharedContext.openChatMessage(OpenChatMessageParams(context: context, updatedPresentationData: strongSelf.updatedPresentationData, chatLocation: openChatLocation, chatFilterTag: chatFilterTag, chatLocationContextHolder: strongSelf.chatLocationContextHolder, message: message, mediaIndex: params.mediaIndex, standalone: standalone, reverseMessageGalleryOrder: false, mode: mode, navigationController: strongSelf.effectiveNavigationController, dismissInput: {
-                    self?.chatDisplayNode.dismissInput()
-                }, present: { c, a, i in
+                let openChatMessageParams =  OpenChatMessageParams(context: context, updatedPresentationData: self.updatedPresentationData, chatLocation: openChatLocation, chatFilterTag: chatFilterTag, chatLocationContextHolder: self.chatLocationContextHolder, message: message, mediaIndex: params.mediaIndex, standalone: standalone, reverseMessageGalleryOrder: false, mode: mode, navigationController: self.effectiveNavigationController, dismissInput: {
+                    self.chatDisplayNode.dismissInput()
+                }, present: { [weak self] c, a, i in
                     if case .current = i {
                         c.presentationArguments = a
                         c.statusBar.alphaUpdated = { [weak self] transition in
@@ -1349,7 +1349,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                     } else {
                         self?.present(c, in: .window(.root), with: a, blockInteraction: true)
                     }
-                }, transitionNode: { messageId, media, adjustRect in
+                }, transitionNode: { [weak self] messageId, media, adjustRect in
                     var selectedNode: (ASDisplayNode, CGRect, () -> (UIView?, UIView?))?
                     if let strongSelf = self {
                         strongSelf.chatDisplayNode.historyNode.forEachItemNode { itemNode in
@@ -1361,24 +1361,24 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         }
                     }
                     return selectedNode
-                }, addToTransitionSurface: { view in
+                }, addToTransitionSurface: { [weak self] view in
                     guard let strongSelf = self else {
                         return
                     }
                     strongSelf.chatDisplayNode.historyNode.view.superview?.insertSubview(view, aboveSubview: strongSelf.chatDisplayNode.historyNode.view)
-                }, openUrl: { url in
+                }, openUrl: { [weak self] url in
                     self?.openUrl(url, concealed: false, skipConcealedAlert: isLocation, message: nil)
-                }, openPeer: { peer, navigation in
+                }, openPeer: { [weak self] peer, navigation in
                     self?.openPeer(peer: EnginePeer(peer), navigation: navigation, fromMessage: nil)
-                }, callPeer: { peerId, isVideo in
+                }, callPeer: { [weak self] peerId, isVideo in
                     self?.controllerInteraction?.callPeer(peerId, isVideo)
-                }, enqueueMessage: { message in
+                }, enqueueMessage: { [weak self] message in
                     self?.sendMessages([message])
-                }, sendSticker: canSendMessagesToChat(strongSelf.presentationInterfaceState) ? { fileReference, sourceNode, sourceRect in
+                }, sendSticker: canSendMessagesToChat(self.presentationInterfaceState) ? { [weak self] fileReference, sourceNode, sourceRect in
                     return self?.controllerInteraction?.sendSticker(fileReference, false, false, nil, false, sourceNode, sourceRect, nil, []) ?? false
-                } : nil, sendEmoji: canSendMessagesToChat(strongSelf.presentationInterfaceState) ? { text, attribute in
+                } : nil, sendEmoji: canSendMessagesToChat(self.presentationInterfaceState) ? { [weak self]  text, attribute in
                     self?.controllerInteraction?.sendEmoji(text, attribute, false)
-                } : nil, setupTemporaryHiddenMedia: { signal, centralIndex, galleryMedia in
+                } : nil, setupTemporaryHiddenMedia: { [weak self] signal, centralIndex, galleryMedia in
                     if let strongSelf = self {
                         strongSelf.temporaryHiddenGalleryMediaDisposable.set((signal |> deliverOnMainQueue).startStrict(next: { entry in
                             if let strongSelf = self, let controllerInteraction = strongSelf.controllerInteraction {
@@ -1398,7 +1398,7 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                             }
                         }))
                     }
-                }, chatAvatarHiddenMedia: { signal, media in
+                }, chatAvatarHiddenMedia: { [weak self] signal, media in
                     if let strongSelf = self {
                         strongSelf.temporaryHiddenGalleryMediaDisposable.set((signal |> deliverOnMainQueue).startStrict(next: { messageId in
                             if let strongSelf = self, let controllerInteraction = strongSelf.controllerInteraction {
@@ -1519,7 +1519,9 @@ public final class ChatControllerImpl: TelegramBaseController, ChatController, G
                         })
                         return rect
                     }
-                ))
+                )
+                
+                return context.sharedContext.openChatMessage(openChatMessageParams)
             }
             
             let openChatMessageParams = OpenChatMessageParams(context: context, updatedPresentationData: self.updatedPresentationData, chatLocation: openChatLocation, chatFilterTag: chatFilterTag, chatLocationContextHolder: self.chatLocationContextHolder, message: message, mediaIndex: params.mediaIndex, standalone: standalone, reverseMessageGalleryOrder: false, mode: mode, navigationController: self.effectiveNavigationController, dismissInput: { [weak self] in

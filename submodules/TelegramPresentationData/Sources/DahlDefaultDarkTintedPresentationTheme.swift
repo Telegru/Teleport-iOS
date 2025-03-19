@@ -632,7 +632,7 @@ public func makeDefaultDahlDarkTintedPresentationTheme(extendingThemeReference: 
         itemDisabledTextColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         itemAccentColor: accentColor,
         itemHighlightedColor: UIColor(rgb: 0x28b772),
-        itemDestructiveColor: UIColor(rgb: 0xff6767),
+        itemDestructiveColor: UIColor(rgb: 0xFF3B30),
         itemPlaceholderTextColor: mainSecondaryTextColor.withAlphaComponent(0.6),
         itemBlocksBackgroundColor: mainBackgroundColor,
         itemModalBlocksBackgroundColor: mainBackgroundColor,
