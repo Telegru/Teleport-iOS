@@ -50,16 +50,16 @@ apple_static_xcframework_import(
     visibility = ["//visibility:public"]
 )
 
-# apple_static_xcframework_import(
-#     name = "FirebaseCoreDiagnostics",
-#     xcframework_imports = glob([
-#         "Firebase/FirebaseAnalytics/FirebaseCoreDiagnostics.xcframework/**"
-#     ]),
-#     deps = [
-#         ":FirebaseAnalytics"
-#     ],
-#     visibility = ["//visibility:public"]
-# )
+apple_static_xcframework_import(
+    name = "FirebaseCoreDiagnostics",
+    xcframework_imports = glob([
+        "Firebase/FirebaseAnalytics/FirebaseCoreDiagnostics.xcframework/**"
+    ]),
+    deps = [
+        ":FirebaseAnalytics"
+    ],
+    visibility = ["//visibility:public"]
+)
 
 apple_static_xcframework_import(
     name = "FirebaseInstallations",
