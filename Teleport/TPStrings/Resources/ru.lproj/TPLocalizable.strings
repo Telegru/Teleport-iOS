@@ -97,6 +97,7 @@
 "DahlSettings.Wall.Excluded.RemoveAllConfirmation" = "Вы уверены, что хотите удалить все исключения?";
 "DahlSettings.Wall.Excluded.Title" = "Исключенные каналы";
 "DahlSettings.Wall.Excluded.Search" = "Поиск каналов";
+"DahlSettings.Wall.Excluded.RemoveFromList" = "Убрать из списка";
 
 "DahlSettings.Appearance.Title" = "Оформление";
 

@@ -7,6 +7,11 @@ import AccountContext
 import ChatListUI
 import TelegramUIPreferences
 
+enum DWallLoadingAction: Equatable {
+    case loadingStarted(isLoadAll: Bool)
+    case loadingEnded(isLoadAll: Bool)
+}
+
 final class DWallChatContent: ChatCustomContentsProtocol {
     
     let kind: ChatCustomContentsKind
@@ -20,6 +25,12 @@ final class DWallChatContent: ChatCustomContentsProtocol {
     var filterSignal: Signal<ChatListFilterPredicate, NoError> {
         return impl.syncWith { impl in
             impl.filterPredicatePromise.get()
+        }
+    }
+    
+    var loadingActionSignal: Signal<DWallLoadingAction, NoError> {
+        return impl.syncWith { impl in
+            impl.loadingActionPromise.get()
         }
     }
     
@@ -102,6 +113,8 @@ extension DWallChatContent {
         let context: AccountContext
         let historyViewStream = ValuePipe<(MessageHistoryView, ViewUpdateType)>()
         let isLoadingPromise = ValuePromise<Bool>(true)
+        let loadingActionPromise = ValuePromise<DWallLoadingAction>(DWallLoadingAction.loadingStarted(isLoadAll: false), ignoreRepeated: false)
+
         let tailChatsCount: Int
         
         var filterPredicate: ChatListFilterPredicate {
@@ -114,6 +127,7 @@ extension DWallChatContent {
 
         var excludedPeerIds: Set<PeerId> = Set()
         var showArchivedChannels: Bool = true
+
         private var settingsDisposable: Disposable?
         
         var mergedHistoryView: MessageHistoryView?
@@ -132,7 +146,8 @@ extension DWallChatContent {
         private var ignoredPeerIds: Atomic<Set<PeerId>> = Atomic(value: [])
         private var anchorsDisposable: Disposable?
         private var readViewDisposable: Disposable?
-        
+        private var loadingActionDisposable: Disposable?
+
         var sourceHistoryViews: Atomic<[PeerId: MessageHistoryView]> = Atomic(value: [:])
         private var pageAnchor: MessageIndex?
         private var currentMessageIndex: MessageIndex?
@@ -206,6 +221,7 @@ extension DWallChatContent {
             self.loadMaxCountDisposable?.dispose()
             self.autoMarkReadDisposable?.dispose()
             self.settingsDisposable?.dispose()
+            self.loadingActionDisposable?.dispose()
         }
         
         private func updateFilterPredicate() {
@@ -253,16 +269,16 @@ extension DWallChatContent {
                 guard let self = self else {
                     return .complete()
                 }
-                return self.context.account.postbox.maxReadIndexForPeerIds(
+                return (self.context.account.postbox.maxReadIndexForPeerIds(
                     peerIds: peerIds,
-                    clipHoles: false,
+                    clipHoles: true,
                     namespaces: .all
-                )
+                ) |> take(1))
             })
             .start(next: { [weak self] anchors in
                 guard let self = self else { return }
                 
-                
+                debugPrint("----||| 1")
                 if anchors.isEmpty && currentAnchors == nil {
                     let historyView = MessageHistoryView(
                         tag: nil,
@@ -287,8 +303,11 @@ extension DWallChatContent {
                 if newPeerAdded || self.mergedHistoryView?.entries.isEmpty == true  {
                     self.filterBefore = anchors
                     self.currentAnchors = anchors
+                    debugPrint("----||| 1_2")
 
-                    self.showLoading()
+                    if self.mergedHistoryView == nil || self.mergedHistoryView?.entries.isEmpty == true {
+                        self.showLoading()
+                    }
                     self.updateHistoryViewRequest()
                 }
                 
@@ -298,8 +317,18 @@ extension DWallChatContent {
         func reloadData() {
             currentAnchors = nil
             pageAnchor = nil
-            showLoading()
+            historyViewDisposable?.dispose()
             loadInitialData()
+            showLoading()
+            loadingActionPromise.set(.loadingStarted(isLoadAll: false))
+            self.loadingActionDisposable?.dispose()
+            self.loadingActionDisposable = (
+                (self.historyViewStream.signal())
+                |> take(1)
+            )
+            .start(next: { [weak self] view in
+                self?.loadingActionPromise.set(.loadingEnded(isLoadAll: false))
+            })
         }
         
         func loadMore() {
@@ -316,13 +345,13 @@ extension DWallChatContent {
             let messagesPerPage = self.messagesPerPage
             let filterBefore = self.filterBefore!
             let context = self.context
-            showLoading()
+            loadingActionPromise.set(.loadingStarted(isLoadAll: true))
 
             loadMaxCountDisposable?.dispose()
             
             historyViewDisposable?.dispose()
             
-            loadMaxCountDisposable = (context.account.viewTracker.tailChatListView(
+            loadMaxCountDisposable = ((context.account.viewTracker.tailChatListView(
                 groupId: .root,
                 filterPredicate: filterPredicate,
                 count: tailChatsCount
@@ -346,13 +375,15 @@ extension DWallChatContent {
                         anchors: topAnchors,
                         filterBofore: filterBefore,
                         count: messagesPerPage,
-                        clipHoles: false,
+                        clipHoles: true,
                         takeTail: true
                     )
                 })
-            } |> take(1))
+            } )
+            |> take(1))
             .startStrict(next: { [weak self] (view) in
                 guard let self = self else { return }
+                debugPrint("----||| 2")
 
                 var updatedAnchors: [PeerId: MessageIndex] = [:]
 
@@ -380,94 +411,104 @@ extension DWallChatContent {
 
                 self.currentAnchors = updatedAnchors
                 self.updateHistoryViewRequest()
+                
+                self.loadingActionDisposable?.dispose()
+                self.loadingActionDisposable = (
+                    (self.historyViewStream.signal())
+                    |> take(1)
+                )
+                .start(next: { [weak self] view in
+                    self?.loadingActionPromise.set(.loadingEnded(isLoadAll: true))
+                })
 
-                if let newestMessage = sortedEntries.last {
-                    for peerId in filterBefore.keys {
-                        let location = ChatLocation.peer(id: peerId)
-                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                        self.context.applyMaxReadIndex(
-                            for: location,
-                            contextHolder: contextHolder,
-                            messageIndex: newestMessage.index
-                        )
-                    }
-                }
+
+//                if let newestMessage = sortedEntries.last {
+//                    for peerId in filterBefore.keys {
+//                        let location = ChatLocation.peer(id: peerId)
+//                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+//                        self.context.applyMaxReadIndex(
+//                            for: location,
+//                            contextHolder: contextHolder,
+//                            messageIndex: newestMessage.index
+//                        )
+//                    }
+//                }
             })
         }
         
         func markAllMessagesRead(olderThan threshold: MessageIndex) {
-            guard let mergedView = self.mergedHistoryView else {
-                return
-            }
-            
-            var maxReadIndices: [PeerId: MessageIndex] = [:]
-            
-            for entry in mergedView.entries {
-                let message = entry.message
-                if message.timestamp <= threshold.timestamp {
-                    let peerId = message.id.peerId
-                    if let existing = maxReadIndices[peerId] {
-                        if existing < message.index {
-                            maxReadIndices[peerId] = message.index
-                        }
-                    } else {
-                        maxReadIndices[peerId] = message.index
-                    }
-                }
-            }
-            
-            for (peerId, messageIndex) in maxReadIndices {
-                let location = ChatLocation.peer(id: peerId)
-                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                self.context.applyMaxReadIndex(for: location, contextHolder: contextHolder, messageIndex: messageIndex)
-            }
+//            guard let mergedView = self.mergedHistoryView else {
+//                return
+//            }
+//            
+//            var maxReadIndices: [PeerId: MessageIndex] = [:]
+//            
+//            for entry in mergedView.entries {
+//                let message = entry.message
+//                if message.timestamp <= threshold.timestamp {
+//                    let peerId = message.id.peerId
+//                    if let existing = maxReadIndices[peerId] {
+//                        if existing < message.index {
+//                            maxReadIndices[peerId] = message.index
+//                        }
+//                    } else {
+//                        maxReadIndices[peerId] = message.index
+//                    }
+//                }
+//            }
+//            
+//            for (peerId, messageIndex) in maxReadIndices {
+//                let location = ChatLocation.peer(id: peerId)
+//                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+//                self.context.applyMaxReadIndex(for: location, contextHolder: contextHolder, messageIndex: messageIndex)
+//            }
         }
         
         private func checkAndMarkAsReadIfNeeded(view: MessageHistoryView) {
-            if view.entries.count == 1, let entry = view.entries.first {
-                let location = ChatLocation.peer(id: entry.message.id.peerId)
-                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                
-                self.context.applyMaxReadIndex(
-                    for: location,
-                    contextHolder: contextHolder,
-                    messageIndex: entry.message.index
-                )
-            } else if view.entries.count > 1 {
-                var currentGroupKey: Int64? = nil
-                var isMultipleGroups = false
-                
-                for entryIndex in (0..<view.entries.count).reversed() {
-                    let entry = view.entries[entryIndex]
-                    let groupKey = entry.message.groupingKey
-                    
-                    if groupKey == nil {
-                        isMultipleGroups = true
-                        break
-                    }
-                    
-                    if currentGroupKey == nil {
-                        currentGroupKey = groupKey
-                    }
-                    else if currentGroupKey != groupKey {
-                        isMultipleGroups = true
-                        break
-                    }
-                }
-                
-                if !isMultipleGroups && currentGroupKey != nil {
-                    if let latestEntry = view.entries.first {
-                        let location = ChatLocation.peer(id: latestEntry.message.id.peerId)
-                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                        
-                        self.context.applyMaxReadIndex(
-                            for: location,
-                            contextHolder: contextHolder,
-                            messageIndex: latestEntry.message.index
-                        )
-                    }
-                }
-            }
+//            if view.entries.count == 1, let entry = view.entries.first {
+//                let location = ChatLocation.peer(id: entry.message.id.peerId)
+//                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+//                
+//                self.context.applyMaxReadIndex(
+//                    for: location,
+//                    contextHolder: contextHolder,
+//                    messageIndex: entry.message.index
+//                )
+//            } else if view.entries.count > 1 {
+//                var currentGroupKey: Int64? = nil
+//                var isMultipleGroups = false
+//                
+//                for entryIndex in (0..<view.entries.count).reversed() {
+//                    let entry = view.entries[entryIndex]
+//                    let groupKey = entry.message.groupingKey
+//                    
+//                    if groupKey == nil {
+//                        isMultipleGroups = true
+//                        break
+//                    }
+//                    
+//                    if currentGroupKey == nil {
+//                        currentGroupKey = groupKey
+//                    }
+//                    else if currentGroupKey != groupKey {
+//                        isMultipleGroups = true
+//                        break
+//                    }
+//                }
+//                
+//                if !isMultipleGroups && currentGroupKey != nil {
+//                    if let latestEntry = view.entries.first {
+//                        let location = ChatLocation.peer(id: latestEntry.message.id.peerId)
+//                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+//                        
+//                        self.context.applyMaxReadIndex(
+//                            for: location,
+//                            contextHolder: contextHolder,
+//                            messageIndex: latestEntry.message.index
+//                        )
+//                    }
+//                }
+//            }
         }
         
         private func showLoading() {
@@ -537,13 +578,14 @@ extension DWallChatContent {
                 anchor: self.pageAnchor,
                 filterBofore: filterBefore,
                 count: self.messagesPerPage,
-                clipHoles: false
+                clipHoles: true
             )
             |> distinctUntilChanged(isEqual: areHistoryViewsEqual)))
             .start(next: { [weak self] result in
                 guard let self = self else { return }
+                debugPrint("----||| 3")
 
-                let (view, _, _) = result
+                let (view, updateType, _) = result
                 #if DEBUG
                 print("📌📌📌 HISTORY VIEW LOADED: \(view.entries.count) entries =====")
                 
@@ -580,7 +622,7 @@ extension DWallChatContent {
                 }
                 #endif
 
-                self.historyViewStream.putNext((view, .Generic))
+                self.historyViewStream.putNext((view, self.mergedHistoryView?.entries.isEmpty == true ? updateType : .Generic))
                 self.mergedHistoryView = view
                 self.checkAndMarkAsReadIfNeeded(view: view)
             })

@@ -13,6 +13,7 @@ import AnimationCache
 import MultiAnimationRenderer
 import SettingsUI
 import TPUI
+import PresentationDataUtils
 
 public final class DWallController: TelegramBaseController {
     
@@ -32,6 +33,10 @@ public final class DWallController: TelegramBaseController {
     
     private let animationCache: AnimationCache
     private let animationRenderer: MultiAnimationRenderer
+    private var loadingActionDisposable: Disposable?
+    
+    private var overlayStatusController: ViewController?
+    private var isShowingOverlay = false
     
     private var controllerNode: DWallControllerNode {
         return self.displayNode as! DWallControllerNode
@@ -104,6 +109,7 @@ public final class DWallController: TelegramBaseController {
         
         setupUnreadCounterObserving()
         setupFilterUpdateObserving()
+        setupLoadingActionObserving()
     }
     
     public required init(coder aDecoder: NSCoder) {
@@ -115,6 +121,7 @@ public final class DWallController: TelegramBaseController {
         unreadCountDisposable?.dispose()
         scrollDisposable?.dispose()
         filterDisposable?.dispose()
+        loadingActionDisposable?.dispose()
     }
     
     public override func loadDisplayNode() {
@@ -177,6 +184,8 @@ public final class DWallController: TelegramBaseController {
             unreadCountDisposable = (combineLatest(unreadCountSignal, context.sharedContext.presentationData) |> deliverOnMainQueue)
                 .startStrict(next: { [weak self] unreadCount, presentationData in
                 guard let self else { return }
+                    debugPrint("----||| 8")
+
                 if unreadCount == 0 {
                     tabBarItem.badgeValue = ""
                 } else {
@@ -197,9 +206,10 @@ public final class DWallController: TelegramBaseController {
                 skipFirst = false
                 return
             }
-            guard let self = self else { return }
-            (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
+            debugPrint("----||| 6")
 
+            guard let self = self else { return }
+            self.scrollToStart()
             self.scrollDisposable?.dispose()
             self.scrollDisposable = (
                 self.controllerNode.wallContent.historyView
@@ -208,8 +218,10 @@ public final class DWallController: TelegramBaseController {
                 |> delay(2.0, queue: .mainQueue())
             )
             .start(next: { [weak self] view in
+                debugPrint("----||| 5")
+
                 guard let self = self else { return }
-                (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
+                self.scrollToStart()
 
                 if let first = view.0.entries.first {
                     (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.scrollToMessage(index: first.index)
@@ -219,22 +231,67 @@ public final class DWallController: TelegramBaseController {
         })
     }
     
+    private func setupLoadingActionObserving() {
+        loadingActionDisposable = (controllerNode.wallContent.loadingActionSignal
+                                    |> deliverOnMainQueue).start(next: { [weak self] action in
+            guard let self = self else { return }
+            
+            switch action {
+            case .loadingStarted:
+                self.showLoadingOverlay()
+                
+            case .loadingEnded(let isLoadAll):
+                self.hideLoadingOverlay()
+                if isLoadAll {
+                    self.scrollToEnd()
+                } else {
+                    self.scrollToStart()
+                }
+            }
+        })
+    }
+    
+    private func scrollToEnd() {
+        let chatController = self.controllerNode.chatController as? ChatControllerImpl
+        chatController?.chatDisplayNode.historyNode.resetScrolling(location: .Scroll(subject: MessageHistoryScrollToSubject(index: .upperBound, quote: nil), anchorIndex: .upperBound, sourceIndex: .lowerBound, scrollPosition: .top(0.0), animated: true, highlight: false, setupReply: false))
+    }
+    
+    private func scrollToStart() {
+        let chatController = self.controllerNode.chatController as? ChatControllerImpl
+        chatController?.chatDisplayNode.historyNode.resetScrolling(location: .Scroll(subject: MessageHistoryScrollToSubject(index: .lowerBound, quote: nil), anchorIndex: .lowerBound, sourceIndex: .upperBound, scrollPosition: .bottom(0.0), animated: true, highlight: false, setupReply: false))
+    }
+    
     @objc private func reloadPressed() {
         controllerNode.wallContent.reloadData()
-        scrollDisposable?.dispose()
-        scrollDisposable = (
-            controllerNode.wallContent.historyView
-            |> filter { !$0.0.isLoading }
-            |> take(1)
-            |> deliverOnMainQueue
-        ).start(next: { [weak self] _ in
-            guard let self else { return }
-            (self.controllerNode.chatController as? ChatControllerImpl)?.chatDisplayNode.historyNode.resetScrolling()
-        })
     }
     
     @objc private func settingsPressed() {
         let settingsController = dWallSettingsController(context: context)
         self.present(settingsController, in: .window(.root), with: ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
+    }
+    
+    private func showLoadingOverlay() {
+        guard !isShowingOverlay else { return }
+        isShowingOverlay = true
+        
+        let overlayController = OverlayStatusController(
+            theme: self.presentationData.theme,
+            type: .loading(cancelled: { [weak self] in
+                self?.hideLoadingOverlay()
+            })
+        )
+        
+        self.overlayStatusController = overlayController
+        self.present(overlayController, in: .window(.root), with: ViewControllerPresentationArguments(presentationAnimation: .none))
+    }
+    
+    private func hideLoadingOverlay() {
+        guard isShowingOverlay else { return }
+        isShowingOverlay = false
+        
+        if let overlayStatusController = self.overlayStatusController {
+            self.overlayStatusController = nil
+            overlayStatusController.dismiss(completion: nil)
+        }
     }
 }
