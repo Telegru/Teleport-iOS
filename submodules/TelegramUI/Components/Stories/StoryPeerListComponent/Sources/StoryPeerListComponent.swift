@@ -893,7 +893,12 @@ public final class StoryPeerListComponent: Component {
             }
             let calculateItem: (Int) -> MeasuredItem = { index in
                 let frameIndex = index
-                let regularItemFrame = itemLayout.frame(at: frameIndex)
+                let regularItemFrame: CGRect
+                if component.theme.squareStyle {
+                    regularItemFrame = itemLayout.frame(at: frameIndex).insetBy(dx: -collapsedState.minFraction * 4.0, dy: 0.0)
+                } else {
+                    regularItemFrame = itemLayout.frame(at: frameIndex)
+                }
                 let isReallyVisible = effectiveVisibleBounds.intersects(regularItemFrame)
                 
                 let collapseIndex = index - effectiveFirstVisibleIndex
@@ -913,8 +918,15 @@ public final class StoryPeerListComponent: Component {
                     collapseDistance = max(0.0, min(1.0, collapseDistance))
                     collapsedMaxItemFrame.origin.x -= collapsedState.minFraction * 4.0
                     collapsedMaxItemFrame.origin.x += collapseDistance * 20.0
-                    collapsedMaxItemFrame.origin.y += collapseDistance * 20.0
-                    collapsedMaxItemFrame.origin.y += collapsedState.minFraction * 10.0
+                    if !component.theme.squareStyle {
+                        collapsedMaxItemFrame.origin.y += collapseDistance * 20.0
+                        collapsedMaxItemFrame.origin.y += collapsedState.minFraction * 10.0
+                    }
+                }
+                
+                if component.theme.squareStyle {
+                    collapsedMaxItemFrame.origin.x -= collapsedState.minFraction * 20.0
+                    collapsedMaxItemFrame.origin.y += collapsedState.minFraction * 20.0
                 }
                 
                 let minimizedDefaultItemScale: CGFloat = 24.0 / 52.0
