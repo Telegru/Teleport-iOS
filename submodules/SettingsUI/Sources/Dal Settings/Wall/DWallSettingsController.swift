@@ -623,7 +623,7 @@ public func dWallSettingsController(
             let presentationData = context.sharedContext.currentPresentationData.with { $0 }
             
             var items: [ContextMenuItem] = []
-            items.append(.action(ContextMenuActionItem(text: presentationData.strings.ChatList_Context_RemoveFromFolder, textColor: .destructive, icon: { theme in
+            items.append(.action(ContextMenuActionItem(text: "DahlSettings.Wall.Excluded.RemoveFromList".tp_loc(lang: presentationData.strings.baseLanguageCode), textColor: .destructive, icon: { theme in
                 return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Delete"), color: theme.contextMenu.destructiveColor)
             }, action: { _, f in
                 f(.dismissWithoutContent)

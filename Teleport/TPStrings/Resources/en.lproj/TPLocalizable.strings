@@ -97,6 +97,7 @@
 "DahlSettings.Wall.Excluded.RemoveAllConfirmation" = "Are you sure you want to remove all exclusions?";
 "DahlSettings.Wall.Excluded.Title" = "Excluded Channels";
 "DahlSettings.Wall.Excluded.Search" = "Search channels";
+"DahlSettings.Wall.Excluded.RemoveFromList" = "Remove from list";
 
 "DahlSettings.Appearance.Title" = "Appearance";
 
