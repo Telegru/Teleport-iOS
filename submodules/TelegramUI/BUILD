@@ -52,6 +52,8 @@ swift_library(
         "//Teleport/TPNews:TPNews",
         "//Teleport/TPSettings:TPSettings",
         "//Teleport/DWallpaper:DWallpaper",
+        "@FirebaseSDK//:FirebaseCore",
+        "@FirebaseSDK//:FirebaseCrashlytics",
 
         "//submodules/SSignalKit/SwiftSignalKit:SwiftSignalKit",
         "//submodules/SSignalKit/SSignalKit:SSignalKit",

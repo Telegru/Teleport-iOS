@@ -262,7 +262,7 @@ filegroup(
     name = "WatchAppStringResources",
     srcs = glob([
         "Telegram-iOS/{}.lproj/Localizable.strings".format(language) for language in supported_languages
-    ], 
+    ],
     exclude = ["Telegram-iOS/*.lproj/**/.*"]) + ["//Teleport/TPStrings:TPLocalizableStrings"],
 )
 
@@ -319,6 +319,13 @@ filegroup(
     name = "AdditionalIcons",
     srcs = glob([
         "Telegram-iOS/*.png",
+    ]),
+)
+
+filegroup(
+    name = "GoogleService-Info",
+    srcs = glob([
+        "Telegram-iOS/GoogleService-Info.plist",
     ]),
 )
 
@@ -388,6 +395,7 @@ swift_library(
         "//Teleport/TPOnboarding:TPOnboardingAssets",
         "//Teleport/TPSettings:TPSettingsAssets",
         "//Teleport/TPUI:TPUIAssets",
+        ":GoogleService-Info",
         ":GeneratedPresentationStrings/Resources/PresentationStrings.data",
     ],
     deps = [
@@ -1167,7 +1175,7 @@ ios_framework(
 plist_fragment(
     name = "ShareInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
@@ -1259,7 +1267,7 @@ ios_extension(
 plist_fragment(
     name = "NotificationContentInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
@@ -1366,7 +1374,7 @@ ios_extension(
 plist_fragment(
     name = "WidgetInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
@@ -1479,7 +1487,7 @@ ios_extension(
 plist_fragment(
     name = "IntentsInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
@@ -1610,7 +1618,7 @@ ios_extension(
 plist_fragment(
     name = "BroadcastUploadInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
@@ -1704,7 +1712,7 @@ ios_extension(
 plist_fragment(
     name = "NotificationServiceInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
@@ -1767,7 +1775,7 @@ ios_extension(
 plist_fragment(
     name = "TelegramInfoPlist",
     extension = "plist",
-    template = 
+    template =
     """
     <key>BGTaskSchedulerPermittedIdentifiers</key>
     <array>

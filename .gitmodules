@@ -32,3 +32,6 @@ url=https://github.com/TelegramMessenger/tgcalls.git
 [submodule "build-system/build-configs"]
 	path = build-system/build-configs
 	url = git@github.com:Telegru/teleport-ios-configs.git
+[submodule "build-system/google-services-ios"]
+	path = build-system/google-services-ios
+	url = git@github.com:Telegru/google-services-ios.git
