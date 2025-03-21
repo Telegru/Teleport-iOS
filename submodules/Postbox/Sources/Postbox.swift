@@ -3237,6 +3237,20 @@ final class PostboxImpl {
         }
     }
     
+    func getChatListPeers(groupId: PeerGroupId, filterPredicate: ChatListFilterPredicate) -> Signal<[PeerId], NoError> {
+        return self.transaction { transaction -> [PeerId] in
+            let peers = transaction.getChatListPeers(
+                groupId: groupId,
+                filterPredicate: filterPredicate,
+                additionalFilter: nil
+            ).map {
+                $0.id
+            }
+            
+            return peers
+        }
+    }
+    
     public func aggregatedGlobalMessagesHistoryViewForPeerIds(
         peerIds: [PeerId],
         from: [PeerId: MessageIndex],
@@ -4983,6 +4997,19 @@ public class Postbox {
 //        }
 //    }
     
+    public func getChatListPeers(groupId: PeerGroupId, filterPredicate: ChatListFilterPredicate) -> Signal<[PeerId], NoError>  {
+        return Signal { subscriber in
+            let disposable = MetaDisposable()
+
+            self.impl.with { impl in
+                disposable.set(impl.getChatListPeers(groupId: groupId,
+                    filterPredicate: filterPredicate
+                ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            }
+            return disposable.strict()
+        }
+    }
+    
     public func maxReadIndexForPeerIds(
             peerIds: [PeerId],
             clipHoles: Bool,
@@ -5085,6 +5112,8 @@ public class Postbox {
         }
     }
 
+   
+    
     public func aroundChatListView(
         groupId: PeerGroupId,
         filterPredicate: ChatListFilterPredicate? = nil,

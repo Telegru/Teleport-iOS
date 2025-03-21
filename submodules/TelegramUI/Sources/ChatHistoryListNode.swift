@@ -1838,7 +1838,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                                 strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .InitialSearch(subject: MessageHistoryInitialSearchSubject(location: .id(messageId), quote: nil), count: historyMessageCount, highlight: true, setupReply: false), id: (strongSelf.chatHistoryLocationValue?.id).flatMap({ $0 + 1 }) ?? 0)
                             } else if var chatHistoryLocation = strongSelf.chatHistoryLocationValue {
                                 chatHistoryLocation.id += 1
-                                strongSelf.chatHistoryLocationValue = chatHistoryLocation
+//                                strongSelf.chatHistoryLocationValue = chatHistoryLocation
                             } else {
                                 strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Initial(count: historyMessageCount), id:(strongSelf.chatHistoryLocationValue?.id).flatMap({ $0 + 1 }) ?? 0)
                             }
@@ -3226,8 +3226,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             var mathesCenter = false
 
             let totalEntries = historyView.filteredEntries.count
-            let centerLowerBound = Int(Double(totalEntries) * 0.25)
-            let centerUpperBound = Int(Double(totalEntries) * 0.75)
+            let centerLowerBound = Int(Double(totalEntries) * 0.15)
+            let centerUpperBound = Int(Double(totalEntries) * 0.35)
             
             if loaded.firstIndex <= 5 {
                 var firstHasGroups = false
@@ -3285,7 +3285,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             
             if mathesCenter {
                 if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
-                    let currentEntry = historyView.filteredEntries[totalEntries / 2]
+                    
+                    let currentEntry = historyView.filteredEntries[historyView.filteredEntries.count - 1 - loaded.lastIndex]
                     customChatContents.loadMoreAt(messageIndex: currentEntry.index)
                 }
             }
