@@ -4602,8 +4602,6 @@ extension ChatControllerImpl {
                     guard let strongSelf = self else {
                         return
                     }
-                    debugPrint("----||| 9")
-
                     strongSelf.chatDisplayNode.navigateButtons.unreadCount = Int32(count)
                 })
 

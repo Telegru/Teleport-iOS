@@ -1786,11 +1786,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         
                         let historyView = (strongSelf.opaqueTransactionState as? ChatHistoryTransactionOpaqueState)?.historyView
                         let displayRange = strongSelf.displayedItemRange
-                        var updateChatHistoryLocationValue = true
-                        if case let .customChatContents(customChatContents) = strongSelf.subject, case .wall = customChatContents.kind {
-                            updateChatHistoryLocationValue = false
-                        }
-                        if updateChatHistoryLocationValue, let filteredEntries = historyView?.filteredEntries, let visibleRange = displayRange.visibleRange {
+                        if let filteredEntries = historyView?.filteredEntries, let visibleRange = displayRange.visibleRange {
                             var anchorIndex: MessageIndex?
                             loop: for index in visibleRange.firstIndex ..< filteredEntries.count {
                                 switch filteredEntries[filteredEntries.count - 1 - index] {
@@ -1838,7 +1834,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                                 strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .InitialSearch(subject: MessageHistoryInitialSearchSubject(location: .id(messageId), quote: nil), count: historyMessageCount, highlight: true, setupReply: false), id: (strongSelf.chatHistoryLocationValue?.id).flatMap({ $0 + 1 }) ?? 0)
                             } else if var chatHistoryLocation = strongSelf.chatHistoryLocationValue {
                                 chatHistoryLocation.id += 1
-//                                strongSelf.chatHistoryLocationValue = chatHistoryLocation
+                                strongSelf.chatHistoryLocationValue = chatHistoryLocation
                             } else {
                                 strongSelf.chatHistoryLocationValue = ChatHistoryLocationInput(content: .Initial(count: historyMessageCount), id:(strongSelf.chatHistoryLocationValue?.id).flatMap({ $0 + 1 }) ?? 0)
                             }
@@ -1850,6 +1846,9 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             let initialData: ChatHistoryCombinedInitialData?
             switch update.0 {
             case let .Loading(combinedInitialData, type):
+                
+                print("DEBUG: historyViewTransitionDisposable TRIGGERED1 Loading")
+
                 if case .Generic(.FillHole) = type {
                     applyHole()
                     return
@@ -1948,7 +1947,15 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                 }
                 return
             case let .HistoryView(view, type, scrollPosition, flashIndicators, originalScrollPosition, data, id):
-                if case .Generic(let innerType) = type {
+                
+                print("DEBUG: historyViewTransitionDisposable TRIGGERED1 \(view.entries.last?.message.text ?? "not found")")
+                
+                var ignoreHole = false
+                if case let .customChatContents(customChatContents) = self?.subject, case .wall = customChatContents.kind {
+                    ignoreHole = true
+                }
+                
+                if !ignoreHole, case .Generic(let innerType) = type {
                     if innerType == .FillHole {
                         applyHole()
                         return
@@ -3226,8 +3233,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             var mathesCenter = false
 
             let totalEntries = historyView.filteredEntries.count
-            let centerLowerBound = Int(Double(totalEntries) * 0.15)
-            let centerUpperBound = Int(Double(totalEntries) * 0.35)
+            let centerLowerBound = Int(Double(totalEntries) * 0.05)
+            let centerUpperBound = Int(Double(totalEntries) * 0.45)
             
             if loaded.firstIndex <= 5 {
                 var firstHasGroups = false
@@ -3285,8 +3292,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             
             if mathesCenter {
                 if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
-                    
-                    let currentEntry = historyView.filteredEntries[historyView.filteredEntries.count - 1 - loaded.lastIndex]
+                    let currentEntry = historyView.filteredEntries[historyView.filteredEntries.count - 1 - loaded.firstIndex]
                     customChatContents.loadMoreAt(messageIndex: currentEntry.index)
                 }
             }
