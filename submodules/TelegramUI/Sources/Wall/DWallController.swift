@@ -147,6 +147,9 @@ public final class DWallController: TelegramBaseController {
         tabBarItem.image = icon
         tabBarItem.selectedImage = icon
         
+        navigationItem.title = "Wall.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)
+        tabBarItem.title = "Wall.TabTitle".tp_loc(lang: presentationData.strings.baseLanguageCode)
+        
         self.statusBar.statusBarStyle = self.presentationData.theme.rootController.statusBarStyle.style
         
         self.navigationBar?.updatePresentationData(NavigationBarPresentationData(presentationData: self.presentationData))

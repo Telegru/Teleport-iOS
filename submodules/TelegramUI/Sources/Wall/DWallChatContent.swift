@@ -206,8 +206,10 @@ extension DWallChatContent {
             self.updateFilterPredicate()
             
             self.loadInitialData()
-            self.loadingDisposable = (self.historyViewStream.signal()
-                                      |> map { $0.0.isLoading })
+            self.loadingDisposable = (
+                self.historyViewStream.signal()
+                |> map { $0.0.isLoading }
+            )
             .start(next: { [weak self] isLoading in
                 self?.isLoadingPromise.set(isLoading)
             })
@@ -250,33 +252,36 @@ extension DWallChatContent {
             self.mergedHistoryView = nil
             self.historyViewDisposable?.dispose()
             self.anchorsDisposable?.dispose()
-            self.anchorsDisposable = (context.account.viewTracker.tailChatListView(
-                groupId: .root,
-                filterPredicate: filterPredicate,
-                count: tailChatsCount
-            )
-                                      |> map { view, _ -> [PeerId] in
-                return view.entries.compactMap { entry -> PeerId? in
-                    switch entry {
-                    case let .MessageEntry(entryData):
-                        return (entryData.renderedPeer.peer as? TelegramChannel)?.id
-                    default:
-                        return nil
+            self.anchorsDisposable = (
+                context.account.viewTracker.tailChatListView(
+                    groupId: .root,
+                    filterPredicate: filterPredicate,
+                    count: tailChatsCount
+                )
+                |> deliverOn(self.queue)
+                |> map { view, _ -> [PeerId] in
+                    return view.entries.compactMap { entry -> PeerId? in
+                        switch entry {
+                        case let .MessageEntry(entryData):
+                            return (entryData.renderedPeer.peer as? TelegramChannel)?.id
+                        default:
+                            return nil
+                        }
                     }
                 }
-            }
-                                      |> mapToSignal { [weak self] peerIds -> Signal<[PeerId: MessageIndex], NoError> in
-                guard let self = self else {
-                    return .complete()
+                |> mapToSignal { [weak self] peerIds -> Signal<[PeerId: MessageIndex], NoError> in
+                    guard let self else {
+                        return .complete()
+                    }
+                    return (self.context.account.postbox.maxReadIndexForPeerIds(
+                        peerIds: peerIds,
+                        clipHoles: true,
+                        namespaces: .all
+                    ) |> take(1))
                 }
-                return (self.context.account.postbox.maxReadIndexForPeerIds(
-                    peerIds: peerIds,
-                    clipHoles: true,
-                    namespaces: .all
-                ) |> take(1))
-            })
-            .start(next: { [weak self] anchors in
-                guard let self = self else { return }
+            )
+            .startStrict(next: { [weak self] anchors in
+                guard let self else { return }
                 
                 debugPrint("----||| 1")
                 if anchors.isEmpty && currentAnchors == nil {
@@ -572,17 +577,22 @@ extension DWallChatContent {
             }
             #endif
 
-            self.historyViewDisposable = ((context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
-                peerIds: Array(currentAnchors.keys),
-                anchors: currentAnchors,
-                anchor: self.pageAnchor,
-                filterBofore: filterBefore,
-                count: self.messagesPerPage,
-                clipHoles: true
+            self.historyViewDisposable = (
+                (
+                    context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
+                        peerIds: Array(currentAnchors.keys),
+                        anchors: currentAnchors,
+                        anchor: self.pageAnchor,
+                        filterBofore: filterBefore,
+                        count: self.messagesPerPage,
+                        clipHoles: true
+                    )
+                    |> distinctUntilChanged(isEqual: areHistoryViewsEqual)
+                    |> deliverOn(self.queue)
+                )
             )
-            |> distinctUntilChanged(isEqual: areHistoryViewsEqual)))
             .start(next: { [weak self] result in
-                guard let self = self else { return }
+                guard let self else { return }
                 debugPrint("----||| 3")
 
                 let (view, updateType, _) = result
@@ -622,8 +632,9 @@ extension DWallChatContent {
                 }
                 #endif
 
-                self.historyViewStream.putNext((view, self.mergedHistoryView?.entries.isEmpty == true ? updateType : .Generic))
+                let isPreviousEntriesEmpty = self.mergedHistoryView?.entries.isEmpty == true
                 self.mergedHistoryView = view
+                self.historyViewStream.putNext((view, isPreviousEntriesEmpty ? updateType : .Generic))
                 self.checkAndMarkAsReadIfNeeded(view: view)
             })
         }
