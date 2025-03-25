@@ -418,93 +418,105 @@ extension DWallChatContent {
                 })
                 
                 
-                //                if let newestMessage = sortedEntries.last {
-                //                    for peerId in filterBefore.keys {
-                //                        let location = ChatLocation.peer(id: peerId)
-                //                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-                //                        self.context.applyMaxReadIndex(
-                //                            for: location,
-                //                            contextHolder: contextHolder,
-                //                            messageIndex: newestMessage.index
-                //                        )
-                //                    }
-                //                }
+                let markAsRead = self?.context.currentDahlSettings.with { $0 }.wallSettings.markAsRead ?? false
+
+                if markAsRead, let newestMessage = sortedEntries.last {
+                    for peerId in filterBefore.keys {
+                        let location = ChatLocation.peer(id: peerId)
+                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                        self.context.applyMaxReadIndex(
+                            for: location,
+                            contextHolder: contextHolder,
+                            messageIndex: newestMessage.index
+                        )
+                    }
+                }
             })
         }
         
         func markAllMessagesRead(olderThan threshold: MessageIndex) {
-//            guard let mergedView = self.mergedHistoryView else {
-//                return
-//            }
-//            
-//            var maxReadIndices: [PeerId: MessageIndex] = [:]
-//            
-//            for entry in mergedView.entries {
-//                let message = entry.message
-//                if message.timestamp <= threshold.timestamp {
-//                    let peerId = message.id.peerId
-//                    if let existing = maxReadIndices[peerId] {
-//                        if existing < message.index {
-//                            maxReadIndices[peerId] = message.index
-//                        }
-//                    } else {
-//                        maxReadIndices[peerId] = message.index
-//                    }
-//                }
-//            }
-//            
-//            for (peerId, messageIndex) in maxReadIndices {
-//                let location = ChatLocation.peer(id: peerId)
-//                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-//                self.context.applyMaxReadIndex(for: location, contextHolder: contextHolder, messageIndex: messageIndex)
-//            }
+            let markAsRead = self.context.currentDahlSettings.with { $0 }.wallSettings.markAsRead
+            guard markAsRead else {
+                return
+            }
+            
+            guard let mergedView = self.mergedHistoryView else {
+                return
+            }
+            
+            var maxReadIndices: [PeerId: MessageIndex] = [:]
+            
+            for entry in mergedView.entries {
+                let message = entry.message
+                if message.timestamp <= threshold.timestamp {
+                    let peerId = message.id.peerId
+                    if let existing = maxReadIndices[peerId] {
+                        if existing < message.index {
+                            maxReadIndices[peerId] = message.index
+                        }
+                    } else {
+                        maxReadIndices[peerId] = message.index
+                    }
+                }
+            }
+            
+            for (peerId, messageIndex) in maxReadIndices {
+                let location = ChatLocation.peer(id: peerId)
+                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                self.context.applyMaxReadIndex(for: location, contextHolder: contextHolder, messageIndex: messageIndex)
+            }
         }
         
         private func checkAndMarkAsReadIfNeeded(view: MessageHistoryView) {
-//            if view.entries.count == 1, let entry = view.entries.first {
-//                let location = ChatLocation.peer(id: entry.message.id.peerId)
-//                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-//                
-//                self.context.applyMaxReadIndex(
-//                    for: location,
-//                    contextHolder: contextHolder,
-//                    messageIndex: entry.message.index
-//                )
-//            } else if view.entries.count > 1 {
-//                var currentGroupKey: Int64? = nil
-//                var isMultipleGroups = false
-//                
-//                for entryIndex in (0..<view.entries.count).reversed() {
-//                    let entry = view.entries[entryIndex]
-//                    let groupKey = entry.message.groupingKey
-//                    
-//                    if groupKey == nil {
-//                        isMultipleGroups = true
-//                        break
-//                    }
-//                    
-//                    if currentGroupKey == nil {
-//                        currentGroupKey = groupKey
-//                    }
-//                    else if currentGroupKey != groupKey {
-//                        isMultipleGroups = true
-//                        break
-//                    }
-//                }
-//                
-//                if !isMultipleGroups && currentGroupKey != nil {
-//                    if let latestEntry = view.entries.first {
-//                        let location = ChatLocation.peer(id: latestEntry.message.id.peerId)
-//                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-//                        
-//                        self.context.applyMaxReadIndex(
-//                            for: location,
-//                            contextHolder: contextHolder,
-//                            messageIndex: latestEntry.message.index
-//                        )
-//                    }
-//                }
-//            }
+            let markAsRead = self.context.currentDahlSettings.with { $0 }.wallSettings.markAsRead
+            guard markAsRead else {
+                return
+            }
+            
+            if view.entries.count == 1, let entry = view.entries.first {
+                let location = ChatLocation.peer(id: entry.message.id.peerId)
+                let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                
+                self.context.applyMaxReadIndex(
+                    for: location,
+                    contextHolder: contextHolder,
+                    messageIndex: entry.message.index
+                )
+            } else if view.entries.count > 1 {
+                var currentGroupKey: Int64? = nil
+                var isMultipleGroups = false
+                
+                for entryIndex in (0..<view.entries.count).reversed() {
+                    let entry = view.entries[entryIndex]
+                    let groupKey = entry.message.groupingKey
+                    
+                    if groupKey == nil {
+                        isMultipleGroups = true
+                        break
+                    }
+                    
+                    if currentGroupKey == nil {
+                        currentGroupKey = groupKey
+                    }
+                    else if currentGroupKey != groupKey {
+                        isMultipleGroups = true
+                        break
+                    }
+                }
+                
+                if !isMultipleGroups && currentGroupKey != nil {
+                    if let latestEntry = view.entries.first {
+                        let location = ChatLocation.peer(id: latestEntry.message.id.peerId)
+                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                        
+                        self.context.applyMaxReadIndex(
+                            for: location,
+                            contextHolder: contextHolder,
+                            messageIndex: latestEntry.message.index
+                        )
+                    }
+                }
+            }
         }
         
         private func showLoading() {

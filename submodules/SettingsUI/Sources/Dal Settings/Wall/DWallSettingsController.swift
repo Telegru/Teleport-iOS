@@ -21,6 +21,7 @@ import TPStrings
 private final class DWallSettingsArguments {
     let context: AccountContext
     let updateShowArchivedChannels: (Bool) -> Void
+    let updateMarkAsRead: (Bool) -> Void
     let addExcludedChannel: () -> Void
     let removeExcludedChannel: (EnginePeer.Id) -> Void
     let removeAllExcludedChannels: () -> Void
@@ -30,6 +31,7 @@ private final class DWallSettingsArguments {
     init(
         context: AccountContext,
         updateShowArchivedChannels: @escaping (Bool) -> Void,
+        updateMarkAsRead: @escaping (Bool) -> Void,
         addExcludedChannel: @escaping () -> Void,
         removeExcludedChannel: @escaping (EnginePeer.Id) -> Void,
         removeAllExcludedChannels: @escaping () -> Void,
@@ -38,6 +40,7 @@ private final class DWallSettingsArguments {
     ) {
         self.context = context
         self.updateShowArchivedChannels = updateShowArchivedChannels
+        self.updateMarkAsRead = updateMarkAsRead
         self.addExcludedChannel = addExcludedChannel
         self.removeExcludedChannel = removeExcludedChannel
         self.removeAllExcludedChannels = removeAllExcludedChannels
@@ -57,6 +60,7 @@ private enum DWallSettingsSection: Int32, CaseIterable {
 
 private enum DWallSettingsEntryTag: ItemListItemTag {
     case showArchivedChannels
+    case markAsRead
     
     func isEqual(to other: ItemListItemTag) -> Bool {
         if let other = other as? DWallSettingsEntryTag, self == other {
@@ -70,6 +74,7 @@ private enum DWallSettingsEntryTag: ItemListItemTag {
 private enum DWallSettingsEntry: ItemListNodeEntry {
     case displayHeader(PresentationTheme, title: String)
     case showArchivedChannels(PresentationTheme, title: String, value: Bool)
+    case markAsRead(PresentationTheme, title: String, value: Bool)
     case displayFooter(PresentationTheme, title: String)
     
     case excludedHeader(PresentationTheme, title: String)
@@ -80,7 +85,7 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
     
     var section: ItemListSectionId {
         switch self {
-        case .displayHeader, .showArchivedChannels, .displayFooter:
+        case .displayHeader, .showArchivedChannels, .markAsRead, .displayFooter:
             return DWallSettingsSection.display.rawValue
         case .excludedHeader, .addExcludedChannel, .excludedChannel, .removeAllExcludedChannels, .excludedFooter:
             return DWallSettingsSection.excluded.rawValue
@@ -93,12 +98,14 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
             return 0
         case .showArchivedChannels:
             return 1
-        case .displayFooter:
+        case .markAsRead:
             return 2
-        case .excludedHeader:
+        case .displayFooter:
             return 3
-        case .addExcludedChannel:
+        case .excludedHeader:
             return 4
+        case .addExcludedChannel:
+            return 5
         case let .excludedChannel(index, _, _, _):
             return 100 + index
         case .removeAllExcludedChannels:
@@ -112,6 +119,8 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
         switch self {
         case .showArchivedChannels:
             return DWallSettingsEntryTag.showArchivedChannels
+        case .markAsRead:
+            return DWallSettingsEntryTag.markAsRead
         default:
             return nil
         }
@@ -130,6 +139,16 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
             
         case let .showArchivedChannels(lhsTheme, lhsTitle, lhsValue):
             if case let .showArchivedChannels(rhsTheme, rhsTitle, rhsValue) = rhs,
+               lhsTheme === rhsTheme,
+               lhsTitle == rhsTitle,
+               lhsValue == rhsValue {
+                return true
+            } else {
+                return false
+            }
+            
+        case let .markAsRead(lhsTheme, lhsTitle, lhsValue):
+            if case let .markAsRead(rhsTheme, rhsTitle, rhsValue) = rhs,
                lhsTheme === rhsTheme,
                lhsTitle == rhsTitle,
                lhsValue == rhsValue {
@@ -226,6 +245,19 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
                 style: .blocks,
                 updated: { updatedValue in
                     arguments.updateShowArchivedChannels(updatedValue)
+                },
+                tag: self.tag
+            )
+            
+        case let .markAsRead(_, title, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { updatedValue in
+                    arguments.updateMarkAsRead(updatedValue)
                 },
                 tag: self.tag
             )
@@ -336,6 +368,14 @@ private func dWallSettingsEntries(
             presentationData.theme,
             title: "DahlSettings.Wall.Display.ArchivedChannels".tp_loc(lang: lang),
             value: wallSettings.showArchivedChannels
+        )
+    )
+    
+    entries.append(
+        .markAsRead(
+            presentationData.theme,
+            title: "DahlSettings.Wall.Display.MarkAsRead".tp_loc(lang: lang),
+            value: wallSettings.markAsRead
         )
     )
     
@@ -455,6 +495,18 @@ public func dWallSettingsController(
                     var updatedSettings = settings
                     var updatedWallSettings = settings.wallSettings
                     updatedWallSettings.showArchivedChannels = value
+                    updatedSettings.wallSettings = updatedWallSettings
+                    return updatedSettings
+                }
+            ).start()
+        },
+        updateMarkAsRead: { value in
+            let _ = updateDalSettingsInteractively(
+                accountManager: context.sharedContext.accountManager,
+                { settings in
+                    var updatedSettings = settings
+                    var updatedWallSettings = settings.wallSettings
+                    updatedWallSettings.markAsRead = value
                     updatedSettings.wallSettings = updatedWallSettings
                     return updatedSettings
                 }

@@ -88,6 +88,7 @@
 "DahlSettings.Wall.Display.Header" = "Show";
 "DahlSettings.Wall.Display.ArchivedChannels" = "Channels from Archive";
 "DahlSettings.Wall.Display.Footer" = "Channel posts from your Archive will appear on your Wall along with other posts.";
+"DahlSettings.Wall.Display.MarkAsRead" = "Mark as read when viewing in wall";
 
 "DahlSettings.Wall.Excluded.Header" = "EXCLUDED CHANNELS";
 "DahlSettings.Wall.Excluded.ExcludedChannels" = "Add Exclusions";
