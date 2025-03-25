@@ -4823,6 +4823,7 @@ public class Postbox {
         filterBofore: [PeerId: MessageIndex],
         count: Int,
         clipHoles: Bool = true,
+        ignoreBelow: Bool = false,
         takeTail: Bool = false,
         namespaces: MessageIdNamespaces = .just(Set([0])),
         orderStatistics: MessageHistoryViewOrderStatistics = MessageHistoryViewOrderStatistics(),
@@ -4855,7 +4856,9 @@ public class Postbox {
                     
                     if let fromIndex = filterBofore[peerId] {
                         let passedGroupingKeys = Set(entries
-                            .filter { $0.index > fromIndex }
+                            .filter {
+                                return $0.index > fromIndex
+                            }
                             .compactMap { entry in
                                 if let groupingKey = entry.message.groupingKey {
                                     return groupingKey
@@ -4864,7 +4867,6 @@ public class Postbox {
                             })
 
                         entries = entries.filter { entry in
-                            
                             if  entry.index > fromIndex {
                                 return true
                             }
@@ -4896,11 +4898,20 @@ public class Postbox {
                 if let anchor = anchor {
                     var groupsToInclude = Set<Int64>()
                     for entry in allEntries {
-                        if let key = entry.message.groupingKey, entry.index >= anchor {
-                            groupsToInclude.insert(key)
+                        if ignoreBelow {
+                            if let key = entry.message.groupingKey, entry.index <= anchor {
+                                groupsToInclude.insert(key)
+                            }
+                        } else {
+                            if let key = entry.message.groupingKey, entry.index >= anchor {
+                                groupsToInclude.insert(key)
+                            }
                         }
                     }
                     allEntries = allEntries.filter { entry in
+                        if ignoreBelow {
+                            return entry.index <= anchor
+                        }
                         return entry.index >= anchor
                     }
                 }

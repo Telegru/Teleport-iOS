@@ -551,7 +551,7 @@ extension DWallChatContent {
             }
         }
         
-        private func updateHistoryViewRequest() {
+        private func updateHistoryViewRequest(takeTail: Bool = false) {
             guard let currentAnchors = self.currentAnchors, let filterBefore = self.filterBefore else {
                 return
             }
@@ -589,7 +589,9 @@ extension DWallChatContent {
                         anchor: self.pageAnchor,
                         filterBofore: filterBefore,
                         count: self.messagesPerPage,
-                        clipHoles: true
+                        clipHoles: true,
+                        ignoreBelow: takeTail,
+                        takeTail: takeTail
                     )
                     |> distinctUntilChanged(isEqual: areHistoryViewsEqual)
                     |> deliverOn(self.queue)
@@ -674,13 +676,28 @@ extension DWallChatContent {
             })
         }
         
-        private func updateAnchorsForPagination(from view: MessageHistoryView) {
+        private func updateAnchorsForPagination(from view: MessageHistoryView, direction: ChatHistoryListLoadDirection) {
             guard let currentAnchors, view.entries.count >= messagesPerPage else {
                 return
             }
             
-            self.currentAnchors = getConsistentAnchorsForAllPeers(currentEntries: view.entries, peerIds: Array(currentAnchors.keys), centerEntry: view.entries[20])
-            self.pageAnchor = view.entries[20].index
+            let centerIndex: Int
+            
+            switch direction {
+            case .down:
+                centerIndex = min(20, view.entries.count - messagesPerPage + 20)
+            case .up:
+                centerIndex = max(view.entries.count - 20, messagesPerPage - 20)
+            }
+            
+            if centerIndex < view.entries.count {
+                self.currentAnchors = getConsistentAnchorsForAllPeers(
+                    currentEntries: view.entries,
+                    peerIds: Array(currentAnchors.keys),
+                    centerEntry: view.entries[centerIndex]
+                )
+                self.pageAnchor = view.entries[centerIndex].index
+            }
         }
         
         private func getConsistentAnchorsForAllPeers(
@@ -721,16 +738,12 @@ extension DWallChatContent {
 
             if direction == .down && index > messagesPerPage / 2 {
                 currentMessageIndex = messageIndex
-                updateAnchorsForPagination(from: currentView)
-                updateHistoryViewRequest()
+                updateAnchorsForPagination(from: currentView, direction: direction)
+                updateHistoryViewRequest(takeTail: false)
             } else if direction == .up && index < messagesPerPage / 2 {
                 currentMessageIndex = messageIndex
-                // TODO: настроить скрол вверх
-                //            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
-                //
-                //                updateAnchorsForPreviousPage(from: currentView)
-                //                updateHistoryViewRequest()
-                //            }
+                updateAnchorsForPagination(from: currentView, direction: direction)
+                updateHistoryViewRequest(takeTail: true)
             }
         }
                 
