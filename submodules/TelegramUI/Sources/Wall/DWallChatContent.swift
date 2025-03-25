@@ -418,7 +418,7 @@ extension DWallChatContent {
                 })
                 
                 
-                let markAsRead = self?.context.currentDahlSettings.with { $0 }.wallSettings.markAsRead ?? false
+                let markAsRead = self.context.currentDahlSettings.with { $0 }.wallSettings.markAsRead
 
                 if markAsRead, let newestMessage = sortedEntries.last {
                     for peerId in filterBefore.keys {
