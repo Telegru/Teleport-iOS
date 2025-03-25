@@ -819,18 +819,20 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             }
         })
         
-        self.folderVisibilityDisposable = (
-            self.context.sharedContext.accountManager.sharedData(
-                keys: [ApplicationSpecificSharedDataKeys.dalSettings]
-            )
-            |> map { sharedData -> Bool in
-                return (sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings).showChatFolders
-            }
-            |> distinctUntilChanged
-            |> deliverOnMainQueue
-        ).startStrict(next: { [weak self] _ in
-            self?.reloadFilters()
-        })
+        if case .chatList(.root) = location {
+            self.folderVisibilityDisposable = (
+                self.context.sharedContext.accountManager.sharedData(
+                    keys: [ApplicationSpecificSharedDataKeys.dalSettings]
+                )
+                |> map { sharedData -> Bool in
+                    return (sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings).showChatFolders
+                }
+                |> distinctUntilChanged
+                |> deliverOnMainQueue
+            ).startStrict(next: { [weak self] _ in
+                self?.reloadFilters()
+            })
+        }
         
         self.updateNavigationMetadata()
     }
