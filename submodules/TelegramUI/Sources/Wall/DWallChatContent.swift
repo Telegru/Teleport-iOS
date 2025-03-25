@@ -83,9 +83,9 @@ final class DWallChatContent: ChatCustomContentsProtocol {
         }
     }
     
-    func loadMoreAt(messageIndex: MessageIndex) {
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
         self.impl.with { impl in
-            impl.loadMoreAt(messageIndex: messageIndex)
+            impl.loadMoreAt(messageIndex: messageIndex, direction: direction)
         }
     }
     
@@ -266,7 +266,6 @@ extension DWallChatContent {
                     getPeerIds(.root),
                     getPeerIds(Namespaces.PeerGroup.archive)
                 )
-                |> deliverOn(self.queue)
                 |> mapToSignal { [weak self] rootPeers, archivePeers -> Signal<[PeerId: MessageIndex], NoError> in
                     guard let self = self else {
                         return .complete()
@@ -276,8 +275,11 @@ extension DWallChatContent {
                         peerIds: peerIds,
                         clipHoles: true,
                         namespaces: .all
-                    ) |> take(1)
-                )
+                    )
+                    |> take(1)
+                    |> deliverOn(self.queue)
+                }
+            )
                 .startStrict(next: { [weak self] anchors in
                     guard let self = self else { return }
                     
@@ -349,22 +351,19 @@ extension DWallChatContent {
             
             historyViewDisposable?.dispose()
             
-            loadMaxCountDisposable = ((context.account.viewTracker.tailChatListView(
-                groupId: .root,
-                filterPredicate: filterPredicate,
-                count: tailChatsCount
-            ) |> map { view, _ -> [PeerId] in
-                return view.entries.compactMap { entry -> PeerId? in
-                    switch entry {
-                    case let .MessageEntry(entryData):
-                        return (entryData.renderedPeer.peer as? TelegramChannel)?.id
-                    default:
-                        return nil
-                    }
-                }
-            } |> mapToSignal { peers in
+            let getPeerIds = { (groupId: PeerGroupId) -> Signal<[PeerId], NoError> in
+                return self.context.account.postbox.getChatListPeers(
+                    groupId: groupId,
+                    filterPredicate: self.filterPredicate
+                )
+            }
+
+            loadMaxCountDisposable = (combineLatest(
+                getPeerIds(.root),
+                getPeerIds(Namespaces.PeerGroup.archive)
+            ) |> mapToSignal { rootPeers, archivePeers in
                 (context.account.postbox.getTopMessageAnchorsForPeerIds(
-                    peerIds: peers,
+                    peerIds: rootPeers + archivePeers,
                     namespace: Namespaces.Message.Cloud)
                                           |> take(1)
                                           |> mapToSignal { topAnchors in
@@ -377,12 +376,13 @@ extension DWallChatContent {
                         takeTail: true
                     )
                 })
-            } )
-            |> take(1))
+            } |> deliverOn(queue)
+              |> take(1)
+            )
             .startStrict(next: { [weak self] (view) in
                 guard let self = self else { return }
                 var updatedAnchors: [PeerId: MessageIndex] = [:]
-
+                
                 var oldestMessageByPeer: [PeerId: MessageIndex] = [:]
                 for entry in view.0.entries {
                     let peerId = entry.message.id.peerId
@@ -394,17 +394,17 @@ extension DWallChatContent {
                         oldestMessageByPeer[peerId] = entry.index
                     }
                 }
-
+                
                 for (peerId, messageIndex) in oldestMessageByPeer {
                     updatedAnchors[peerId] = messageIndex
                 }
                 
                 let sortedEntries = view.0.entries.sorted(by: { $0.index < $1.index })
-
+                
                 if let oldestMessage = sortedEntries.first {
                     self.pageAnchor = oldestMessage.index
                 }
-
+                
                 self.currentAnchors = updatedAnchors
                 self.updateHistoryViewRequest()
                 
@@ -416,19 +416,19 @@ extension DWallChatContent {
                 .start(next: { [weak self] view in
                     self?.loadingActionPromise.set(.loadingEnded(isLoadAll: true))
                 })
-
-
-//                if let newestMessage = sortedEntries.last {
-//                    for peerId in filterBefore.keys {
-//                        let location = ChatLocation.peer(id: peerId)
-//                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-//                        self.context.applyMaxReadIndex(
-//                            for: location,
-//                            contextHolder: contextHolder,
-//                            messageIndex: newestMessage.index
-//                        )
-//                    }
-//                }
+                
+                
+                //                if let newestMessage = sortedEntries.last {
+                //                    for peerId in filterBefore.keys {
+                //                        let location = ChatLocation.peer(id: peerId)
+                //                        let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+                //                        self.context.applyMaxReadIndex(
+                //                            for: location,
+                //                            contextHolder: contextHolder,
+                //                            messageIndex: newestMessage.index
+                //                        )
+                //                    }
+                //                }
             })
         }
         
@@ -582,6 +582,7 @@ extension DWallChatContent {
                     |> distinctUntilChanged(isEqual: areHistoryViewsEqual)
                     |> deliverOn(self.queue)
                 )
+            )
             .start(next: { [weak self] result in
                 guard let self = self else { return }
                 self.isLoadingHistoryViewInProgress = false
@@ -652,9 +653,7 @@ extension DWallChatContent {
                     }
                 }
                 #endif
-//                let isPreviousEntriesEmpty = self.mergedHistoryView?.entries.isEmpty == true
-//                self.historyViewStream.putNext((view, isPreviousEntriesEmpty ? updateType : .Generic))
-                
+
                 print("📌📌📌 Last item in view: \(view.entries.last?.message.text ?? "not found") ")
 
                 self.historyViewStream.putNext((view, updateType: updateType))
@@ -700,7 +699,7 @@ extension DWallChatContent {
         }
         
         
-        func loadMoreAt(messageIndex: MessageIndex) {
+        func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
             guard let currentView = self.mergedHistoryView, !currentView.entries.isEmpty, currentMessageIndex != messageIndex, !isLoadingHistoryViewInProgress else {
                 return
             }
@@ -708,19 +707,19 @@ extension DWallChatContent {
             let index = currentView.entries.firstIndex { $0.index == messageIndex } ?? 0
             debugPrint("📌📌📌 Load More At: \(index) \(currentView.entries[index].message.text)")
 
-            if index > messagesPerPage / 2 {
+            if direction == .down && index > messagesPerPage / 2 {
                 currentMessageIndex = messageIndex
                 updateAnchorsForPagination(from: currentView)
                 updateHistoryViewRequest()
+            } else if direction == .up && index < messagesPerPage / 2 {
+                currentMessageIndex = messageIndex
+                // TODO: настроить скрол вверх
+                //            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
+                //
+                //                updateAnchorsForPreviousPage(from: currentView)
+                //                updateHistoryViewRequest()
+                //            }
             }
-            
-            
-            // TODO: настроить скрол вверх
-            //            else if position < totalEntries / 3 && !isAtBeginning(currentView) {
-            //
-            //                updateAnchorsForPreviousPage(from: currentView)
-            //                updateHistoryViewRequest()
-            //            }
         }
                 
         private func findPositionForMessageIndex(messageIndex: MessageIndex, in view: MessageHistoryView) -> Int {

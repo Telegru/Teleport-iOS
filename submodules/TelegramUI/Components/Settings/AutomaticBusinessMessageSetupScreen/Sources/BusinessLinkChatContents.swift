@@ -95,7 +95,7 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
     func loadMore() {
     }
     
-    func loadMoreAt(messageIndex: MessageIndex) {
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
         
     }
     

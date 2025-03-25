@@ -275,7 +275,7 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     }
     
     func loadAll() {}
-    func loadMoreAt(messageIndex: MessageIndex) {
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
         
     }
     
