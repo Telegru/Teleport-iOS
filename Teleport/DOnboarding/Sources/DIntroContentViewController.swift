@@ -26,17 +26,4 @@ final class DIntroContentViewController: UIViewController {
         super.viewDidLoad()
         contentView.viewModel = viewModel
     }
-    
-//    private func makeConstraints() {
-//        
-//        coverImageView.snp.makeConstraints {
-//            $0.top.leading.trailing.equalToSuperview()
-//            $0.height.equalTo(UIScreen.main.bounds.width < 375.0 ? 280.0 : 140.0)
-//        }
-//        
-//        textsStackView.snp.makeConstraints {
-//            $0.top.equalTo(coverImageView.snp.bottom).offset(34.0)
-//            $0.leading.trailing.equalToSuperview().inset(66.0)
-//        }
-//    }
 }
