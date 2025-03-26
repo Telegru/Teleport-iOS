@@ -98,9 +98,9 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
             return 0
         case .showArchivedChannels:
             return 1
-        case .markAsRead:
-            return 2
         case .displayFooter:
+            return 2
+        case .markAsRead:
             return 3
         case .excludedHeader:
             return 4
@@ -372,17 +372,17 @@ private func dWallSettingsEntries(
     )
     
     entries.append(
-        .markAsRead(
+        .displayFooter(
             presentationData.theme,
-            title: "DahlSettings.Wall.Display.MarkAsRead".tp_loc(lang: lang),
-            value: wallSettings.markAsRead
+            title: "DahlSettings.Wall.Display.Footer".tp_loc(lang: lang)
         )
     )
     
     entries.append(
-        .displayFooter(
+        .markAsRead(
             presentationData.theme,
-            title: "DahlSettings.Wall.Display.Footer".tp_loc(lang: lang)
+            title: "DahlSettings.Wall.Display.MarkAsRead".tp_loc(lang: lang),
+            value: wallSettings.markAsRead
         )
     )
     

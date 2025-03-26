@@ -369,17 +369,19 @@ extension DWallChatContent {
                                           |> mapToSignal { topAnchors in
                     return context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
                         peerIds: Array(topAnchors.keys),
-                        anchors: topAnchors,
-                        filterBofore: filterBefore,
-                        count: messagesPerPage,
-                        clipHoles: true,
-                        takeTail: true
-                    )
+                        anchorIndices: topAnchors,
+                        filterOlderThanIndices: filterBefore,
+                        selectionOptions: MessageHistorySelectionOptions(boundAnchor: self.pageAnchor, direction: .newerMessages, range: .fromEnd),
+                        messageCount: messagesPerPage,
+                        clipHoles: true
+                    ) |> map {
+                        ($0, topAnchors)
+                    }
                 })
             } |> deliverOn(queue)
               |> take(1)
             )
-            .startStrict(next: { [weak self] (view) in
+            .startStrict(next: { [weak self] (view, topAnchors) in
                 guard let self = self else { return }
                 var updatedAnchors: [PeerId: MessageIndex] = [:]
                 
@@ -420,14 +422,14 @@ extension DWallChatContent {
                 
                 let markAsRead = self.context.currentDahlSettings.with { $0 }.wallSettings.markAsRead
 
-                if markAsRead, let newestMessage = sortedEntries.last {
-                    for peerId in filterBefore.keys {
+                if markAsRead {
+                    for (peerId, index) in topAnchors {
                         let location = ChatLocation.peer(id: peerId)
                         let contextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
                         self.context.applyMaxReadIndex(
                             for: location,
                             contextHolder: contextHolder,
-                            messageIndex: newestMessage.index
+                            messageIndex: index
                         )
                     }
                 }
@@ -551,7 +553,7 @@ extension DWallChatContent {
             }
         }
         
-        private func updateHistoryViewRequest(takeTail: Bool = false) {
+        private func updateHistoryViewRequest(takeLatestEntries: Bool = false) {
             guard let currentAnchors = self.currentAnchors, let filterBefore = self.filterBefore else {
                 return
             }
@@ -585,13 +587,11 @@ extension DWallChatContent {
                 (
                     context.account.postbox.aroundAggregatedMessageHistoryViewForPeerIds(
                         peerIds: Array(currentAnchors.keys),
-                        anchors: currentAnchors,
-                        anchor: self.pageAnchor,
-                        filterBofore: filterBefore,
-                        count: self.messagesPerPage,
-                        clipHoles: true,
-                        ignoreBelow: takeTail,
-                        takeTail: takeTail
+                        anchorIndices: currentAnchors,
+                        filterOlderThanIndices: filterBefore,
+                        selectionOptions: MessageHistorySelectionOptions(boundAnchor: self.pageAnchor, direction: takeLatestEntries ? .olderMessages : .newerMessages, range: takeLatestEntries ? .fromEnd : .fromBeginning),
+                        messageCount: self.messagesPerPage,
+                        clipHoles: true
                     )
                     |> distinctUntilChanged(isEqual: areHistoryViewsEqual)
                     |> deliverOn(self.queue)
@@ -739,11 +739,11 @@ extension DWallChatContent {
             if direction == .down && index > messagesPerPage / 2 {
                 currentMessageIndex = messageIndex
                 updateAnchorsForPagination(from: currentView, direction: direction)
-                updateHistoryViewRequest(takeTail: false)
+                updateHistoryViewRequest(takeLatestEntries: false)
             } else if direction == .up && index < messagesPerPage / 2 {
                 currentMessageIndex = messageIndex
                 updateAnchorsForPagination(from: currentView, direction: direction)
-                updateHistoryViewRequest(takeTail: true)
+                updateHistoryViewRequest(takeLatestEntries: true)
             }
         }
                 
