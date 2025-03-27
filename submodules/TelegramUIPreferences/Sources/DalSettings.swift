@@ -10,7 +10,7 @@ public enum CameraType: String, Codable, Equatable {
     case undefined = "undefined"
 }
 
-public enum ListViewType: Int32, Codable, Equatable {
+public enum DChatListViewStyle: Int32, CaseIterable, Codable, Equatable {
     case singleLine = 0
     case doubleLine = 1
     case tripleLine = 2
@@ -20,7 +20,7 @@ public struct DalSettings: Codable, Equatable {
     
     public var tabBarSettings: DTabBarSettings
     public var menuItemsSettings: MenuItemsSettings
-    public var chatsListViewType: ListViewType
+    public var chatsListViewType: DChatListViewStyle
     public var premiumSettings: DPremiumSettings
     public var appearanceSettings: DAppearanceSettings
     
@@ -94,7 +94,7 @@ public struct DalSettings: Codable, Equatable {
         infiniteScrolling: Bool,
         showChatFolders: Bool,
         showRecentChats: Bool?,
-        chatsListViewType: ListViewType
+        chatsListViewType: DChatListViewStyle
     ) {
         self.tabBarSettings = tabBarSettings
         self.menuItemsSettings = menuItemsSettings
@@ -150,7 +150,7 @@ public struct DalSettings: Codable, Equatable {
         }
         
         if let listViewString = try container.decodeIfPresent(Int32.self, forKey: "chatsListViewType"),
-           let listView = ListViewType(rawValue: listViewString) {
+           let listView = DChatListViewStyle(rawValue: listViewString) {
             self.chatsListViewType = listView
         } else {
             self.chatsListViewType = .singleLine

@@ -20,7 +20,7 @@ private final class DAppearanceSettingsArguments {
     
     let updateShowCustomWallpaperInChannels: (Bool) -> Void
     let updateChannelBottomPanel: (Bool) -> Void
-    let updateChatsListViewType: (ListViewType) -> Void
+    let updateChatsListViewType: (DChatListViewStyle) -> Void
     let updateViewRounding: (Bool) -> Void
     let updateVKIcons: (Bool) -> Void
     let updateAlternativeFontInAvatars: (Bool) -> Void
@@ -29,7 +29,7 @@ private final class DAppearanceSettingsArguments {
         context: AccountContext,
         updateShowCustomWallpaperInChannels: @escaping (Bool) -> Void,
         updateChannelBottomPanel: @escaping (Bool) -> Void,
-        updateChatsListViewType: @escaping (ListViewType) -> Void,
+        updateChatsListViewType: @escaping (DChatListViewStyle) -> Void,
         updateViewRounding: @escaping (Bool) -> Void,
         updateVKIcons: @escaping (Bool) -> Void,
         updateAlternativeFontInAvatars: @escaping (Bool) -> Void
@@ -58,7 +58,7 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     case showChannelBottomPanel(title: String, isActive: Bool)
     
     case listViewTypeHeader(title: String)
-    case listViewTypeOption(title: String, type: ListViewType, isSelected: Bool)
+    case listViewTypeOptions(types: [DChatListViewStyle], currentType: DChatListViewStyle, theme: PresentationTheme)
     
     case viewRoundingHeader(title: String)
     case viewRounding(title: String, isActive: Bool)
@@ -76,7 +76,7 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case .chatsAppearanceHeader, .showCustomWallpaperInChannels, .showChannelBottomPanel:
             return DAppearanceSettingsSection.chatsAppearance.rawValue
             
-        case .listViewTypeHeader, .listViewTypeOption:
+        case .listViewTypeHeader, .listViewTypeOptions:
             return DAppearanceSettingsSection.listViewType.rawValue
             
         case .viewRoundingHeader, .viewRounding:
@@ -100,24 +100,24 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 2
         case .listViewTypeHeader:
             return 3
-        case let .listViewTypeOption(_, type, _):
-            return Int32(type.rawValue + 100)
+        case .listViewTypeOptions:
+            return 4
         case .viewRoundingHeader:
-            return 1000
+            return 5
         case .viewRounding:
-            return 1001
+            return 6
         case .avatarFontHeader:
-            return 1002
+            return 7
         case .avatarFont:
-            return 1003
+            return 8
         case .avatarFontFooter:
-            return 1004
+            return 9
         case .iconsHeader:
-            return 1005
+            return 10
         case .vkIcons:
-            return 1006
+            return 11
         case .iconsPreview:
-            return 1007
+            return 12
         }
     }
     
@@ -147,9 +147,9 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             }
             return false
             
-        case let .listViewTypeOption(lhsText, lhsType, lhsSelected):
-            if case let .listViewTypeOption(rhsText, rhsType, rhsSelected) = rhs {
-                return lhsText == rhsText && lhsType == rhsType && lhsSelected == rhsSelected
+        case let .listViewTypeOptions(lhsTypes, lhsCurrentType, lhsTheme):
+            if case let .listViewTypeOptions(rhsTypes, rhsCurrentType, rhsTheme) = rhs {
+                return lhsTypes == rhsTypes && lhsCurrentType == rhsCurrentType && lhsTheme === rhsTheme
             }
             return false
             
@@ -248,16 +248,15 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section
             )
             
-        case let .listViewTypeOption(title, type, isSelected):
-            return ItemListCheckboxItem(
-                presentationData: presentationData,
-                title: title,
-                style: .right,
-                textColor: .primary,
-                checked: isSelected,
-                zeroSeparatorInsets: false,
+        case let .listViewTypeOptions(types, currentType, theme):
+            return DChatListStyleCarouselItem(
+                context: arguments.context,
                 sectionId: self.section,
-                action: {
+                theme: theme,
+                strings: presentationData.strings,
+                types: types,
+                currentType: currentType,
+                updateType: { type in
                     arguments.updateChatsListViewType(type)
                 }
             )
@@ -398,6 +397,7 @@ public func dAppearanceSettingsController(
     } |> distinctUntilChanged
     
     let signal = combineLatest(
+        queue: .mainQueue(),
         context.sharedContext.presentationData,
         dahlSettingsSignal
     ) |> map { presentationData, dahlSettings -> (ItemListControllerState, (ItemListNodeState, Any)) in
@@ -431,22 +431,7 @@ public func dAppearanceSettingsController(
             .listViewTypeHeader(title: "DahlSettings.Appearance.ChatsList.Header".tp_loc(lang: lang).uppercased())
         )
         
-        let options: [(String, ListViewType)] = [
-            ("DahlSettings.ChatsList.SingleLine".tp_loc(lang: lang), .singleLine),
-            ("DahlSettings.ChatsList.DoubleLine".tp_loc(lang: lang), .doubleLine),
-            ("DahlSettings.ChatsList.TripleLine".tp_loc(lang: lang), .tripleLine)
-        ]
-        
-        
-        for (title, type) in options {
-            entries.append(
-                .listViewTypeOption(
-                    title: title,
-                    type: type,
-                    isSelected: type == dahlSettings.chatsListViewType
-                )
-            )
-        }
+        entries.append(.listViewTypeOptions(types: DChatListViewStyle.allCases, currentType: dahlSettings.chatsListViewType, theme: presentationData.theme))
         
         entries.append(
             .viewRoundingHeader(
