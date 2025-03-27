@@ -1767,8 +1767,6 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             contentSettings |> debug_measureTimeToFirstEvent(label: "chatHistoryNode_contentSettings")
         ) |> debug_measureTimeToFirstEvent(label: "chatHistoryNode_firstChatHistoryTransition")).startStrict(next: { [weak self] update, chatPresentationData, selectedMessages, updatingMedia, networkType, preferredStoryHighQuality, animatedEmojiStickers, additionalAnimatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, availableReactions, availableMessageEffects, savedMessageTags, defaultReaction, accountPeer, suggestAudioTranscription, promises, topicAuthorId, translationState, maxReadStoryId, recommendedChannels, audioTranscriptionTrial, chatThemes, deviceContactsNumbers, contentSettings in
 
-            print("DEBUG: historyViewTransitionDisposable TRIGGERED")
-
             let (historyAppearsCleared, pendingUnpinnedAllMessages, pendingRemovedMessages, currentlyPlayingMessageIdAndType, scrollToMessageId, chatHasBots, allAdMessages) = promises
             
             if measure_isFirstTime {
@@ -1848,9 +1846,6 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             let initialData: ChatHistoryCombinedInitialData?
             switch update.0 {
             case let .Loading(combinedInitialData, type):
-                
-                print("DEBUG: historyViewTransitionDisposable TRIGGERED1 Loading")
-
                 if case .Generic(.FillHole) = type {
                     applyHole()
                     return
@@ -1949,9 +1944,6 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                 }
                 return
             case let .HistoryView(view, type, scrollPosition, flashIndicators, originalScrollPosition, data, id):
-                
-                print("DEBUG: historyViewTransitionDisposable TRIGGERED1 \(view.entries.last?.message.text ?? "not found")")
-                
                 if case .Generic(let innerType) = type {
                     if innerType == .FillHole {
                         applyHole()

@@ -43,7 +43,7 @@ extension DWallSettings {
     public static var `default`: DWallSettings {
         DWallSettings(
             markAsRead: false,
-            showArchivedChannels: false,
+            showArchivedChannels: true,
             excludedChannels: []
         )
     }

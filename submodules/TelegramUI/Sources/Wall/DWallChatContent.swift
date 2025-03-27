@@ -6,6 +6,7 @@ import TelegramCore
 import AccountContext
 import ChatListUI
 import TelegramUIPreferences
+import TelegramPresentationData
 
 enum DWallLoadingAction: Equatable {
     case loadingStarted(isLoadAll: Bool)
@@ -127,7 +128,6 @@ extension DWallChatContent {
 
         var excludedPeerIds: Set<PeerId> = Set()
         var showArchivedChannels: Bool = true
-
         private var settingsDisposable: Disposable?
         
         var mergedHistoryView: MessageHistoryView?
@@ -155,7 +155,10 @@ extension DWallChatContent {
         private var currentAnchors: [PeerId: MessageIndex]?
         private let messagesPerPage = 50
         private var isLoadingHistoryViewInProgress = false
-
+        private var pendingInitialLoad = true
+        private let peersLoadingMonitor: PeersLoadingMonitor
+        private var statusDisposable: Disposable? = nil
+        
         init(
             queue: Queue,
             context: AccountContext,
@@ -164,7 +167,8 @@ extension DWallChatContent {
             self.queue = queue
             self.context = context
             self.tailChatsCount = tailChatsCount
-            
+            self.peersLoadingMonitor = PeersLoadingMonitor(postbox: context.account.postbox)
+
             let filterData = ChatListFilterData(
                 isShared: false,
                 hasSharedLinks: false,
@@ -200,13 +204,15 @@ extension DWallChatContent {
                         
                         self.updateFilterPredicate()
                         
-                        self.reloadData()
+                        if !self.pendingInitialLoad {
+                            self.reloadData()
+                        }
                     }
                 })
             
             self.updateFilterPredicate()
+            self.showLoading()
             
-            self.loadInitialData()
             self.loadingDisposable = (
                 self.historyViewStream.signal()
                 |> map { $0.0.isLoading }
@@ -214,6 +220,14 @@ extension DWallChatContent {
             .start(next: { [weak self] isLoading in
                 self?.isLoadingPromise.set(isLoading)
             })
+            
+            statusDisposable = peersLoadingMonitor.loadedSignal.start(next: { [weak self] loaded in
+                if loaded {
+                    self?.pendingInitialLoad = false
+                    self?.loadInitialData()
+                }
+            })
+            peersLoadingMonitor.start()
         }
         
         deinit {
@@ -225,6 +239,8 @@ extension DWallChatContent {
             self.autoMarkReadDisposable?.dispose()
             self.settingsDisposable?.dispose()
             self.loadingActionDisposable?.dispose()
+            self.statusDisposable?.dispose()
+            self.peersLoadingMonitor.stop()
         }
         
         private func updateFilterPredicate() {
@@ -247,6 +263,7 @@ extension DWallChatContent {
         }
         
         func loadInitialData() {
+            
             self.currentAnchors = nil
             self.filterBefore = nil
             self.pageAnchor = nil
@@ -317,6 +334,11 @@ extension DWallChatContent {
         }
         
         func reloadData() {
+            guard !self.pendingInitialLoad else {
+                self.showLoading()
+                return
+            }
+            
             currentMessageIndex = nil
             currentAnchors = nil
             pageAnchor = nil
@@ -335,15 +357,19 @@ extension DWallChatContent {
         }
         
         func loadMore() {
-
         }
         
         func loadAll() {
+            
             self.currentAnchors = nil
             self.pageAnchor = nil
             
             let messagesPerPage = self.messagesPerPage
-            let filterBefore = self.filterBefore!
+            guard let filterBefore = self.filterBefore else {
+                assertionFailure()
+                return
+            }
+            
             let context = self.context
             loadingActionPromise.set(.loadingStarted(isLoadAll: true))
 
