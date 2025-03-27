@@ -43,7 +43,7 @@ import TelegramUIDeclareEncodables
 import ContextMenuScreen
 import MetalEngine
 import RecaptchaEnterprise
-import TPOnboarding
+import DOnboarding
 import FirebaseCore
 
 #if canImport(AppCenter)

@@ -1,10 +1,3 @@
-//
-//  DIntroViewController.swift
-//  Telegram
-//
-//  Created by Lenar Gilyazov on 19.12.2024.
-//
-
 import UIKit
 import RMIntro
 import SSignalKit
@@ -96,7 +89,11 @@ public final class DIntroViewController: UIViewController {
     private lazy var pageControl: UIPageControl = {
         let control = UIPageControl()
         control.tintColor = .white
+        control.isUserInteractionEnabled = false
         control.numberOfPages = pageViewController.numberOfPages
+        if #available(iOS 14.0, *) {
+            control.allowsContinuousInteraction = false
+        }
         return control
     }()
     private lazy var alternativeLanguageButton: TGModernButton = {

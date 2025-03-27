@@ -392,7 +392,7 @@ swift_library(
         "//submodules/TelegramUI:TelegramUIResources",
         "//submodules/TelegramUI:TelegramUIAssets",
         "//submodules/TelegramUI/Components/Calls/CallScreen:Assets",
-        "//Teleport/TPOnboarding:TPOnboardingAssets",
+        "//Teleport/DOnboarding:DOnboardingAssets",
         "//Teleport/TPSettings:TPSettingsAssets",
         "//Teleport/TPUI:TPUIAssets",
         ":GoogleService-Info",
