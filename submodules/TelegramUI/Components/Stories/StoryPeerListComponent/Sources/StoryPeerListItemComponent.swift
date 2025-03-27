@@ -134,6 +134,472 @@ private func calculateMergingCircleShape(center: CGPoint, leftCenter: CGPoint?, 
     return path
 }
 
+private func calculateMergingRectShape(center: CGPoint, leftCenter: CGPoint?, rightCenter: CGPoint?, sideLength: CGFloat, radius: CGFloat, totalCount: Int, unseenCount: Int, isSeen: Bool, segmentFraction: CGFloat, rotationFraction: CGFloat) -> CGPath {
+    var totalCount = totalCount
+    var unseenCount = unseenCount
+    
+    let totalCountNorm = CGFloat(totalCount) / 30.0
+    if totalCountNorm > 1.0 {
+        totalCount = Int(CGFloat(totalCount) / totalCountNorm)
+        unseenCount = Int(CGFloat(unseenCount) / totalCountNorm)
+    }
+    
+    let path = CGMutablePath()
+    let segmentCount = max(totalCount, 1)
+    
+    if isSeen {
+        if unseenCount < totalCount {
+        } else {
+            return path
+        }
+    } else {
+        if unseenCount != 0 {
+        } else {
+            return path
+        }
+    }
+    
+    if leftCenter != nil || rightCenter != nil {
+        addRoundedRect(path: path, center: center, leftCenter: leftCenter, rightCenter: rightCenter, sideLength: sideLength, radius: radius)
+    } else {
+        if segmentCount == 1 {
+            if isSeen {
+                if unseenCount == 0 {
+                    path.addRoundedRect(in: CGRect(origin: CGPoint(x: center.x - sideLength/2, y: center.y - sideLength/2), size: CGSize(width: sideLength, height: sideLength)), cornerWidth: radius, cornerHeight: radius)
+                }
+            } else {
+                if unseenCount != 0 {
+                    path.addRoundedRect(in: CGRect(origin: CGPoint(x: center.x - sideLength/2, y: center.y - sideLength/2), size: CGSize(width: sideLength, height: sideLength)), cornerWidth: radius, cornerHeight: radius)
+                }
+            }
+        } else {
+            let segmentSpacing: CGFloat = 4.0 * segmentFraction
+            addSegmentedRoundedSquarePath(
+                path: path,
+                center: center,
+                size: sideLength,
+                cornerRadius: radius,
+                segmentCount: totalCount,
+                segmentSpacing: segmentSpacing,
+                startSegmentIndex: isSeen ? 0 : segmentCount - unseenCount
+            )
+        }
+    }
+    
+    return path
+}
+
+private func addRoundedRect(
+    path: CGMutablePath,
+    center: CGPoint,
+    leftCenter: CGPoint?,
+    rightCenter: CGPoint?,
+    sideLength: CGFloat,
+    radius: CGFloat
+) {
+    if let leftCenter, rightCenter != nil {
+        let minX = leftCenter.x + sideLength / 2 - radius
+        let maxX = center.x + sideLength / 2 - radius
+        path.addLines(between: [
+            CGPoint(
+                x: minX,
+                y: center.y - sideLength / 2
+            ),
+            CGPoint(
+                x: maxX,
+                y: center.y - sideLength / 2
+            )
+        ])
+        path.addLines(between: [
+            CGPoint(
+                x: minX,
+                y: center.y + sideLength / 2
+            ),
+            CGPoint(
+                x: maxX,
+                y: center.y + sideLength / 2
+            )
+        ])
+    } else if let leftCenter {
+        let lineMinX = leftCenter.x + sideLength / 2 - radius
+        let linMaxX = center.x + sideLength / 2 - radius
+        path.addLines(between: [
+            CGPoint(
+                x: lineMinX,
+                y: center.y - sideLength / 2
+            ),
+            CGPoint(
+                x: linMaxX,
+                y: center.y - sideLength / 2
+            )
+        ])
+        path.addLines(between: [
+            CGPoint(
+                x: lineMinX,
+                y: center.y + sideLength / 2
+            ),
+            CGPoint(
+                x: linMaxX,
+                y: center.y + sideLength / 2
+            )
+        ])
+        path.addLines(between: [
+            CGPoint(
+                x: center.x + sideLength / 2,
+                y: center.y - sideLength / 2 + radius
+            ),
+            CGPoint(
+                x: center.x + sideLength / 2,
+                y: center.y + sideLength / 2 - radius
+            )
+        ])
+        
+        path.move(to: CGPoint(x: center.x + sideLength / 2, y: center.y - sideLength / 2 + radius))
+        path.addArc(
+            center: CGPoint(x: center.x + sideLength / 2 - radius, y: center.y - sideLength / 2 + radius),
+            radius: radius,
+            startAngle: 0,
+            endAngle: -.pi / 2,
+            clockwise: true
+        )
+        
+        path.move(to: CGPoint(x: center.x + sideLength / 2 - radius, y: center.y + sideLength / 2))
+        path.addArc(
+            center: CGPoint(x: center.x + sideLength / 2 - radius, y: center.y + sideLength / 2 - radius),
+            radius: radius,
+            startAngle: .pi / 2,
+            endAngle: 0,
+            clockwise: true
+        )
+    } else if rightCenter != nil {
+        let lineMinX = center.x - sideLength / 2
+        let linMaxX = center.x + sideLength / 2 - radius
+        
+        path.move(
+            to: CGPoint(
+                x: linMaxX,
+                y: center.y + sideLength / 2
+            )
+        )
+        path.addLine(
+            to: CGPoint(
+                x: lineMinX + radius,
+                y: center.y + sideLength / 2
+            )
+        )
+        
+        path.move(to: CGPoint(x: center.x - sideLength / 2, y: center.y + sideLength / 2 - radius))
+        path.addArc(
+            center: CGPoint(x: center.x - sideLength / 2 + radius, y: center.y + sideLength / 2 - radius),
+            radius: radius,
+            startAngle: .pi,
+            endAngle: .pi / 2,
+            clockwise: true
+        )
+        
+        path.move(
+            to: CGPoint(
+                x: lineMinX,
+                y: center.y + sideLength / 2 - radius
+            )
+        )
+        
+        path.addLine(
+            to: CGPoint(
+                x: lineMinX,
+                y: center.y - sideLength / 2 + radius
+            )
+        )
+        path.move(to: CGPoint(x: center.x - sideLength / 2 + radius, y: center.y - sideLength / 2))
+        path.addArc(
+            center: CGPoint(x: center.x - sideLength / 2 + radius, y: center.y - sideLength / 2 + radius),
+            radius: radius,
+            startAngle: (3 * .pi) / 2,
+            endAngle: .pi,
+            clockwise: true
+        )
+        
+        path.move(
+            to: CGPoint(
+                x: lineMinX + radius,
+                y: center.y - sideLength / 2
+            )
+        )
+        path.addLine(
+            to: CGPoint(
+                x: linMaxX,
+                y: center.y - sideLength / 2
+            )
+        )
+    }
+}
+
+private func addSegmentedRoundedSquarePath(
+    path: CGMutablePath,
+    center: CGPoint,
+    size: CGFloat,
+    cornerRadius: CGFloat,
+    segmentCount: Int,
+    segmentSpacing: CGFloat,
+    startSegmentIndex: Int = 0
+) {
+    if segmentCount <= 0 || startSegmentIndex >= segmentCount {
+        return
+    }
+    
+    let lastSegmentIndex = segmentCount - 1
+    
+    let halfSize = size / 2.0
+    let sideLength = size - 2 * cornerRadius
+    
+    let straightPartsLength = 4 * sideLength
+    let cornerPartsLength = 2 * .pi * cornerRadius
+    let totalLength = straightPartsLength + cornerPartsLength
+    
+    let totalSpacingLength = segmentSpacing * CGFloat(segmentCount)
+    let segmentLength = (totalLength - totalSpacingLength) / CGFloat(segmentCount)
+    
+    enum PathSegment {
+        case line(from: CGPoint, to: CGPoint)
+        case arc(center: CGPoint, startAngle: CGFloat, endAngle: CGFloat)
+    }
+    
+    func getPathSegments(fromLength start: CGFloat, toLength end: CGFloat) -> [PathSegment] {
+        var segments: [PathSegment] = []
+        var currentLength = start
+        var remainingLength = end - start
+        
+        func addSegment(length: CGFloat, generator: (CGFloat) -> PathSegment) {
+            let segmentLength = min(length, remainingLength)
+            segments.append(generator(segmentLength))
+            currentLength += segmentLength
+            remainingLength -= segmentLength
+        }
+        
+        var completedStages = Array(repeating: false, count: 8)
+        
+        while remainingLength > 0 {
+            let x = center.x
+            let y = center.y
+            
+            if currentLength < sideLength / 2 && !completedStages[0] {
+                let startX = x + currentLength
+                let length = min(sideLength * 0.5 - currentLength, remainingLength)
+                segments.append(.line(
+                    from: CGPoint(x: startX, y: y - halfSize),
+                    to: CGPoint(x: startX + length, y: y - halfSize)
+                ))
+                currentLength += length
+                remainingLength -= length
+                continue
+            }
+            if !completedStages[0] {
+                completedStages[0] = true
+                currentLength -= sideLength / 2
+            }
+            
+            if currentLength < cornerPartsLength / 4 && !completedStages[1] {
+                let cornerCenter = CGPoint(
+                    x: x + halfSize - cornerRadius,
+                    y: y - halfSize + cornerRadius
+                )
+                let startAngle = currentLength / cornerRadius
+                let endAngle = min(startAngle + remainingLength / cornerRadius, .pi/2)
+                segments.append(.arc(
+                    center: cornerCenter,
+                    startAngle: -(.pi/2 - startAngle),
+                    endAngle: -(.pi/2 - endAngle)
+                ))
+                var arcLength = (endAngle - startAngle) * cornerRadius
+                if arcLength == 0 {
+                    arcLength = remainingLength - currentLength
+                }
+                currentLength += arcLength
+                remainingLength -= arcLength
+                continue
+            }
+            if !completedStages[1] {
+                completedStages[1] = true
+                currentLength -= cornerPartsLength / 4
+            }
+            
+            if currentLength < sideLength && !completedStages[2] {
+                let startY = y - halfSize + cornerRadius + currentLength
+                let length = min(sideLength - currentLength, remainingLength)
+                segments.append(.line(
+                    from: CGPoint(x: x + halfSize, y: startY),
+                    to: CGPoint(x: x + halfSize, y: startY + length)
+                ))
+                currentLength += length
+                remainingLength -= length
+                continue
+            }
+            if !completedStages[2] {
+                completedStages[2] = true
+                currentLength -= sideLength
+            }
+            
+            if currentLength < cornerPartsLength / 4 && !completedStages[3] {
+                let cornerCenter = CGPoint(
+                    x: x + halfSize - cornerRadius,
+                    y: y + halfSize - cornerRadius
+                )
+                let startAngle = currentLength / cornerRadius
+                let endAngle = min(startAngle + remainingLength / cornerRadius, .pi/2)
+                segments.append(.arc(
+                    center: cornerCenter,
+                    startAngle: startAngle,
+                    endAngle: endAngle
+                ))
+                var arcLength = (endAngle - startAngle) * cornerRadius
+                if arcLength == 0 {
+                    arcLength = remainingLength - currentLength
+                }
+                currentLength += arcLength
+                remainingLength -= arcLength
+                continue
+            }
+            if !completedStages[3] {
+                completedStages[3] = true
+                currentLength -= cornerPartsLength / 4
+            }
+
+            if currentLength < sideLength && !completedStages[4] {
+                let startX = x + halfSize - cornerRadius - currentLength
+                let length = min(sideLength - currentLength, remainingLength)
+                segments.append(.line(
+                    from: CGPoint(x: startX, y: y + halfSize),
+                    to: CGPoint(x: startX - length, y: y + halfSize)
+                ))
+                currentLength += length
+                remainingLength -= length
+                continue
+            }
+            if !completedStages[4] {
+                completedStages[4] = true
+                currentLength -= sideLength
+            }
+
+            if currentLength < cornerPartsLength / 4 && !completedStages[5] {
+                let cornerCenter = CGPoint(
+                    x: x - halfSize + cornerRadius,
+                    y: y + halfSize - cornerRadius
+                )
+                let startAngle = currentLength / cornerRadius
+                let endAngle = min(startAngle + remainingLength / cornerRadius, .pi/2)
+                segments.append(.arc(
+                    center: cornerCenter,
+                    startAngle: .pi/2 + startAngle,
+                    endAngle: .pi/2 + endAngle
+                ))
+                var arcLength = (endAngle - startAngle) * cornerRadius
+                if arcLength == 0 {
+                    arcLength = remainingLength - currentLength
+                }
+                currentLength += arcLength
+                remainingLength -= arcLength
+                continue
+            }
+            if !completedStages[5] {
+                completedStages[5] = true
+                currentLength -= cornerPartsLength / 4
+            }
+
+            if currentLength < sideLength && !completedStages[6] {
+                let startY = y + halfSize - cornerRadius - currentLength
+                let length = min(sideLength - currentLength, remainingLength)
+                segments.append(.line(
+                    from: CGPoint(x: x - halfSize, y: startY),
+                    to: CGPoint(x: x - halfSize, y: startY - length)
+                ))
+                currentLength += length
+                remainingLength -= length
+                continue
+            }
+            if !completedStages[6] {
+                completedStages[6] = true
+                currentLength -= sideLength
+            }
+
+            if currentLength < cornerPartsLength / 4 && !completedStages[7] {
+                let cornerCenter = CGPoint(
+                    x: x - halfSize + cornerRadius,
+                    y: y - halfSize + cornerRadius
+                )
+                let startAngle = currentLength / cornerRadius
+                let endAngle = min(startAngle + remainingLength / cornerRadius, .pi/2)
+                segments.append(.arc(
+                    center: cornerCenter,
+                    startAngle: .pi + startAngle,
+                    endAngle: .pi + endAngle
+                ))
+                var arcLength = (endAngle - startAngle) * cornerRadius
+                if arcLength == 0 {
+                    arcLength = remainingLength - currentLength
+                }
+                currentLength += arcLength
+                remainingLength -= arcLength
+                continue
+            }
+            if !completedStages[7] {
+                completedStages[7] = true
+                currentLength -= cornerPartsLength / 4
+            }
+            
+            if currentLength < sideLength / 2 {
+                let startX = x - sideLength / 2 + currentLength
+                let length = min(sideLength * 0.5 - currentLength, remainingLength)
+                segments.append(.line(
+                    from: CGPoint(x: startX, y: y - halfSize),
+                    to: CGPoint(x: startX + length, y: y - halfSize)
+                ))
+                currentLength += length
+                remainingLength -= length
+                continue
+            }
+            
+            break
+        }
+        
+        return segments
+    }
+    
+    for segmentIndex in startSegmentIndex...lastSegmentIndex {
+        let segmentStartLength = CGFloat(segmentIndex) * (segmentLength + segmentSpacing) + segmentSpacing * 0.5
+        let segmentEndLength = segmentStartLength + segmentLength
+        
+        let pathSegments = getPathSegments(fromLength: segmentStartLength, toLength: segmentEndLength)
+        
+        var isFirstSegment = true
+        for segment in pathSegments {
+            switch segment {
+            case .line(let from, let to):
+                if isFirstSegment {
+                    path.move(to: from)
+                    isFirstSegment = false
+                }
+                path.addLine(to: to)
+            case .arc(let center, let startAngle, let endAngle):
+                if isFirstSegment {
+                    let startPoint = CGPoint(
+                        x: center.x + cornerRadius * cos(startAngle),
+                        y: center.y + cornerRadius * sin(startAngle)
+                    )
+                    path.move(to: startPoint)
+                    isFirstSegment = false
+                }
+                path.addArc(
+                    center: center,
+                    radius: cornerRadius,
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    clockwise: false
+                )
+            }
+        }
+    }
+}
+
 private final class StoryProgressLayer: HierarchyTrackingLayer {
     enum Value: Equatable {
         case indefinite
@@ -666,7 +1132,7 @@ public final class StoryPeerListItemComponent: Component {
             if let sharedAvatarBackgroundImage = sharedAvatarBackgroundImage, sharedAvatarBackgroundImage.size.width == avatarSize.width {
                 avatarBackgroundImage = sharedAvatarBackgroundImage
             } else {
-                avatarBackgroundImage = generateFilledCircleImage(diameter: avatarSize.width, color: .white)?.withRenderingMode(.alwaysTemplate)
+                avatarBackgroundImage = (self.component?.theme.squareStyle == true ? generateFilledRoundedRectImage(size: avatarSize, cornerRadius: 4, color: .white) : generateFilledCircleImage(diameter: avatarSize.width, color: .white))?.withRenderingMode(.alwaysTemplate)
             }
             self.avatarBackgroundView.image = avatarBackgroundImage
             
@@ -694,7 +1160,7 @@ public final class StoryPeerListItemComponent: Component {
                 context: component.context,
                 theme: component.theme,
                 peer: component.peer,
-                clipStyle: component.theme.squareStyle ? .round : .round // TODO: Добавить круглые сторис
+                clipStyle: component.theme.squareStyle ? .rect : .round
             )
             avatarNode.updateSize(size: avatarSize)
             
@@ -728,10 +1194,17 @@ public final class StoryPeerListItemComponent: Component {
                 }
                 let badgeSize = CGSize(width: 16.0, height: 16.0)
                 if avatarAddBadgeView.image == nil || themeUpdated {
+                    let squareStyle = component.theme.squareStyle
                     avatarAddBadgeView.image = generateImage(badgeSize, rotatedContext: { size, context in
                         context.clear(CGRect(origin: CGPoint(), size: size))
                         context.setFillColor(component.theme.list.itemCheckColors.fillColor.cgColor)
-                        context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+                        if squareStyle {
+                            let path = CGPath(roundedRect: CGRect(origin: .zero, size: size), cornerWidth: 2, cornerHeight: 2, transform: nil)
+                            context.addPath(path)
+                            context.fillPath()
+                        } else {
+                            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+                        }
                         
                         context.setStrokeColor(component.theme.list.itemCheckColors.foregroundColor.cgColor)
                         context.setLineWidth(UIScreenPixel * 3.0)
@@ -748,7 +1221,11 @@ public final class StoryPeerListItemComponent: Component {
                         context.strokePath()
                     })
                 }
-                avatarAddBadgeTransition.setFrame(view: avatarAddBadgeView, frame: CGRect(origin: CGPoint(x: avatarFrame.width - 1.0 - badgeSize.width, y: avatarFrame.height - 2.0 - badgeSize.height), size: badgeSize))
+                if component.theme.squareStyle {
+                    avatarAddBadgeTransition.setFrame(view: avatarAddBadgeView, frame: CGRect(origin: CGPoint(x: avatarFrame.width - 1.0 - badgeSize.width, y: avatarFrame.height - 1.0 - badgeSize.height), size: badgeSize))
+                } else {
+                    avatarAddBadgeTransition.setFrame(view: avatarAddBadgeView, frame: CGRect(origin: CGPoint(x: avatarFrame.width - 1.0 - badgeSize.width, y: avatarFrame.height - 2.0 - badgeSize.height), size: badgeSize))
+                }
             } else {
                 self.indicatorColorSeenLayer.isHidden = false
                 self.indicatorColorUnseenLayer.isHidden = false
@@ -761,8 +1238,8 @@ public final class StoryPeerListItemComponent: Component {
             
             self.avatarBackgroundView.isHidden = component.ringAnimation != nil || self.indicatorColorSeenLayer.isHidden
             
-            let baseRadius: CGFloat = 30.66
-            let collapsedRadius: CGFloat = 35.0
+            let baseRadius: CGFloat = component.theme.squareStyle ? 8.66 : 30.66
+            let collapsedRadius: CGFloat = component.theme.squareStyle ? 10.0 : 35.0
             var indicatorRadius: CGFloat = baseRadius * normalizedScale + collapsedRadius * (1.0 - normalizedScale)
             if component.scale > 1.0 {
                 indicatorRadius += max(0.0, component.scale - 1.0) * 0.0
@@ -817,17 +1294,35 @@ public final class StoryPeerListItemComponent: Component {
             }
             
             let avatarPath = CGMutablePath()
-            avatarPath.addEllipse(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -1.0, dy: -1.0))
+            if component.theme.squareStyle {
+                avatarPath.addRoundedRect(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -1.0, dy: -1.0), cornerWidth: 4.0, cornerHeight: 4.0)
+            } else {
+                avatarPath.addEllipse(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -1.0, dy: -1.0))
+            }
             if component.peer.id == component.context.account.peerId && !component.hasItems && component.ringAnimation == nil {
                 let cutoutSize: CGFloat = 18.0 + UIScreenPixel * 2.0
-                avatarPath.addEllipse(in: CGRect(origin: CGPoint(x: avatarSize.width - cutoutSize + UIScreenPixel, y: avatarSize.height - 1.0 - cutoutSize + UIScreenPixel), size: CGSize(width: cutoutSize, height: cutoutSize)))
+                if component.theme.squareStyle {
+                    avatarPath.addRoundedRect(in: CGRect(origin: CGPoint(x: avatarSize.width - cutoutSize + UIScreenPixel, y: avatarSize.height - cutoutSize + UIScreenPixel), size: CGSize(width: cutoutSize, height: cutoutSize)), cornerWidth: 4.0, cornerHeight: 4.0)
+                } else {
+                    avatarPath.addEllipse(in: CGRect(origin: CGPoint(x: avatarSize.width - cutoutSize + UIScreenPixel, y: avatarSize.height - 1.0 - cutoutSize + UIScreenPixel), size: CGSize(width: cutoutSize, height: cutoutSize)))
+                }
             } else if let mappedLeftCenter {
-                avatarPath.addEllipse(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -indicatorLineSeenWidth * 1.4, dy: -indicatorLineSeenWidth * 1.4).offsetBy(dx: -abs(indicatorCenter.x - mappedLeftCenter.x), dy: -abs(indicatorCenter.y - mappedLeftCenter.y)))
+                if component.theme.squareStyle {
+                    avatarPath.addRoundedRect(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -indicatorLineSeenWidth * 1.4, dy: -indicatorLineSeenWidth * 1.4).offsetBy(dx: -abs(indicatorCenter.x - mappedLeftCenter.x), dy: -abs(indicatorCenter.y - mappedLeftCenter.y)), cornerWidth: 4.0, cornerHeight: 4.0)
+                } else {
+                    avatarPath.addEllipse(in: CGRect(origin: CGPoint(), size: avatarSize).insetBy(dx: -indicatorLineSeenWidth * 1.4, dy: -indicatorLineSeenWidth * 1.4).offsetBy(dx: -abs(indicatorCenter.x - mappedLeftCenter.x), dy: -abs(indicatorCenter.y - mappedLeftCenter.y)))
+                }
             }
             ComponentTransition.immediate.setShapeLayerPath(layer: self.avatarShapeLayer, path: avatarPath)
             
-            ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeSeenLayer, path: calculateMergingCircleShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: true, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
-            ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeUnseenLayer, path: calculateMergingCircleShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: false, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
+            if component.theme.squareStyle {
+                let inset: CGFloat = indicatorLineUnseenWidth * 0.5 + 8.0 * normalizedScale
+                ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeSeenLayer, path: calculateMergingRectShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, sideLength: indicatorFrame.size.width - inset, radius: 10.0 * normalizedScale, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: true, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
+                ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeUnseenLayer, path: calculateMergingRectShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, sideLength: indicatorFrame.size.width - inset, radius: 10.0 * normalizedScale, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: false, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
+            } else {
+                ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeSeenLayer, path: calculateMergingCircleShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: true, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
+                ComponentTransition.immediate.setShapeLayerPath(layer: self.indicatorShapeUnseenLayer, path: calculateMergingCircleShape(center: indicatorCenter, leftCenter: mappedLeftCenter, rightCenter: mappedRightCenter, radius: indicatorRadius - indicatorLineUnseenWidth * 0.5, totalCount: component.totalCount, unseenCount: component.unseenCount, isSeen: false, segmentFraction: component.expandedAlphaFraction, rotationFraction: component.expandEffectFraction))
+            }
             
             let titleString: String
             if component.peer.id == component.context.account.peerId {
