@@ -85,7 +85,7 @@ public enum DWallpaper: CaseIterable {
                     mimeType: "image/svg",
                     size: fileSize,
                     attributes: [
-                        .ImageSize(size: PixelDimensions(width: 837, height: 1850)),
+                        .ImageSize(size: PixelDimensions(width: 720, height: 1480)),
                         .FileName(fileName: "\(resourceName).\(resourceType)")
                     ],
                     alternativeRepresentations: []

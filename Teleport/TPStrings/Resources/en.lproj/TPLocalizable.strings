@@ -87,6 +87,7 @@
 
 "DahlSettings.Appearance.Chats.Header" = "Enable in chats and channels";
 "DahlSettings.Appearance.Chats.CustomChannelWallpapers" = "Custom wallpapers in channels";
+"DahlSettings.Appearance.Chats.ChannelBottomPanel" = "Channel bottom panel";
 
 "DahlSettings.Appearance.ChatsList.Header" = "View of the chat list";
 
@@ -115,6 +116,7 @@
 "DahlSettings.Chats.Folders.BottomFolders" = "Move to bottom";
 "DahlSettings.Chats.Folders.InfiniteScroll" = "Scroll around in a circle";
 "DahlSettings.Chats.Folders.HideAllChats" = "Hide folder “All chats”";
+"DahlSettings.Chats.Folders.ShowChatFolders" = "Show all folders";
 
 "DahlSettings.Support.Title" = "Support";
 "DahlSettings.Support.Alert.Title" = "Please note that volunteers are responsible for supporting Dahl. We will try to help as soon as possible, but waiting may take time.";
@@ -142,6 +144,8 @@
 "DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i of %i";
 "DahlSettings.TabBarSettings.ActiveTabs.Footer" = "The tab bar of the application can be customized by removing and adding items from the list of available ones.";
 "DahlSettings.TabBarSettings.AvailableTabs.Header" = "More items";
+"DahlSettings.TabBarSettings.TabTitleVisibility" = "Display titles";
+"DahlSettings.TabBarSettings.TabTitleVisibility.Footer" = "Set the visibility of the bottom menu item titles.";
 
 "DahlSettings.RecentChatsHeader" = "Recent chats";
 "DahlSettings.EnablePanel" = "Enable panel";

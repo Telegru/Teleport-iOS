@@ -27,17 +27,23 @@ private final class DGeneralSettingsArguments {
     let updateProxyEnableState: (Bool) -> Void
     let updateHidePhone: (Bool) -> Void
     let openPremiumSettings: () -> Void
+    let openSettingsItemsConfiguration: () -> Void
+    let openTabBarSettings: () -> Void
     
     init(
         context: AccountContext,
         updateProxyEnableState: @escaping (Bool) -> Void,
         updateHidePhone: @escaping (Bool) -> Void,
-        openPremiumSettings: @escaping () -> Void
+        openPremiumSettings: @escaping () -> Void,
+        openSettingsItemsConfiguration: @escaping () -> Void,
+        openTabBarSettings: @escaping () -> Void
     ) {
         self.context = context
         self.updateProxyEnableState = updateProxyEnableState
         self.updateHidePhone = updateHidePhone
         self.openPremiumSettings = openPremiumSettings
+        self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
+        self.openTabBarSettings = openTabBarSettings
     }
 }
 
@@ -46,6 +52,8 @@ private enum DGeneralSettingsSection: Int32, CaseIterable {
     case savedProxies
     case profile
     case premium
+    case menuItems
+    case tabBar
 }
 
 private enum DGeneralSettingsEntry: ItemListNodeEntry {
@@ -63,6 +71,10 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
     case premiumSettings(PresentationTheme, title: String)
     case premiumSettingsFooter(PresentationTheme, title: String)
     
+    case menuItemsHeader(title: String)
+    case menuItems(title: String, detail: String)
+    case tabBar(title: String, detail: String)
+    
     var section: ItemListSectionId {
         switch self {
         case .connectionHeader, .proxy, .connectionFooter:
@@ -76,6 +88,12 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             
         case .premiumSettings, .premiumSettingsFooter:
             return DGeneralSettingsSection.premium.rawValue
+            
+        case .menuItemsHeader, .menuItems:
+            return DGeneralSettingsSection.menuItems.rawValue
+            
+        case .tabBar:
+            return DGeneralSettingsSection.tabBar.rawValue
         }
     }
     
@@ -91,16 +109,22 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             return 3
         case .server:
             return 4
-        case .profileHeader:
+        case .menuItemsHeader:
             return 5
-        case .hidePhoneNumber:
+        case .menuItems:
             return 6
-        case .profileFooter:
+        case .tabBar:
             return 7
-        case .premiumSettings:
+        case .profileHeader:
             return 8
-        case .premiumSettingsFooter:
+        case .hidePhoneNumber:
             return 9
+        case .profileFooter:
+            return 10
+        case .premiumSettings:
+            return 11
+        case .premiumSettingsFooter:
+            return 12
         }
     }
     
@@ -195,6 +219,24 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
             } else {
                 return false
             }
+            
+        case let .menuItemsHeader(lhsTitle):
+            if case let .menuItemsHeader(rhsTitle) = rhs {
+                return lhsTitle == rhsTitle
+            }
+            return false
+            
+        case let .menuItems(lhsTitle, lhsDetail):
+            if case let .menuItems(rhsTitle, rhsDetail) = rhs {
+                return lhsTitle == rhsTitle && lhsDetail == rhsDetail
+            }
+            return false
+            
+        case let .tabBar(lhsTitle, lhsDetail):
+            if case let .tabBar(rhsTitle, rhsDetail) = rhs {
+                return lhsTitle == rhsTitle && lhsDetail == rhsDetail
+            }
+            return false
         }
     }
     
@@ -307,6 +349,37 @@ private enum DGeneralSettingsEntry: ItemListNodeEntry {
                 text: .plain(title),
                 sectionId: self.section
             )
+            
+        case let .menuItemsHeader(title):
+            return ItemListSectionHeaderItem(
+                presentationData: presentationData,
+                text: title,
+                sectionId: self.section
+            )
+            
+        case let .menuItems(title, detail):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: title,
+                label: detail,
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openSettingsItemsConfiguration()
+                }
+            )
+            
+        case let .tabBar(title, detail):
+            return ItemListDisclosureItem(
+                presentationData: presentationData,
+                title: title,
+                label: detail,
+                sectionId: self.section,
+                style: .blocks,
+                action: {
+                    arguments.openTabBarSettings()
+                }
+            )
         }
     }
 }
@@ -317,7 +390,9 @@ private func dGeneralSettingsEntries(
     proxySettings: ProxyServerSettings?,
     proxyStatus: ProxyServerStatus?,
     connectionStatus: ConnectionStatus?,
-    hidePhoneEnabled: Bool
+    hidePhoneEnabled: Bool,
+    activeItemsCount: Int,
+    activeTabsCount: Int
 ) -> [DGeneralSettingsEntry] {
     var entries = [DGeneralSettingsEntry]()
     let lang = presentationData.strings.baseLanguageCode
@@ -393,6 +468,24 @@ private func dGeneralSettingsEntries(
     }
     
     entries.append(
+        .menuItemsHeader(title: "DahlSettings.Appearance.MenuItems.Header".tp_loc(lang: lang).uppercased())
+    )
+    
+    entries.append(
+        .menuItems(
+            title: "DahlSettings.Appearance.MenuItems".tp_loc(lang: lang),
+            detail: "\(activeItemsCount)"
+        )
+    )
+    
+    entries.append(
+        .tabBar(
+            title: "DahlSettings.TabBarSettings.Title".tp_loc(lang: lang),
+            detail: "\(activeTabsCount)"
+        )
+    )
+    
+    entries.append(
         .profileHeader(
             presentationData.theme,
             title: "DahlSettings.General.Profile.Header".tp_loc(lang: lang).uppercased()
@@ -440,6 +533,9 @@ public func dGeneralSettingsController(
     
     var openPremiumSettings: (() -> Void)?
     
+    var openSettingsItemsConfiguration: (() -> Void)?
+    var openTabBarSettings: (() -> Void)?
+    
     let proxyServer: ProxyServerSettings? = {
         guard let parsedSecret = MTProxySecret.parse(buildConfig.dProxySecret) else {
             return nil
@@ -478,6 +574,12 @@ public func dGeneralSettingsController(
         },
         openPremiumSettings: {
             openPremiumSettings?()
+        },
+        openSettingsItemsConfiguration: {
+            openSettingsItemsConfiguration?()
+        },
+        openTabBarSettings: {
+            openTabBarSettings?()
         }
     )
     
@@ -511,7 +613,9 @@ public func dGeneralSettingsController(
             proxySettings: proxySettings.servers.contains(where: { $0.host == proxyServer?.host }) ? proxyServer : nil,
             proxyStatus: statuses.first?.value,
             connectionStatus: connectionStatus,
-            hidePhoneEnabled: dahlSettings.hidePhone
+            hidePhoneEnabled: dahlSettings.hidePhone,
+            activeItemsCount: dahlSettings.menuItemsSettings.activeItemsCount,
+            activeTabsCount: dahlSettings.tabBarSettings.activeTabs.count
         )
         
         let controllerState = ItemListControllerState(
@@ -541,5 +645,35 @@ public func dGeneralSettingsController(
         controller?.push(premiumSettings)
     }
     
+    openTabBarSettings = { [weak controller] in
+        let tabBarSettings = dTabBarSettingsController(context: context)
+        controller?.push(tabBarSettings)
+    }
+    
+    openSettingsItemsConfiguration = { [weak controller] in
+        let menuItemSettings = dMenuItemsSettingsController(context: context)
+        controller?.push(menuItemSettings)
+    }
+    
     return controller
+}
+
+private extension MenuItemsSettings {
+    
+    var activeItemsCount: Int {
+        var count = 0
+        if myProfile { count += 1 }
+        if wallet { count += 1 }
+        if savedMessages { count += 1 }
+        if recentCalls { count += 1 }
+        if devices { count += 1 }
+        if chatFolders { count += 1 }
+        if myStars { count += 1 }
+        if business { count += 1 }
+        if sendGift { count += 1 }
+        if support { count += 1 }
+        if faq { count += 1 }
+        if tips { count += 1 }
+        return count
+    }
 }

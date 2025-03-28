@@ -803,12 +803,13 @@ final class AuthorizedApplicationContext {
         
         let appTabsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
         |> map { sharedData -> [DAppTab] in
-            var value = TabBarSettings.default
+            var value = DTabBarSettings.default
             if let settings = sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) {
                 value = settings.tabBarSettings
             }
             return value.activeTabs
         }
+        |> distinctUntilChanged
         self.appTabsDisposable = (appTabsSignal |> deliverOnMainQueue).start(next: { [weak self] value in
             guard let self else { return }
             if self.appTabs != value {

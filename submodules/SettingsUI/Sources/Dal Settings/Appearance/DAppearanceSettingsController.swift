@@ -17,10 +17,10 @@ import TPStrings
 
 private final class DAppearanceSettingsArguments {
     let context: AccountContext
+    
     let updateShowCustomWallpaperInChannels: (Bool) -> Void
+    let updateChannelBottomPanel: (Bool) -> Void
     let updateChatsListViewType: (ListViewType) -> Void
-    let openSettingsItemsConfiguration: () -> Void
-    let openTabBarSettings: () -> Void
     let updateViewRounding: (Bool) -> Void
     let updateVKIcons: (Bool) -> Void
     let updateAlternativeFontInAvatars: (Bool) -> Void
@@ -28,18 +28,16 @@ private final class DAppearanceSettingsArguments {
     init(
         context: AccountContext,
         updateShowCustomWallpaperInChannels: @escaping (Bool) -> Void,
+        updateChannelBottomPanel: @escaping (Bool) -> Void,
         updateChatsListViewType: @escaping (ListViewType) -> Void,
-        openSettingsItemsConfiguration: @escaping () -> Void,
-        openTabBarSettings: @escaping () -> Void,
         updateViewRounding: @escaping (Bool) -> Void,
         updateVKIcons: @escaping (Bool) -> Void,
         updateAlternativeFontInAvatars: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.updateShowCustomWallpaperInChannels = updateShowCustomWallpaperInChannels
+        self.updateChannelBottomPanel = updateChannelBottomPanel
         self.updateChatsListViewType = updateChatsListViewType
-        self.openSettingsItemsConfiguration = openSettingsItemsConfiguration
-        self.openTabBarSettings = openTabBarSettings
         self.updateViewRounding = updateViewRounding
         self.updateVKIcons = updateVKIcons
         self.updateAlternativeFontInAvatars = updateAlternativeFontInAvatars
@@ -49,8 +47,6 @@ private final class DAppearanceSettingsArguments {
 private enum DAppearanceSettingsSection: Int32 {
     case chatsAppearance
     case listViewType
-    case menuItems
-    case tabBar
     case viewRounding
     case avatarFont
     case icons
@@ -59,12 +55,10 @@ private enum DAppearanceSettingsSection: Int32 {
 private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     case chatsAppearanceHeader(title: String)
     case showCustomWallpaperInChannels(title: String, isActive: Bool)
+    case showChannelBottomPanel(title: String, isActive: Bool)
     
     case listViewTypeHeader(title: String)
     case listViewTypeOption(title: String, type: ListViewType, isSelected: Bool)
-    case menuItemsHeader(title: String)
-    case menuItems(title: String, detail: String)
-    case tabBar(title: String, detail: String)
     
     case viewRoundingHeader(title: String)
     case viewRounding(title: String, isActive: Bool)
@@ -79,17 +73,11 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
     
     var section: ItemListSectionId {
         switch self {
-        case .chatsAppearanceHeader, .showCustomWallpaperInChannels:
+        case .chatsAppearanceHeader, .showCustomWallpaperInChannels, .showChannelBottomPanel:
             return DAppearanceSettingsSection.chatsAppearance.rawValue
             
         case .listViewTypeHeader, .listViewTypeOption:
             return DAppearanceSettingsSection.listViewType.rawValue
-            
-        case .menuItemsHeader, .menuItems:
-            return DAppearanceSettingsSection.menuItems.rawValue
-            
-        case .tabBar:
-            return DAppearanceSettingsSection.tabBar.rawValue
             
         case .viewRoundingHeader, .viewRounding:
             return DAppearanceSettingsSection.viewRounding.rawValue
@@ -108,32 +96,28 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             return 0
         case .showCustomWallpaperInChannels:
             return 1
-        case .listViewTypeHeader:
+        case .showChannelBottomPanel:
             return 2
+        case .listViewTypeHeader:
+            return 3
         case let .listViewTypeOption(_, type, _):
             return Int32(type.rawValue + 100)
-        case .menuItemsHeader:
-            return 1000
-        case .menuItems:
-            return 1001
-        case .tabBar:
-            return 1002
         case .viewRoundingHeader:
-            return 1003
+            return 1000
         case .viewRounding:
-            return 1004
+            return 1001
         case .avatarFontHeader:
-            return 1005
+            return 1002
         case .avatarFont:
-            return 1006
+            return 1003
         case .avatarFontFooter:
-            return 1007
+            return 1004
         case .iconsHeader:
-            return 1008
+            return 1005
         case .vkIcons:
-            return 1009
+            return 1006
         case .iconsPreview:
-            return 1010
+            return 1007
         }
     }
     
@@ -151,6 +135,12 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
             }
             return false
             
+        case let .showChannelBottomPanel(lhsTitle, lhsIsActive):
+            if case let .showChannelBottomPanel(rhsTitle, rhsIsActive) = rhs {
+                return lhsTitle == rhsTitle && lhsIsActive == rhsIsActive
+            }
+            return false
+            
         case let .listViewTypeHeader(lhsTitle):
             if case let .listViewTypeHeader(rhsTitle) = rhs {
                 return lhsTitle == rhsTitle
@@ -160,24 +150,6 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
         case let .listViewTypeOption(lhsText, lhsType, lhsSelected):
             if case let .listViewTypeOption(rhsText, rhsType, rhsSelected) = rhs {
                 return lhsText == rhsText && lhsType == rhsType && lhsSelected == rhsSelected
-            }
-            return false
-            
-        case let .menuItemsHeader(lhsTitle):
-            if case let .menuItemsHeader(rhsTitle) = rhs {
-                return lhsTitle == rhsTitle
-            }
-            return false
-            
-        case let .menuItems(lhsTitle, lhsDetail):
-            if case let .menuItems(rhsTitle, rhsDetail) = rhs {
-                return lhsTitle == rhsTitle && lhsDetail == rhsDetail
-            }
-            return false
-            
-        case let .tabBar(lhsTitle, lhsDetail):
-            if case let .tabBar(rhsTitle, rhsDetail) = rhs {
-                return lhsTitle == rhsTitle && lhsDetail == rhsDetail
             }
             return false
             
@@ -257,6 +229,18 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                 }
             )
             
+        case let .showChannelBottomPanel(title, isActive):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: isActive,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { value in
+                    arguments.updateChannelBottomPanel(value)
+                }
+            )
+            
         case let .listViewTypeHeader(title):
             return ItemListSectionHeaderItem(
                 presentationData: presentationData,
@@ -275,37 +259,6 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
                 sectionId: self.section,
                 action: {
                     arguments.updateChatsListViewType(type)
-                }
-            )
-            
-        case let .menuItemsHeader(title):
-            return ItemListSectionHeaderItem(
-                presentationData: presentationData,
-                text: title,
-                sectionId: self.section
-            )
-            
-        case let .menuItems(title, detail):
-            return ItemListDisclosureItem(
-                presentationData: presentationData,
-                title: title,
-                label: detail,
-                sectionId: self.section,
-                style: .blocks,
-                action: {
-                    arguments.openSettingsItemsConfiguration()
-                }
-            )
-            
-        case let .tabBar(title, detail):
-            return ItemListDisclosureItem(
-                presentationData: presentationData,
-                title: title,
-                label: detail,
-                sectionId: self.section,
-                style: .blocks,
-                action: {
-                    arguments.openTabBarSettings()
                 }
             )
             
@@ -381,8 +334,6 @@ private enum DAppearanceSettingsEntry: ItemListNodeEntry {
 public func dAppearanceSettingsController(
     context: AccountContext
 ) -> ViewController {
-    var openSettingsItemsConfiguration: (() -> Void)?
-    var openTabBarSettings: (() -> Void)?
     var showRestartToast: (() -> Void)?
     
     let arguments = DAppearanceSettingsArguments(
@@ -395,6 +346,14 @@ public func dAppearanceSettingsController(
             }
             .start()
         },
+        updateChannelBottomPanel: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
+                var updatedSettings = settings
+                updatedSettings.appearanceSettings.showChannelBottomPanel = value
+                return updatedSettings
+            }
+            .start()
+        },
         updateChatsListViewType: { selectedType in
             let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
                 var updatedSettings = settings
@@ -402,12 +361,6 @@ public func dAppearanceSettingsController(
                 return updatedSettings
             }
             .start()
-        },
-        openSettingsItemsConfiguration: {
-            openSettingsItemsConfiguration?()
-        },
-        openTabBarSettings: {
-            openTabBarSettings?()
         },
         updateViewRounding: { value in
             let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) { settings in
@@ -467,6 +420,12 @@ public func dAppearanceSettingsController(
                 isActive: dahlSettings.appearanceSettings.showCustomWallpaperInChannels
             )
         )
+        entries.append(
+            .showChannelBottomPanel(
+                title: "DahlSettings.Appearance.Chats.ChannelBottomPanel".tp_loc(lang: lang),
+                isActive: dahlSettings.appearanceSettings.showChannelBottomPanel
+            )
+        )
         
         entries.append(
             .listViewTypeHeader(title: "DahlSettings.Appearance.ChatsList.Header".tp_loc(lang: lang).uppercased())
@@ -488,24 +447,6 @@ public func dAppearanceSettingsController(
                 )
             )
         }
-        
-        entries.append(
-            .menuItemsHeader(title: "DahlSettings.Appearance.MenuItems.Header".tp_loc(lang: lang).uppercased())
-        )
-        
-        entries.append(
-            .menuItems(
-                title: "DahlSettings.Appearance.MenuItems".tp_loc(lang: lang),
-                detail: "\(dahlSettings.menuItemsSettings.activeItemsCount)"
-            )
-        )
-        
-        entries.append(
-            .tabBar(
-                title: "DahlSettings.TabBarSettings.Title".tp_loc(lang: lang),
-                detail: "\(dahlSettings.tabBarSettings.activeTabs.count)"
-            )
-        )
         
         entries.append(
             .viewRoundingHeader(
@@ -575,16 +516,6 @@ public func dAppearanceSettingsController(
     
     let controller = ItemListController(context: context, state: signal)
     
-    openTabBarSettings = { [weak controller] in
-        let tabBarSettings = dTabBarSettingsController(context: context)
-        controller?.push(tabBarSettings)
-    }
-    
-    openSettingsItemsConfiguration = { [weak controller] in
-        let menuItemSettings = dMenuItemsSettingsController(context: context)
-        controller?.push(menuItemSettings)
-    }
-    
     showRestartToast = { [weak controller] in
         guard let controller else { return }
         let presentationData = context.sharedContext.currentPresentationData.with { $0 }
@@ -604,24 +535,4 @@ public func dAppearanceSettingsController(
     }
     
     return controller
-}
-
-private extension MenuItemsSettings {
-    
-    var activeItemsCount: Int {
-        var count = 0
-        if myProfile { count += 1 }
-        if wallet { count += 1 }
-        if savedMessages { count += 1 }
-        if recentCalls { count += 1 }
-        if devices { count += 1 }
-        if chatFolders { count += 1 }
-        if myStars { count += 1 }
-        if business { count += 1 }
-        if sendGift { count += 1 }
-        if support { count += 1 }
-        if faq { count += 1 }
-        if tips { count += 1 }
-        return count
-    }
 }

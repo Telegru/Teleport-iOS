@@ -14,21 +14,25 @@ private final class DTabBarSettingsControllerArguments {
     
     let addTab: (DAppTab) -> Void
     let removeTab: (DAppTab) -> Void
+    let updateShowTitle: (Bool) -> Void
     
     init(
         context: AccountContext,
         addTab: @escaping (DAppTab) -> Void,
-        removeTab: @escaping (DAppTab) -> Void
+        removeTab: @escaping (DAppTab) -> Void,
+        updateShowTitle: @escaping (Bool) -> Void
     ) {
         self.context = context
         self.addTab = addTab
         self.removeTab = removeTab
+        self.updateShowTitle = updateShowTitle
     }
 }
 
 private enum DTabBarSettingsSection: Int32 {
     case activeTabs
     case availableTabs
+    case tabTitleVisibility
 }
 
 private enum DTabBarSettingsEntryId: Hashable {
@@ -43,12 +47,17 @@ private enum DTabBarSettingsEntry: ItemListNodeEntry {
     case availableTabHeader(String)
     case availableTab(DAppTab)
     
+    case tabTitleVisibility(title: String, value: Bool)
+    case tabTitleVisibilityFooter(text: String)
+    
     var section: ItemListSectionId {
         switch self {
         case .activeTab, .activeTabHeader, .activeTabFooter:
             return DTabBarSettingsSection.activeTabs.rawValue
         case .availableTab, .availableTabHeader:
             return DTabBarSettingsSection.availableTabs.rawValue
+        case .tabTitleVisibility, .tabTitleVisibilityFooter:
+            return DTabBarSettingsSection.tabTitleVisibility.rawValue
         }
     }
     
@@ -64,6 +73,11 @@ private enum DTabBarSettingsEntry: ItemListNodeEntry {
             return .index(2)
         case let .availableTab(tab):
             return .index(Int32(tab.rawValue + 10000))
+            
+        case .tabTitleVisibility:
+            return .index(3)
+        case .tabTitleVisibilityFooter:
+            return .index(4)
         }
     }
     
@@ -93,6 +107,20 @@ private enum DTabBarSettingsEntry: ItemListNodeEntry {
         case let .availableTab(lhsTab):
             if case .availableTab(let rhsTab) = rhs,
                lhsTab == rhsTab {
+                return true
+            }
+            return false
+            
+        case let .tabTitleVisibility(lhsTitle, lhsValue):
+            if case let .tabTitleVisibility(rhsTitle, rhsValue) = rhs,
+               lhsTitle == rhsTitle, lhsValue == rhsValue {
+                return true
+            }
+            return false
+            
+        case let .tabTitleVisibilityFooter(lhsText):
+            if case let .tabTitleVisibilityFooter(rhsText) = rhs,
+               lhsText == rhsText {
                 return true
             }
             return false
@@ -132,7 +160,22 @@ private enum DTabBarSettingsEntry: ItemListNodeEntry {
             switch rhs {
             case .activeTab, .activeTabFooter, .activeTabHeader, .availableTabHeader:
                 return false
-            case .availableTab:
+            default:
+                return true
+            }
+            
+        case .tabTitleVisibility:
+            switch rhs {
+            case .activeTab, .activeTabFooter, .activeTabHeader, .availableTabHeader, .availableTab:
+                return false
+            default:
+                return true
+            }
+        case .tabTitleVisibilityFooter:
+            switch rhs {
+            case .activeTab, .activeTabFooter, .activeTabHeader, .availableTabHeader, .availableTab, .tabTitleVisibility:
+                return false
+            case .tabTitleVisibilityFooter:
                 return true
             }
         }
@@ -191,6 +234,25 @@ private enum DTabBarSettingsEntry: ItemListNodeEntry {
                 style: .blocks) {
                     arguments.addTab(tab)
                 }
+            
+        case let .tabTitleVisibility(title, value):
+            return ItemListSwitchItem(
+                presentationData: presentationData,
+                title: title,
+                value: value,
+                sectionId: self.section,
+                style: .blocks,
+                updated: { value in
+                    arguments.updateShowTitle(value)
+                }
+            )
+            
+        case let .tabTitleVisibilityFooter(text):
+            return ItemListTextItem(
+                presentationData: presentationData,
+                text: .plain(text),
+                sectionId: self.section
+            )
         }
     }
 }
@@ -200,7 +262,8 @@ private let maxAllowedNumberOfTabs: Int = 5
 private func dTabBarSettingsControllerEntries(
     context: AccountContext,
     presentationData: PresentationData,
-    activeTabs: [DAppTab]
+    activeTabs: [DAppTab],
+    showTabTitle: Bool
 ) -> [DTabBarSettingsEntry] {
     var entries: [DTabBarSettingsEntry] = []
     let languageCode = presentationData.strings.baseLanguageCode
@@ -233,6 +296,17 @@ private func dTabBarSettingsControllerEntries(
             }
     }
     
+    entries.append(
+        .tabTitleVisibility(
+            title: "DahlSettings.TabBarSettings.TabTitleVisibility".tp_loc(lang: languageCode),
+            value: showTabTitle
+        )
+    )
+    
+    entries.append(
+        .tabTitleVisibilityFooter(text: "DahlSettings.TabBarSettings.TabTitleVisibility.Footer".tp_loc(lang: languageCode))
+    )
+    
     return entries
 }
 
@@ -246,6 +320,11 @@ public func dTabBarSettingsController(
     |> take(1)
     |> mapToSignal { tabs -> Signal<[DAppTab], NoError> in
         return .single(tabs)
+    }
+    
+    let dahlSettingsSignal = context.sharedContext.accountManager.sharedData(keys: [ApplicationSpecificSharedDataKeys.dalSettings])
+    |> map {
+        ($0.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? .defaultSettings)
     }
     
     let activeTabs = Promise<[DAppTab]>()
@@ -278,13 +357,22 @@ public func dTabBarSettingsController(
                         return settings
                     }.start()
                 })
-        })
+        },
+        updateShowTitle: { value in
+            let _ = updateDalSettingsInteractively(accountManager: context.sharedContext.accountManager) {
+                var settings = $0
+                settings.tabBarSettings.showTabTitles = value
+                return settings
+            }.start()
+        }
+    )
     
     let signal = combineLatest(queue: .mainQueue(),
         context.sharedContext.presentationData,
-        activeTabs.get()
+        activeTabs.get(),
+        dahlSettingsSignal
     )
-    |> map { presentationData, activeTabsValue -> (ItemListControllerState, (ItemListNodeState, Any)) in
+    |> map { presentationData, activeTabsValue, dahlSettings -> (ItemListControllerState, (ItemListNodeState, Any)) in
         let title = "DahlSettings.TabBarSettings.Title".tp_loc(lang: presentationData.strings.baseLanguageCode)
         let controllerState = ItemListControllerState(
             presentationData: ItemListPresentationData(presentationData),
@@ -298,7 +386,8 @@ public func dTabBarSettingsController(
         let entries = dTabBarSettingsControllerEntries(
             context: context,
             presentationData: presentationData,
-            activeTabs: activeTabsValue
+            activeTabs: activeTabsValue,
+            showTabTitle: dahlSettings.tabBarSettings.showTabTitles
         )
         
         let listState = ItemListNodeState(

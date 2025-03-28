@@ -69,7 +69,10 @@ build-input/*
 submodules/OpusBinding/SharedHeaders/*
 submodules/FFMpegBinding/SharedHeaders/*
 submodules/OpenSSLEncryptionProvider/SharedHeaders/*
+submodules/TelegramCore/FlatSerialization/Sources/*
+buildServer.json
 
 ci/Gemfile.lock
 ci/.env.default
 ci/fastlane/report.xml
+GoogleService-Info.plist

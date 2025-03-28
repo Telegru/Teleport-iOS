@@ -119,6 +119,7 @@ public final class CallListController: TelegramBaseController {
             self.tabBarItem.title = self.presentationData.strings.Calls_TabTitle
             self.tabBarItem.image = icon
             self.tabBarItem.selectedImage = icon
+            self.tabBarItem.tag = 101
             if !self.presentationData.reduceMotion && !presentationData.theme.vkIcons {
                 self.tabBarItem.animationName = "TabCalls"
             }

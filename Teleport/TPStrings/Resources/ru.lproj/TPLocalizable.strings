@@ -87,6 +87,7 @@
 
 "DahlSettings.Appearance.Chats.Header" = "Включить в чатах и каналах";
 "DahlSettings.Appearance.Chats.CustomChannelWallpapers" = "Кастомные обои в каналах";
+"DahlSettings.Appearance.Chats.ChannelBottomPanel" = "Нижняя панель в каналах";
 
 "DahlSettings.Appearance.ChatsList.Header" = "Вид списка чатов";
 
@@ -115,6 +116,7 @@
 "DahlSettings.Chats.Folders.BottomFolders" = "Переместить вниз";
 "DahlSettings.Chats.Folders.InfiniteScroll" = "Листать по кругу";
 "DahlSettings.Chats.Folders.HideAllChats" = "Скрыть папку “Все чаты”";
+"DahlSettings.Chats.Folders.ShowChatFolders" = "Показывать все папки";
 
 "DahlSettings.Support.Title" = "Поддержка";
 "DahlSettings.Support.Alert.Title" = "Пожалуйста, обратите внимание, что в поддержке Даль отвечают волонтеры. Мы постараемся помочь, как можно скорее, но ожидание может занять время.";
@@ -143,6 +145,8 @@
 "DahlSettings.TabBarSettings.ActiveTabs.Header.Counter" = "%i из %i";
 "DahlSettings.TabBarSettings.ActiveTabs.Footer" = "Нижнее меню приложения можно настраивать под себя, удаляя и добавляя пункты из списка доступных.";
 "DahlSettings.TabBarSettings.AvailableTabs.Header" = "Еще пункты";
+"DahlSettings.TabBarSettings.TabTitleVisibility" = "Отображать названия";
+"DahlSettings.TabBarSettings.TabTitleVisibility.Footer" = "Настройте видимость названий пунктов нижнего меню.";
 
 "DahlSettings.RecentChatsHeader" = "Недавние чаты";
 "DahlSettings.EnablePanel" = "Включить панель";

@@ -17,7 +17,7 @@ import LegacyComponents
 import SolidRoundedButtonNode
 import RMIntro
 import DAuth
-import TPOnboarding
+import DOnboarding
 import AccountContext
 
 public final class DAuthorizationSequenceSplashController: ViewController {

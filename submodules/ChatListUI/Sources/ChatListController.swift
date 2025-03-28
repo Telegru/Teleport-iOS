@@ -54,6 +54,7 @@ import OldChannelsController
 import TextFormat
 import AvatarUploadToastScreen
 import TPUI
+import AdsInfoScreen
 
 private final class ContextControllerContentSourceImpl: ContextControllerContentSource {
     let controller: ViewController
@@ -174,6 +175,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     private let storyPostingAvailabilityValue = ValuePromise<StoriesConfiguration.PostingAvailability>(.disabled)
     
     private var dalSettingsDisposable: Disposable?
+    private var folderVisibilityDisposable: Disposable?
     private(set) var storyPostingHidden: Bool = false
     private let storyPostingHiddenValue = ValuePromise<Bool>(false)
     
@@ -817,6 +819,21 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             }
         })
         
+        if case .chatList(.root) = location {
+            self.folderVisibilityDisposable = (
+                self.context.sharedContext.accountManager.sharedData(
+                    keys: [ApplicationSpecificSharedDataKeys.dalSettings]
+                )
+                |> map { sharedData -> Bool in
+                    return (sharedData.entries[ApplicationSpecificSharedDataKeys.dalSettings]?.get(DalSettings.self) ?? DalSettings.defaultSettings).showChatFolders
+                }
+                |> distinctUntilChanged
+                |> deliverOnMainQueue
+            ).startStrict(next: { [weak self] _ in
+                self?.reloadFilters()
+            })
+        }
+        
         self.updateNavigationMetadata()
     }
 
@@ -849,6 +866,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.storiesPostingAvailabilityDisposable?.dispose()
         self.sharedOpenStoryProgressDisposable.dispose()
         self.dalSettingsDisposable?.dispose()
+        self.folderVisibilityDisposable?.dispose()
         for (_, disposable) in self.preloadStoryResourceDisposables {
             disposable.dispose()
         }
@@ -1331,6 +1349,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
                 })
             }
         }
+        
         
         self.chatListDisplayNode.mainContainerNode.openPremiumManagement = { [weak self] in
             guard let self else {
@@ -3966,7 +3985,7 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
     
     private var initializedFilters = false
     private func reloadFilters(firstUpdate: (() -> Void)? = nil) {
-        let filterItems = chatListFilterItems(context: self.context)
+        let filterItems = context.currentDahlSettings.with({ $0 }).showChatFolders ? chatListFilterItems(context: self.context) : .single((0, []))
         var notifiedFirstUpdate = false
         self.filterDisposable.set((combineLatest(queue: .mainQueue(),
             filterItems,
@@ -4000,6 +4019,10 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
             var resolvedItems = filterItems
             if case .chatList(.root) = strongSelf.location {
             } else {
+                resolvedItems = []
+            }
+            
+            if !strongSelf.context.currentDahlSettings.with({ $0 }).showChatFolders {
                 resolvedItems = []
             }
             
@@ -6294,6 +6317,134 @@ public class ChatListControllerImpl: TelegramBaseController, ChatListController 
         self.push(controller)
     }
     
+    func openAdInfo(_ node: ASDisplayNode) {
+        let controller = self
+        let referenceView = node.view
+
+        let context = self.context
+        let presentationData = context.sharedContext.currentPresentationData.with { $0 }
+        
+        var actions: [ContextMenuItem] = []
+        //if adAttribute.sponsorInfo != nil || adAttribute.additionalInfo != nil {
+            actions.append(.action(ContextMenuActionItem(text: presentationData.strings.Chat_ContextMenu_AdSponsorInfo, textColor: .primary, icon: { theme in
+                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Channels"), color: theme.actionSheet.primaryTextColor)
+            }, iconSource: nil, action: { [weak self] c, _ in
+                let _ = self
+                var subItems: [ContextMenuItem] = []
+                
+                subItems.append(.action(ContextMenuActionItem(text: presentationData.strings.Common_Back, textColor: .primary, icon: { theme in
+                    return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Back"), color: theme.actionSheet.primaryTextColor)
+                }, iconSource: nil, iconPosition: .left, action: { c, _ in
+                    c?.popItems()
+                })))
+                
+                subItems.append(.separator)
+                
+//                if let sponsorInfo = adAttribute.sponsorInfo {
+//                    subItems.append(.action(ContextMenuActionItem(text: sponsorInfo, textColor: .primary, textLayout: .multiline, textFont: .custom(font: Font.regular(floor(presentationData.listsFontSize.baseDisplaySize * 0.8)), height: nil, verticalOffset: nil), badge: nil, icon: { theme in
+//                        return nil
+//                    }, iconSource: nil, action: { [weak self] c, _ in
+//                        c?.dismiss(completion: {
+//                            UIPasteboard.general.string = sponsorInfo
+//                            
+//                            self?.displayUndo(.copy(text: presentationData.strings.Chat_ContextMenu_AdSponsorInfoCopied))
+//                        })
+//                    })))
+//                }
+//                if let additionalInfo = adAttribute.additionalInfo {
+//                    subItems.append(.action(ContextMenuActionItem(text: additionalInfo, textColor: .primary, textLayout: .multiline, textFont: .custom(font: Font.regular(floor(presentationData.listsFontSize.baseDisplaySize * 0.8)), height: nil, verticalOffset: nil), badge: nil, icon: { theme in
+//                        return nil
+//                    }, iconSource: nil, action: { [weak self] c, _ in
+//                        c?.dismiss(completion: {
+//                            UIPasteboard.general.string = additionalInfo
+//                            
+//                            self?.displayUndo(.copy(text: presentationData.strings.Chat_ContextMenu_AdSponsorInfoCopied))
+//                        })
+//                    })))
+//                }
+                
+                c?.pushItems(items: .single(ContextController.Items(content: .list(subItems))))
+            })))
+        //}
+        
+        actions.append(.action(ContextMenuActionItem(text: "About These Ads", textColor: .primary, textLayout: .twoLinesMax, textFont: .custom(font: Font.regular(presentationData.listsFontSize.baseDisplaySize - 1.0), height: nil, verticalOffset: nil), badge: nil, icon: { theme in
+            return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Info"), color: theme.actionSheet.primaryTextColor)
+        }, iconSource: nil, action: { [weak self] _, f in
+            f(.default)
+            if let self {
+                self.push(AdsInfoScreen(context: self.context, mode: .search))
+            }
+        })))
+        
+        if "".isEmpty {
+            actions.append(.action(ContextMenuActionItem(text: presentationData.strings.Chat_ContextMenu_ReportAd, textColor: .primary, textLayout: .twoLinesMax, textFont: .custom(font: Font.regular(presentationData.listsFontSize.baseDisplaySize - 1.0), height: nil, verticalOffset: nil), badge: nil, icon: { theme in
+                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Restrict"), color: theme.actionSheet.primaryTextColor)
+            }, iconSource: nil, action: { [weak self] _, f in
+                f(.default)
+                
+                guard let navigationController = self?.navigationController as? NavigationController else {
+                    return
+                }
+                let _ = navigationController
+                //.dismiss(animated: true)
+                
+                //                let _ = (context.engine.messages.reportAdMessage(peerId: message.id.peerId, opaqueId: adAttribute.opaqueId, option: nil)
+                //                |> deliverOnMainQueue).start(next: { [weak navigationController] result in
+                //                    if case let .options(title, options) = result {
+                //                        Queue.mainQueue().after(0.2) {
+                //                            navigationController?.pushViewController(
+                //                                AdsReportScreen(
+                //                                    context: context,
+                //                                    peerId: message.id.peerId,
+                //                                    opaqueId: adAttribute.opaqueId,
+                //                                    title: title,
+                //                                    options: options,
+                //                                    completed: {
+                //                                        removeAd?(adAttribute.opaqueId)
+                //                                    }
+                //                                )
+                //                            )
+                //                        }
+                //                    }
+                //                })
+            })))
+            
+            actions.append(.separator)
+            
+            actions.append(.action(ContextMenuActionItem(text: presentationData.strings.Chat_ContextMenu_RemoveAd, textColor: .primary, textLayout: .twoLinesMax, textFont: .custom(font: Font.regular(presentationData.listsFontSize.baseDisplaySize - 1.0), height: nil, verticalOffset: nil), badge: nil, icon: { theme in
+                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Clear"), color: theme.actionSheet.primaryTextColor)
+            }, iconSource: nil, action: { [weak self] c, _ in
+                c?.dismiss(completion: {
+                    let _ = self
+//                    if context.isPremium {
+//                        removeAd?(adAttribute.opaqueId)
+//                    } else {
+//                        self?.presentNoAdsDemo()
+//                    }
+                })
+            })))
+        }
+//        } else {
+//            if !actions.isEmpty {
+//                actions.append(.separator)
+//            }
+//            actions.append(.action(ContextMenuActionItem(text: presentationData.strings.SponsoredMessageMenu_Hide, textColor: .primary, textLayout: .twoLinesMax, textFont: .custom(font: Font.regular(presentationData.listsFontSize.baseDisplaySize - 1.0), height: nil, verticalOffset: nil), badge: nil, icon: { theme in
+//                return generateTintedImage(image: UIImage(bundleImageName: "Chat/Context Menu/Clear"), color: theme.actionSheet.primaryTextColor)
+//            }, iconSource: nil, action: { [weak self] c, _ in
+//                c?.dismiss(completion: {
+//                    if context.isPremium {
+//                        removeAd?(adAttribute.opaqueId)
+//                    } else {
+//                        self?.presentNoAdsDemo()
+//                    }
+//                })
+//            })))
+//        }
+        
+        let contextController = ContextController(presentationData: presentationData, source: .reference(AdsInfoContextReferenceContentSource(controller: controller, sourceView: referenceView, insets: .zero, contentInsets: .zero)), items: .single(ContextController.Items(content: .list(actions))), gesture: nil)
+        controller.presentInGlobalOverlay(contextController)
+    }
+    
     private var storyCameraTransitionInCoordinator: StoryCameraTransitionInCoordinator?
     var hasStoryCameraTransition: Bool {
         return self.storyCameraTransitionInCoordinator != nil
@@ -7180,5 +7331,23 @@ private final class ChatListLocationContext {
         case .savedMessagesChats:
             break
         }
+    }
+}
+
+private final class AdsInfoContextReferenceContentSource: ContextReferenceContentSource {
+    let controller: ViewController
+    let sourceView: UIView
+    let insets: UIEdgeInsets
+    let contentInsets: UIEdgeInsets
+    
+    init(controller: ViewController, sourceView: UIView, insets: UIEdgeInsets, contentInsets: UIEdgeInsets = UIEdgeInsets()) {
+        self.controller = controller
+        self.sourceView = sourceView
+        self.insets = insets
+        self.contentInsets = contentInsets
+    }
+    
+    func transitionInfo() -> ContextControllerReferenceViewInfo? {
+        return ContextControllerReferenceViewInfo(referenceView: self.sourceView, contentAreaInScreenSpace: UIScreen.main.bounds.inset(by: self.insets), insets: self.contentInsets)
     }
 }

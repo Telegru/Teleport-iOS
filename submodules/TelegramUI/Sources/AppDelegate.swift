@@ -43,7 +43,8 @@ import TelegramUIDeclareEncodables
 import ContextMenuScreen
 import MetalEngine
 import RecaptchaEnterprise
-import TPOnboarding
+import DOnboarding
+import FirebaseCore
 
 #if canImport(AppCenter)
 import AppCenter
@@ -340,6 +341,8 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
         })
         
         let launchStartTime = CFAbsoluteTimeGetCurrent()
+        
+        FirebaseApp.configure()
         
         let statusBarHost = ApplicationStatusBarHost()
         let (window, hostView) = nativeWindowHostView()
@@ -1932,6 +1935,14 @@ private func extractAccountManagerState(records: AccountRecordsView<TelegramAcco
                 extendNow = false
             }
             sharedApplicationContext.wakeupManager.allowBackgroundTimeExtension(timeout: 2.0, extendNow: extendNow)
+            
+            let _ = (sharedApplicationContext.sharedContext.activeAccountContexts
+             |> take(1)
+             |> deliverOnMainQueue).start(next: { activeAccounts in
+                for (_, context, _) in activeAccounts.accounts {
+                    context.account.postbox.clearCaches()
+                }
+            })
         })
         
         self.isInForegroundValue = false
