@@ -368,6 +368,12 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
                                 strongSelf.loadingPlaceholderNode = nil
                             }
                         })
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                            if let strongSelf = self, strongSelf.loadingPlaceholderNode != nil {
+                                strongSelf.loadingPlaceholderNode?.removeFromSupernode()
+                                strongSelf.loadingPlaceholderNode = nil
+                            }
+                        }
                     }
                 } else {
                     self.loadingNode.alpha = 0.0
@@ -699,7 +705,13 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
         self.inputPanelBottomBackgroundSeparatorNode.backgroundColor = self.chatPresentationInterfaceState.theme.chat.inputMediaPanel.panelSeparatorColor
         self.inputPanelBottomBackgroundSeparatorNode.isLayerBacked = true
         
-        self.navigateButtons = ChatHistoryNavigationButtons(theme: self.chatPresentationInterfaceState.theme, dateTimeFormat: self.chatPresentationInterfaceState.dateTimeFormat, backgroundNode: self.backgroundNode, isChatRotated: historyNodeRotated)
+        var isWall = false
+            
+        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject, case .wall = contents.kind {
+            isWall = true
+        }
+        
+        self.navigateButtons = ChatHistoryNavigationButtons(theme: self.chatPresentationInterfaceState.theme, dateTimeFormat: self.chatPresentationInterfaceState.dateTimeFormat, backgroundNode: self.backgroundNode, isChatRotated: historyNodeRotated || isWall)
         self.navigateButtons.accessibilityElementsHidden = true
         
         super.init()
@@ -2243,7 +2255,13 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
             apparentNavigateButtonsFrame.origin.y -= 16.0
         }
         
-        if !self.historyNode.rotated {
+        var isWall = false
+    
+        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject, case .wall = contents.kind {
+            isWall = true
+        }
+                            
+        if !self.historyNode.rotated && !isWall {
             apparentNavigateButtonsFrame = CGRect(origin: CGPoint(x: layout.size.width - layout.safeInsets.right - navigateButtonsSize.width - 6.0, y: insets.top + 6.0), size: navigateButtonsSize)
         }
         
@@ -2775,16 +2793,21 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
                             return
                         }
                         
-                        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject, case .hashTagSearch = contents.kind {
-                            self.controller?.navigateToMessage(
-                                from: message.id,
-                                to: .index(message.index),
-                                scrollPosition: .center(.bottom),
-                                rememberInStack: false,
-                                forceInCurrentChat: false,
-                                forceNew: true,
-                                animated: true
-                            )
+                        if case let .customChatContents(contents) = self.chatPresentationInterfaceState.subject {
+                            switch contents.kind {
+                            case .hashTagSearch, .wall:
+                                self.controller?.navigateToMessage(
+                                    from: message.id,
+                                    to: .index(message.index),
+                                    scrollPosition: .center(.bottom),
+                                    rememberInStack: false,
+                                    forceInCurrentChat: false,
+                                    forceNew: true,
+                                    animated: true
+                                )
+                            default:
+                                break
+                            }
                         } else if let historyFilter = self.chatPresentationInterfaceState.historyFilter, let reaction = ReactionsMessageAttribute.reactionFromMessageTag(tag: historyFilter.customTag), let peerId = self.chatLocation.peerId, historyFilter.isActive {
                             let _ = (self.context.engine.messages.searchMessages(
                                 location: .peer(peerId: peerId, fromId: nil, tags: nil, reactions: [reaction], threadId: self.chatLocation.threadId, minDate: nil, maxDate: nil),
@@ -4289,6 +4312,8 @@ class ChatControllerNode: ASDisplayNode, ASScrollViewDelegate {
                 var postEmptyMessages = false
                 if case let .customChatContents(customChatContents) = self.chatPresentationInterfaceState.subject {
                     switch customChatContents.kind {
+                    case .wall:
+                        break
                     case .hashTagSearch:
                         break
                     case .quickReplyMessageInput:

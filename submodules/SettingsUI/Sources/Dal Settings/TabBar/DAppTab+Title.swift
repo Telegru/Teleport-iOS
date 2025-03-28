@@ -1,10 +1,3 @@
-//
-//  DAppTab+Title.swift
-//  SettingsUI
-//
-//  Created by Lenar Gilyazov on 16.01.2025.
-//
-
 import Foundation
 import TPStrings
 import TelegramUIPreferences
@@ -30,6 +23,9 @@ public extension DAppTab {
 //            return "Apps.TabTitle".tp_loc(lang: strings.baseLanguageCode)
 //        case .channels:
 //            return strings.ChatListFolder_NameChannels
+            
+        case .wall:
+            return "Wall.TabTitle".tp_loc(lang: strings.baseLanguageCode)
         }
     }
 }

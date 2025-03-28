@@ -426,7 +426,7 @@ private enum ChatListEntryType {
     case groupReference
 }
 
-public struct ChatListFilterPredicate {
+public struct ChatListFilterPredicate: Equatable {
     public var includePeerIds: Set<PeerId>
     public var excludePeerIds: Set<PeerId>
     public var pinnedPeerIds: [PeerId]
@@ -460,6 +460,18 @@ public struct ChatListFilterPredicate {
             }
         }
         return self.include(peer, isRemovedFromTotalUnreadCount, isUnread, isContact, messageTagSummaryResult)
+    }
+    
+    public static func == (lhs: ChatListFilterPredicate, rhs: ChatListFilterPredicate) -> Bool {
+        guard lhs.includePeerIds == rhs.includePeerIds,
+              lhs.excludePeerIds == rhs.excludePeerIds,
+              lhs.pinnedPeerIds == rhs.pinnedPeerIds,
+              lhs.messageTagSummary == rhs.messageTagSummary,
+              lhs.includeAdditionalPeerGroupIds == rhs.includeAdditionalPeerGroupIds else {
+            return false
+        }
+        
+        return true
     }
 }
 

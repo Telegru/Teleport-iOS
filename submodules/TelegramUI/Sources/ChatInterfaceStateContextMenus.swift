@@ -281,8 +281,13 @@ private func canViewReadStats(message: Message, participantCount: Int?, isMessag
 }
 
 func canReplyInChat(_ chatPresentationInterfaceState: ChatPresentationInterfaceState, accountPeerId: PeerId) -> Bool {
-    if case let .customChatContents(contents) = chatPresentationInterfaceState.subject, case .hashTagSearch = contents.kind {
-        return true
+    if case let .customChatContents(contents) = chatPresentationInterfaceState.subject {
+        switch contents.kind {
+        case .hashTagSearch, .wall:
+            return true
+        default:
+            break
+        }
     }
     if case .customChatContents = chatPresentationInterfaceState.chatLocation {
         return true
@@ -487,6 +492,10 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
     }
     
     if case let .customChatContents(customChatContents) = chatPresentationInterfaceState.subject, case .hashTagSearch = customChatContents.kind {
+        isEmbeddedMode = true
+    }
+    
+    if case let .customChatContents(customChatContents) = chatPresentationInterfaceState.subject, case .wall = customChatContents.kind {
         isEmbeddedMode = true
     }
     
@@ -895,8 +904,16 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         
         var messageActions = messageActions
         if isEmbeddedMode {
+            let isWall = {
+                guard let subject = chatPresentationInterfaceState.subject,
+                      case let .customChatContents(contents) = subject,
+                      case .wall = contents.kind else {
+                    return false
+                }
+                return true
+            }()
             messageActions = ChatAvailableMessageActions(
-                options: messageActions.options.intersection([.deleteLocally, .deleteGlobally, .forward]),
+                options: messageActions.options.intersection(isWall ? [.deleteLocally, .deleteGlobally, .forward, .report] : [.deleteLocally, .deleteGlobally, .forward]),
                 banAuthor: nil,
                 banAuthors: [],
                 disableDelete: true,
@@ -2041,6 +2058,8 @@ func contextMenuForChatPresentationInterfaceState(chatPresentationInterfaceState
         
         if let message = messages.first, case let .customChatContents(customChatContents) = chatPresentationInterfaceState.subject {
             switch customChatContents.kind {
+            case .wall:
+                break
             case .hashTagSearch:
                 break
             case .quickReplyMessageInput:

@@ -132,14 +132,26 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
             let chatListFilters = chatSelection.chatListFilters
             
             var chatListFilter: ChatListFilter?
-            if chatSelection.onlyUsers {
+            if chatSelection.onlyChannels {
+                chatListFilter = .filter(id: Int32.max, title: ChatFolderTitle(text: "", entities: [], enableAnimations: true), emoticon: nil, data: ChatListFilterData(
+                    isShared: false,
+                    hasSharedLinks: false,
+                    categories: [.channels],
+                    excludeMuted: false,
+                    excludeRead: false,
+                    excludeArchived: chatSelection.disableArchived,
+                    includePeers: ChatListFilterIncludePeers(),
+                    excludePeers: [],
+                    color: nil
+                ))
+            } else if chatSelection.onlyUsers {
                 chatListFilter = .filter(id: Int32.max, title: ChatFolderTitle(text: "", entities: [], enableAnimations: true), emoticon: nil, data: ChatListFilterData(
                     isShared: false,
                     hasSharedLinks: false,
                     categories: [.contacts, .nonContacts],
                     excludeMuted: false,
                     excludeRead: false,
-                    excludeArchived: false,
+                    excludeArchived: chatSelection.disableArchived,
                     includePeers: ChatListFilterIncludePeers(),
                     excludePeers: [],
                     color: nil
@@ -162,7 +174,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                     categories: categories,
                     excludeMuted: false,
                     excludeRead: false,
-                    excludeArchived: false,
+                    excludeArchived: chatSelection.disableArchived,
                     includePeers: ChatListFilterIncludePeers(),
                     excludePeers: [],
                     color: nil
@@ -343,6 +355,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                         var searchChannels = false
                         var globalSearch = false
                         var displaySavedMessages = true
+                        var searchAcrchivedChannels = true
                         var filters = filters
                         switch mode {
                         case .groupCreation, .channelCreation:
@@ -364,6 +377,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                                 searchGroups = true
                                 searchChannels = !chatSelection.disableChannels
                             }
+                            searchAcrchivedChannels = !chatSelection.disableArchived
                             globalSearch = false
                         case .premiumGifting, .requestedUsersSelection:
                             searchChatList = true
@@ -374,6 +388,7 @@ final class ContactMultiselectionControllerNode: ASDisplayNode {
                                 searchDeviceContacts: false,
                                 searchGroups: searchGroups,
                                 searchChannels: searchChannels,
+                                searchAcrchivedChannels: searchAcrchivedChannels,
                                 globalSearch: globalSearch,
                                 displaySavedMessages: displaySavedMessages
                         ))), filters: filters, onlyWriteable: strongSelf.onlyWriteable, isGroupInvitation: strongSelf.isGroupInvitation, isPeerEnabled: strongSelf.isPeerEnabled, selectionState: selectionState, isSearch: true)

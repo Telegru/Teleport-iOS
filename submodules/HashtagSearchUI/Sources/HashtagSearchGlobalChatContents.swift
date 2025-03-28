@@ -142,6 +142,8 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
     }
     
     var kind: ChatCustomContentsKind
+    
+    var disableFloatingDateHeaders: Bool = true
 
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> {
         return self.impl.signalWith({ impl, subscriber in
@@ -150,6 +152,10 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
             }
             return impl.historyViewStream.signal().start(next: subscriber.putNext)
         })
+    }
+    
+    var isLoadingSignal: Signal<Bool, NoError> {
+        return .complete()
     }
     
     var searching: Signal<Bool, NoError> {
@@ -199,6 +205,15 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
         self.impl.with { impl in
             impl.loadMore()
         }
+    }
+    
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
+        
+    }
+    
+    func loadAll() {}
+    
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
     }
     
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in } {

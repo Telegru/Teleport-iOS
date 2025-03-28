@@ -1342,10 +1342,11 @@ public func canSendMessagesToChat(_ state: ChatPresentationInterfaceState) -> Bo
         }
     } else if case .customChatContents = state.chatLocation {
         if case let .customChatContents(contents) = state.subject {
-            if case .hashTagSearch = contents.kind {
+            switch contents.kind {
+            case .hashTagSearch, .wall:
                 return false
-            } else {
-                return true
+            default:
+                return false
             }
         } else {
             return true

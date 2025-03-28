@@ -10,7 +10,7 @@ public struct GlobalMessageIdsNamespace: Hashable {
     }
 }
 
-public struct ChatListMessageTagSummaryResultComponent {
+public struct ChatListMessageTagSummaryResultComponent: Equatable {
     public let tag: MessageTags
     public let namespace: MessageId.Namespace
     
@@ -20,7 +20,7 @@ public struct ChatListMessageTagSummaryResultComponent {
     }
 }
 
-public struct ChatListMessageTagActionsSummaryResultComponent {
+public struct ChatListMessageTagActionsSummaryResultComponent: Equatable {
     public let type: PendingMessageActionType
     public let namespace: MessageId.Namespace
     
@@ -30,7 +30,7 @@ public struct ChatListMessageTagActionsSummaryResultComponent {
     }
 }
 
-public struct ChatListMessageTagSummaryResultCalculation {
+public struct ChatListMessageTagSummaryResultCalculation: Equatable {
     public let addCount: ChatListMessageTagSummaryResultComponent
     public let subtractCount: ChatListMessageTagActionsSummaryResultComponent
     

@@ -94,6 +94,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
     private var dahlSettingsController: ViewController?
 //    private var walletController: ViewController?
     private var channelsController: ViewController?
+    private var wallController: DWallController?
     
     private var permissionsDisposable: Disposable?
     private var presentationDataDisposable: Disposable?
@@ -361,6 +362,12 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         
 //        let appsController = appsControllerIfPossible()
         
+        var wallController: DWallController?
+                        
+        if tabs.contains(.wall) {
+            wallController = DWallController(context: context)
+        }
+        
         tabs.forEach {
             switch $0 {
             case .calls:
@@ -381,6 +388,11 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                if let appsController {
 //                    controllers.append(appsController)
 //                }
+                
+            case .wall:
+                if let wallController {
+                    controllers.append(wallController)
+                }
             }
         }
                 
@@ -395,6 +407,7 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         self.dahlSettingsController = dahlSettingsController
 //        self.walletController = walletController
 //        self.appsController = appsController
+        self.wallController = wallController
         self.rootTabController = tabBarController
         self.pushViewController(tabBarController, animated: false)
     }
@@ -403,9 +416,18 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         guard let rootTabController = self.rootTabController as? TabBarControllerImpl else {
             return
         }
+        let wallTabWasRemoved = self.tabs?.contains(.wall) == true && !tabs.contains(.wall)
+        if wallTabWasRemoved, let wallController {
+            wallController.willMove(toParent: nil)
+            wallController.view.removeFromSuperview()
+            wallController.removeFromParent()
+            wallController.didMove(toParent: nil)
+            self.wallController = nil
+        }
+
         self.tabs = tabs
         var controllers: [ViewController] = []
-        
+
         tabs.forEach {
             switch $0 {
             case .calls:
@@ -426,6 +448,15 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                if let appsController {
 //                    controllers.append(appsController)
 //                }
+                
+            case .wall:
+                if self.wallController == nil {
+                    self.wallController = DWallController(context: context)
+                }
+                
+                if let wallController = self.wallController {
+                    controllers.append(wallController)
+                }
             }
         }
         

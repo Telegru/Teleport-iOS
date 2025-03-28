@@ -10,6 +10,7 @@ public enum DAppTab: Int, Codable, CaseIterable {
 //    case wallet
 //    case apps
 //    case channels
+    case wall
     
     public var isAlwaysShow: Bool {
         switch self {

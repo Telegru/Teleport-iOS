@@ -28,12 +28,18 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
         }
     }
     
+    var disableFloatingDateHeaders: Bool = true
+
     var kind: ChatCustomContentsKind
 
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> {
         let view = MessageHistoryView(tag: nil, namespaces: .just(Namespaces.Message.allQuickReply), entries: [], holeEarlier: false, holeLater: false, isLoading: false)
 
         return .single((view, .Initial))
+    }
+    
+    var isLoadingSignal: Signal<Bool, NoError> {
+        return .complete()
     }
     
     var messageLimit: Int? {
@@ -89,8 +95,18 @@ final class BusinessLinkChatContents: ChatCustomContentsProtocol {
     func loadMore() {
     }
     
-    func hashtagSearchUpdate(query: String) {   
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
+        
     }
+    
+    func loadAll() {}
+    
+
+
+    func hashtagSearchUpdate(query: String) {
+    }
+    
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) { }
     
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }
 }

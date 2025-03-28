@@ -586,6 +586,50 @@ public final class AccountContextImpl: AccountContext {
         }
     }
     
+    public func totalUnreadCount(filterPredicate: ChatListFilterPredicate? = nil, tailChatListViewCount: Int) -> Signal<Int, NoError> {
+        let peerIdsSignal = self.account.viewTracker.tailChatListView(
+            groupId: .root,
+            filterPredicate: filterPredicate,
+            count: tailChatListViewCount
+        )
+        |> map { view, _ in
+            view.entries.compactMap { entry -> PeerId? in
+                switch entry {
+                case let .MessageEntry(entryData):
+                    return (entryData.renderedPeer.peer as? TelegramChannel)?.id
+                default:
+                    return nil
+                }
+            }
+        }
+        |> distinctUntilChanged(isEqual: { lhs, rhs in
+            return lhs == rhs
+        })
+        
+        return peerIdsSignal
+        |> mapToSignal { [weak self] peerIds -> Signal<Int, NoError> in
+            guard let strongSelf = self else {
+                return .single(0)
+            }
+            let peerSignals = peerIds.map { peerId -> Signal<Int, NoError> in
+                let unreadCountsKey: PostboxViewKey = .unreadCounts(items: [.peer(id: peerId, handleThreads: false)])
+                
+                return strongSelf.account.postbox.combinedView(keys: [unreadCountsKey])
+                |> map { views in
+                    if let view = views.views[unreadCountsKey] as? UnreadMessageCountsView,
+                       let count = view.count(for: .peer(id: peerId, handleThreads: false)) {
+                        return Int(count)
+                    }
+                    return 0
+                }
+            }
+            return combineLatest(peerSignals)
+            |> map { counts in
+                counts.reduce(0, +)
+            }
+        }
+    }
+    
     public func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex) {
         switch location {
         case .peer:

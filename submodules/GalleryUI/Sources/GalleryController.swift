@@ -761,7 +761,29 @@ public class GalleryController: ViewController, StandalonePresentableController,
                         return .single(GalleryMessageHistoryView.entries([MessageHistoryEntry(message: message, isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))], false, false))
                 }
                 case .standaloneMessage:
-                    return .single(GalleryMessageHistoryView.entries([MessageHistoryEntry(message: message, isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))], false ,false))
+                    if let tags = tagsForMessage(message) {
+                        let namespaces: MessageIdNamespaces
+                        if Namespaces.Message.allScheduled.contains(message.id.namespace) {
+                            namespaces = .just(Namespaces.Message.allScheduled)
+                        } else if Namespaces.Message.allQuickReply.contains(message.id.namespace) {
+                            namespaces = .just(Namespaces.Message.allQuickReply)
+                        } else {
+                            namespaces = .not(Namespaces.Message.allNonRegular)
+                        }
+                        let inputTag = HistoryViewInputTag.tag(tags)
+                        return context.account.postbox.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), count: 10, messageId: message.id, topTaggedMessageIdNamespaces: Set(), tag: inputTag, appendMessagesFromTheSameGroup: false, namespaces: namespaces, orderStatistics: [.combinedLocation])
+                        |> mapToSignal { (view, _, _) -> Signal<GalleryMessageHistoryView?, NoError> in
+                            let entries = view.entries
+                                .filter { $0.message.id == message.id || $0.message.groupingKey == message.groupingKey }
+                                .map(\.message)
+                                .map { message in
+                                    MessageHistoryEntry(message: message, isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
+                                }
+                            return .single(GalleryMessageHistoryView.entries(entries, false, false))
+                        }
+                    } else {
+                        return .single(GalleryMessageHistoryView.entries([MessageHistoryEntry(message: message, isRead: false, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))], false, false))
+                    }
                 case let .custom(messages, _, _):
                     return messages
                     |> map { messages, totalCount, hasMore in

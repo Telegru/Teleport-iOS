@@ -24,6 +24,8 @@ import UndoUI
 import PremiumUI
 import LottieComponent
 
+import TPStrings
+
 private protocol ChatEmptyNodeContent {
     func updateLayout(interfaceState: ChatPresentationInterfaceState, subject: ChatEmptyNode.Subject, size: CGSize, transition: ContainedViewLayoutTransition) -> CGSize
 }
@@ -601,6 +603,57 @@ private final class ChatEmptyNodeSecretChatContent: ASDisplayNode, ChatEmptyNode
     }
 }
 
+private final class ChatEmptyNodeWallChatContent: ASDisplayNode, ChatEmptyNodeContent {
+    private let titleNode: ImmediateTextNode
+    
+    private var currentTheme: PresentationTheme?
+    private var currentStrings: PresentationStrings?
+    
+    override init() {
+        self.titleNode = ImmediateTextNode()
+        self.titleNode.maximumNumberOfLines = 0
+        self.titleNode.lineSpacing = 0.25
+        self.titleNode.textAlignment = .center
+        self.titleNode.isUserInteractionEnabled = false
+        self.titleNode.displaysAsynchronously = false
+        
+        super.init()
+        
+        self.addSubnode(self.titleNode)
+    }
+    
+    func updateLayout(interfaceState: ChatPresentationInterfaceState, subject: ChatEmptyNode.Subject, size: CGSize, transition: ContainedViewLayoutTransition) -> CGSize {
+        if self.currentTheme !== interfaceState.theme || self.currentStrings !== interfaceState.strings {
+            self.currentTheme = interfaceState.theme
+            self.currentStrings = interfaceState.strings
+            
+            let titleString: String = "Wall.EmptyWallInfo.Title".tp_loc(lang: interfaceState.strings.baseLanguageCode)
+            
+            let serviceColor = serviceMessageColorComponents(theme: interfaceState.theme, wallpaper: interfaceState.chatWallpaper)
+            
+            self.titleNode.attributedText = NSAttributedString(string: titleString, font: titleFont, textColor: serviceColor.primaryText)
+        }
+        
+        let insets = UIEdgeInsets(top: 15.0, left: 15.0, bottom: 15.0, right: 15.0)
+        
+        var contentWidth: CGFloat = 220.0
+        var contentHeight: CGFloat = 0.0
+        
+        let titleSize = self.titleNode.updateLayout(CGSize(width: contentWidth, height: CGFloat.greatestFiniteMagnitude))
+        
+        contentWidth = max(contentWidth, titleSize.width)
+        
+        contentHeight += titleSize.height
+        
+        let contentRect = CGRect(origin: CGPoint(x: insets.left, y: insets.top), size: CGSize(width: contentWidth, height: contentHeight))
+        
+        let titleFrame = CGRect(origin: CGPoint(x: contentRect.minX + floor((contentRect.width - titleSize.width) / 2.0), y: contentRect.minY), size: titleSize)
+        transition.updateFrame(node: self.titleNode, frame: titleFrame)
+        
+        return contentRect.insetBy(dx: -insets.left, dy: -insets.top).size
+    }
+}
+
 private final class ChatEmptyNodeGroupChatContent: ASDisplayNode, ChatEmptyNodeContent {
     private let titleNode: ImmediateTextNode
     private let subtitleNode: ImmediateTextNode
@@ -780,7 +833,7 @@ private final class ChatEmptyNodeCloudChatContent: ASDisplayNode, ChatEmptyNodeC
                 insets.top = -9.0
                 imageSpacing = 4.0
                 titleSpacing = 5.0
-            case .hashTagSearch:
+            case .hashTagSearch, .wall:
                 break
             }
         }
@@ -842,6 +895,9 @@ private final class ChatEmptyNodeCloudChatContent: ASDisplayNode, ChatEmptyNodeC
                     
                     self.businessLink = link
                 case .hashTagSearch:
+                    titleString = ""
+                    strings = []
+                case .wall:
                     titleString = ""
                     strings = []
                 }
@@ -1427,6 +1483,7 @@ private enum ChatEmptyNodeContentType: Equatable {
     case topic
     case premiumRequired
     case starsRequired
+    case wall
 }
 
 private final class EmptyAttachedDescriptionNode: HighlightTrackingButtonNode {
@@ -1795,8 +1852,13 @@ public final class ChatEmptyNode: ASDisplayNode {
         case let .emptyChat(emptyType):
             if case .customGreeting = emptyType {
                 contentType = .greeting
-            } else if case .customChatContents = interfaceState.subject {
-                contentType = .cloud
+            } else if case let .customChatContents(content) = interfaceState.subject {
+                switch content.kind {
+                case .wall:
+                    contentType = .wall
+                default:
+                    contentType = .cloud
+                }
             } else if case .replyThread = interfaceState.chatLocation {
                 if case .topic = emptyType {
                     contentType = .topic
@@ -1855,6 +1917,8 @@ public final class ChatEmptyNode: ASDisplayNode {
                 node = ChatEmptyNodeSecretChatContent()
             case .group:
                 node = ChatEmptyNodeGroupChatContent()
+            case .wall:
+                node = ChatEmptyNodeWallChatContent()
             case .cloud:
                 let cloudNode = ChatEmptyNodeCloudChatContent()
                 node = cloudNode

@@ -189,6 +189,8 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     }
     
     var kind: ChatCustomContentsKind
+    
+    var disableFloatingDateHeaders: Bool = true
 
     var historyView: Signal<(MessageHistoryView, ViewUpdateType), NoError> {
         return self.impl.signalWith({ impl, subscriber in
@@ -201,6 +203,10 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     
     var messageLimit: Int? {
         return 20
+    }
+    
+    var isLoadingSignal: Signal<Bool, NoError> {
+        return .complete()
     }
     
     private let queue: Queue
@@ -216,6 +222,8 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
         case .businessLinkSetup:
             initialShortcut = ""
         case .hashTagSearch:
+            initialShortcut = ""
+        case .wall:
             initialShortcut = ""
         }
         
@@ -255,6 +263,8 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
             break
         case .hashTagSearch:
             break
+        case .wall:
+            break
         }
     }
     
@@ -264,8 +274,15 @@ final class AutomaticBusinessMessageSetupChatContents: ChatCustomContentsProtoco
     func loadMore() {
     }
     
+    func loadAll() {}
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
+        
+    }
+    
     func hashtagSearchUpdate(query: String) {
     }
+    
+    func applyMaxReadIndex(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>, messageIndex: MessageIndex)  { }
     
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void = { _ in }
 }

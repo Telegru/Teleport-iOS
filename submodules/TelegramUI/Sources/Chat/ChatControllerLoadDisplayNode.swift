@@ -1397,6 +1397,8 @@ extension ChatControllerImpl {
                 switch customChatContents.kind {
                 case .hashTagSearch:
                     break
+                case .wall:
+                    break
                 case .quickReplyMessageInput:
                     customChatContents.enqueueMessages(messages: messages)
                     strongSelf.chatDisplayNode.historyNode.scrollToEndOfHistory()
@@ -1610,6 +1612,8 @@ extension ChatControllerImpl {
             }
             
             if case let .customChatContents(contents) = self.presentationInterfaceState.subject, case .hashTagSearch = contents.kind {
+                self.chatDisplayNode.historyNode.scrollToEndOfHistory()
+            } else if case let .customChatContents(contents) = self.presentationInterfaceState.subject, case .wall = contents.kind {
                 self.chatDisplayNode.historyNode.scrollToEndOfHistory()
             } else if let resultsState = self.presentationInterfaceState.search?.resultsState, !resultsState.messageIndices.isEmpty {
                 if let currentId = resultsState.currentId, let index = resultsState.messageIndices.firstIndex(where: { $0.id == currentId }) {
@@ -2157,6 +2161,21 @@ extension ChatControllerImpl {
                                 let _ = strongSelf.context.engine.messages.deleteMessagesInteractively(messageIds: Array(messageIds), type: .forEveryone, deleteAllInGroup: true).startStandalone()
                                 completion(.dismissWithoutContent)
                             } else {
+                                let isWall = {
+                                    guard let subject = strongSelf.subject,
+                                          case let .customChatContents(contents) = subject,
+                                          case .wall = contents.kind else {
+                                        return false
+                                    }
+                                    return true
+                                }()
+                                
+                                if isWall {
+                                    let author = messages.first?.author
+                                    strongSelf.presentClearCacheSuggestion(forPeer: author)
+                                    return completion(.default)
+                                }
+                                
                                 if actions.options.intersection([.deleteLocally, .deleteGlobally]).isEmpty {
                                     strongSelf.presentClearCacheSuggestion()
                                     completion(.default)
@@ -4558,10 +4577,29 @@ extension ChatControllerImpl {
             let peerId = self.chatLocation.peerId
             if let subject = self.subject, case .scheduledMessages = subject {
             } else {
-                let throttledUnreadCountSignal = self.context.chatLocationUnreadCount(for: self.chatLocation, contextHolder: self.chatLocationContextHolder)
-                |> mapToThrottled { value -> Signal<Int, NoError> in
-                    return .single(value) |> then(.complete() |> delay(0.2, queue: Queue.mainQueue()))
-                }
+                
+                let throttledUnreadCountSignal: Signal<Int, NoError> = {
+                    let baseSignal: Signal<Int, NoError>
+                    
+                    if case let .customChatContents(contents) = self.subject,
+                       case let .wall(count) = contents.kind, let wallContent = contents as? DWallChatContent {
+                        baseSignal = wallContent.filterSignal |> mapToSignal { [weak self] filter -> Signal<Int, NoError> in
+                            guard let strongSelf = self else {
+                                return .complete()
+                            }
+                            return strongSelf.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+                        }
+                    } else {
+                        baseSignal = self.context.chatLocationUnreadCount(for: self.chatLocation,
+                                                                  contextHolder: self.chatLocationContextHolder)
+                    }
+                    
+                    return baseSignal
+                        |> mapToThrottled { value in
+                            .single(value) |> then(.complete() |> delay(0.2, queue: Queue.mainQueue()))
+                        }
+                }()
+          
                 self.buttonUnreadCountDisposable = (throttledUnreadCountSignal
                 |> deliverOnMainQueue).startStrict(next: { [weak self] count in
                     guard let strongSelf = self else {

@@ -4,6 +4,7 @@ import SwiftSignalKit
 import TelegramCore
 
 
+
 public enum CameraType: String, Codable, Equatable {
     case front = "front"
     case back = "back"
@@ -23,6 +24,7 @@ public struct DalSettings: Codable, Equatable {
     public var chatsListViewType: ListViewType
     public var premiumSettings: DPremiumSettings
     public var appearanceSettings: DAppearanceSettings
+    public var wallSettings: DWallSettings
     
     // Раздел Stories
     public var hidePublishStoriesButton: Bool
@@ -55,6 +57,7 @@ public struct DalSettings: Codable, Equatable {
             menuItemsSettings: .default,
             premiumSettings: .default,
             appearanceSettings: .default,
+            wallSettings: .default,
             hidePublishStoriesButton: false,
             hideStories: false,
             hideViewedStories: false,
@@ -79,6 +82,7 @@ public struct DalSettings: Codable, Equatable {
         menuItemsSettings: MenuItemsSettings,
         premiumSettings: DPremiumSettings,
         appearanceSettings: DAppearanceSettings,
+        wallSettings: DWallSettings,
         hidePublishStoriesButton: Bool,
         hideStories: Bool,
         hideViewedStories: Bool,
@@ -100,6 +104,7 @@ public struct DalSettings: Codable, Equatable {
         self.menuItemsSettings = menuItemsSettings
         self.premiumSettings = premiumSettings
         self.appearanceSettings = appearanceSettings
+        self.wallSettings = wallSettings
         self.hidePublishStoriesButton = hidePublishStoriesButton
         self.hideStories = hideStories
         self.hideViewedStories = hideViewedStories
@@ -124,6 +129,7 @@ public struct DalSettings: Codable, Equatable {
         self.menuItemsSettings = (try container.decodeIfPresent(MenuItemsSettings.self, forKey: "menuItemsSettings") ?? .default)
         self.premiumSettings = (try container.decodeIfPresent(DPremiumSettings.self, forKey: "premiumSettings") ?? .default)
         self.appearanceSettings = (try container.decodeIfPresent(DAppearanceSettings.self, forKey: "appearanceSettings") ?? .default)
+        self.wallSettings = (try container.decodeIfPresent(DWallSettings.self, forKey: "wallSettings") ?? .default)
         // Раздел Stories
         self.hidePublishStoriesButton = (try container.decodeIfPresent(Int32.self, forKey: "hidePublishStoriesButton") ?? 0) != 0
         self.hideStories = (try container.decodeIfPresent(Int32.self, forKey: "hideStories") ?? 0) != 0
@@ -163,6 +169,7 @@ public struct DalSettings: Codable, Equatable {
         try container.encode(self.menuItemsSettings, forKey: "menuItemsSettings")
         try container.encode(self.premiumSettings, forKey: "premiumSettings")
         try container.encode(self.appearanceSettings, forKey: "appearanceSettings")
+        try container.encode(self.wallSettings, forKey: "wallSettings")
         // Раздел Stories
         try container.encode((self.hidePublishStoriesButton ? 1 : 0) as Int32, forKey: "hidePublishStoriesButton")
         try container.encode((self.hideStories ? 1 : 0) as Int32, forKey: "hideStories")
