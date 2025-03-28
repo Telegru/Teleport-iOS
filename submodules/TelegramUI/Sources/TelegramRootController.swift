@@ -417,7 +417,11 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
             return
         }
         let wallTabWasRemoved = self.tabs?.contains(.wall) == true && !tabs.contains(.wall)
-        if wallTabWasRemoved {
+        if wallTabWasRemoved, let wallController {
+            wallController.willMove(toParent: nil)
+            wallController.view.removeFromSuperview()
+            wallController.removeFromParent()
+            wallController.didMove(toParent: nil)
             self.wallController = nil
         }
 

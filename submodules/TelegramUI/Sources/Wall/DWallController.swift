@@ -22,7 +22,6 @@ public final class DWallController: TelegramBaseController {
     private let context: AccountContext
     private var hasAppearedBefore = false
 
-    private var transitionDisposable: Disposable?
     private var scrollDisposable: Disposable?
     private var filterDisposable: Disposable?
 
@@ -180,8 +179,11 @@ public final class DWallController: TelegramBaseController {
             unreadCountDisposable = nil
             
             let unreadCountSignal = controllerNode.wallContent.filterSignal
-            |> mapToSignal { filter -> Signal<Int, NoError>  in
-                self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+            |> mapToSignal { [weak self] filter -> Signal<Int, NoError>  in
+                guard let self = self else {
+                    return .complete()
+                }
+                return self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
             }
             
             unreadCountDisposable = (combineLatest(unreadCountSignal, context.sharedContext.presentationData) |> deliverOnMainQueue)
