@@ -3223,10 +3223,10 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             var shouldLoadMoreAtTop = false
 
             let totalEntries = historyView.filteredEntries.count
-            let bottomListLowerBound = Int(Double(totalEntries) * 0.05)
-            let bottomListUpperBound = Int(Double(totalEntries) * 0.45)
-            let topListLowerBound = Int(Double(totalEntries) * 0.55)
-            let topListUpperBound = Int(Double(totalEntries) * 0.95)
+            let bottomListLowerBound = Int(Double(totalEntries) * 0.00)
+            let bottomListUpperBound = Int(Double(totalEntries) * 0.35)
+            let topListLowerBound = Int(Double(totalEntries) * 0.65)
+            let topListUpperBound = Int(Double(totalEntries) * 1.00)
             
             if loaded.firstIndex <= 5 {
                 var firstHasGroups = false

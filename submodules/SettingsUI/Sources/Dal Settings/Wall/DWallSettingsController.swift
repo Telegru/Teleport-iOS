@@ -55,6 +55,7 @@ private struct DWallSettingsState: Equatable {
 
 private enum DWallSettingsSection: Int32, CaseIterable {
     case display
+    case readState
     case excluded
 }
 
@@ -85,8 +86,10 @@ private enum DWallSettingsEntry: ItemListNodeEntry {
     
     var section: ItemListSectionId {
         switch self {
-        case .displayHeader, .showArchivedChannels, .markAsRead, .displayFooter:
+        case .displayHeader, .showArchivedChannels, .displayFooter:
             return DWallSettingsSection.display.rawValue
+        case .markAsRead:
+            return DWallSettingsSection.readState.rawValue
         case .excludedHeader, .addExcludedChannel, .excludedChannel, .removeAllExcludedChannels, .excludedFooter:
             return DWallSettingsSection.excluded.rawValue
         }
@@ -385,6 +388,7 @@ private func dWallSettingsEntries(
             value: wallSettings.markAsRead
         )
     )
+    
     
     entries.append(
         .excludedHeader(
