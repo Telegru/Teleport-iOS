@@ -738,7 +738,8 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
     var frozenMessageForScrollingReset: EngineMessage.Id?
     
     private var hasDisplayedBusinessBotMessageTooltip: Bool = false
-    
+    private var currentGeneralScrollDirection: GeneralScrollDirection?
+
     private let _isReady = ValuePromise<Bool>(false, ignoreRepeated: true)
     public var isReady: Signal<Bool, NoError> {
         return self._isReady.get()
@@ -1004,6 +1005,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             guard let strongSelf = self else {
                 return
             }
+            strongSelf.currentGeneralScrollDirection = direction
             let prefetchDirectionIsToLater = direction == .up
             if strongSelf.currentPrefetchDirectionIsToLater != prefetchDirectionIsToLater {
                 strongSelf.currentPrefetchDirectionIsToLater = prefetchDirectionIsToLater
@@ -1765,8 +1767,6 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
             contentSettings |> debug_measureTimeToFirstEvent(label: "chatHistoryNode_contentSettings")
         ) |> debug_measureTimeToFirstEvent(label: "chatHistoryNode_firstChatHistoryTransition")).startStrict(next: { [weak self] update, chatPresentationData, selectedMessages, updatingMedia, networkType, preferredStoryHighQuality, animatedEmojiStickers, additionalAnimatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, availableReactions, availableMessageEffects, savedMessageTags, defaultReaction, accountPeer, suggestAudioTranscription, promises, topicAuthorId, translationState, maxReadStoryId, recommendedChannels, audioTranscriptionTrial, chatThemes, deviceContactsNumbers, contentSettings in
 
-            print("DEBUG: historyViewTransitionDisposable TRIGGERED")
-
             let (historyAppearsCleared, pendingUnpinnedAllMessages, pendingRemovedMessages, currentlyPlayingMessageIdAndType, scrollToMessageId, chatHasBots, allAdMessages) = promises
             
             if measure_isFirstTime {
@@ -1786,11 +1786,7 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                         
                         let historyView = (strongSelf.opaqueTransactionState as? ChatHistoryTransactionOpaqueState)?.historyView
                         let displayRange = strongSelf.displayedItemRange
-                        var updateChatHistoryLocationValue = true
-                        if case let .customChatContents(customChatContents) = strongSelf.subject, case .wall = customChatContents.kind {
-                            updateChatHistoryLocationValue = false
-                        }
-                        if updateChatHistoryLocationValue, let filteredEntries = historyView?.filteredEntries, let visibleRange = displayRange.visibleRange {
+                        if let filteredEntries = historyView?.filteredEntries, let visibleRange = displayRange.visibleRange {
                             var anchorIndex: MessageIndex?
                             loop: for index in visibleRange.firstIndex ..< filteredEntries.count {
                                 switch filteredEntries[filteredEntries.count - 1 - index] {
@@ -3223,11 +3219,14 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
         
         if let loaded = displayedRange.visibleRange, let firstEntry = historyView.filteredEntries.first, let lastEntry = historyView.filteredEntries.last {
             var mathesFirst = false
-            var mathesCenter = false
+            var shouldLoadMoreAtBottom = false
+            var shouldLoadMoreAtTop = false
 
             let totalEntries = historyView.filteredEntries.count
-            let centerLowerBound = Int(Double(totalEntries) * 0.25)
-            let centerUpperBound = Int(Double(totalEntries) * 0.75)
+            let bottomListLowerBound = Int(Double(totalEntries) * 0.05)
+            let bottomListUpperBound = Int(Double(totalEntries) * 0.45)
+            let topListLowerBound = Int(Double(totalEntries) * 0.55)
+            let topListUpperBound = Int(Double(totalEntries) * 0.95)
             
             if loaded.firstIndex <= 5 {
                 var firstHasGroups = false
@@ -3268,25 +3267,19 @@ public final class ChatHistoryListNodeImpl: ListView, ChatHistoryNode, ChatHisto
                 }
             }
             
-            if loaded.firstIndex >= centerLowerBound && loaded.lastIndex <= centerUpperBound {
-                mathesCenter = true
-            } else {
-                var centerItemVisible = false
-                let centerIndex = totalEntries / 2
-                
-                if loaded.firstIndex <= centerIndex && loaded.lastIndex >= centerIndex {
-                    centerItemVisible = true
-                }
-                
-                if centerItemVisible && (loaded.lastIndex - loaded.firstIndex) >= min(10, totalEntries / 4) {
-                    mathesCenter = true
-                }
+            if loaded.firstIndex >= bottomListLowerBound && loaded.lastIndex <= bottomListUpperBound {
+                shouldLoadMoreAtBottom = self.currentGeneralScrollDirection == (self.rotated ? .up : .down)
+            } else if loaded.firstIndex >= topListLowerBound && loaded.lastIndex <= topListUpperBound {
+                shouldLoadMoreAtTop = self.currentGeneralScrollDirection == (self.rotated ? .down : .up)
             }
             
-            if mathesCenter {
-                if case let .customChatContents(customChatContents) = self.subject, case .wall = customChatContents.kind {
-                    let currentEntry = historyView.filteredEntries[totalEntries / 2]
-                    customChatContents.loadMoreAt(messageIndex: currentEntry.index)
+            if case let .customChatContents(customChatContents) = self.subject {
+                if shouldLoadMoreAtBottom {
+                    let currentEntry = historyView.filteredEntries[historyView.filteredEntries.count - 1 - loaded.firstIndex]
+                    customChatContents.loadMoreAt(messageIndex: currentEntry.index, direction: ChatHistoryListLoadDirection.down)
+                } else if shouldLoadMoreAtTop {
+                    let currentEntry = historyView.filteredEntries[historyView.filteredEntries.count - 1 - loaded.lastIndex]
+                    customChatContents.loadMoreAt(messageIndex: currentEntry.index, direction: ChatHistoryListLoadDirection.up)
                 }
             }
             

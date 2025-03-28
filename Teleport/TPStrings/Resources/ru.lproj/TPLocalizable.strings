@@ -88,6 +88,7 @@
 "DahlSettings.Wall.Display.Header" = "Показывать";
 "DahlSettings.Wall.Display.ArchivedChannels" = "Каналы из Архива";
 "DahlSettings.Wall.Display.Footer" = "Записи каналов из вашего Архива будут появляться на Стене вместе с остальными записями.";
+"DahlSettings.Wall.Display.MarkAsRead" = "Отмечать сообщения прочитанными при чтении на стене";
 
 "DahlSettings.Wall.Excluded.Header" = "ИСКЛЮЧЕННЫЕ КАНАЛЫ";
 "DahlSettings.Wall.Excluded.ExcludedChannels" = "Добавить исключения";

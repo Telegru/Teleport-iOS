@@ -22,7 +22,6 @@ public final class DWallController: TelegramBaseController {
     private let context: AccountContext
     private var hasAppearedBefore = false
 
-    private var transitionDisposable: Disposable?
     private var scrollDisposable: Disposable?
     private var filterDisposable: Disposable?
 
@@ -180,14 +179,16 @@ public final class DWallController: TelegramBaseController {
             unreadCountDisposable = nil
             
             let unreadCountSignal = controllerNode.wallContent.filterSignal
-            |> mapToSignal { filter -> Signal<Int, NoError>  in
-                self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
+            |> mapToSignal { [weak self] filter -> Signal<Int, NoError>  in
+                guard let self = self else {
+                    return .complete()
+                }
+                return self.context.totalUnreadCount(filterPredicate: filter, tailChatListViewCount: count)
             }
             
             unreadCountDisposable = (combineLatest(unreadCountSignal, context.sharedContext.presentationData) |> deliverOnMainQueue)
                 .startStrict(next: { [weak self] unreadCount, presentationData in
                 guard let self else { return }
-                    debugPrint("----||| 8")
 
                 if unreadCount == 0 {
                     tabBarItem.badgeValue = ""
@@ -209,7 +210,6 @@ public final class DWallController: TelegramBaseController {
                 skipFirst = false
                 return
             }
-            debugPrint("----||| 6")
 
             guard let self = self else { return }
             self.scrollToStart()
@@ -221,7 +221,6 @@ public final class DWallController: TelegramBaseController {
                 |> delay(2.0, queue: .mainQueue())
             )
             .start(next: { [weak self] view in
-                debugPrint("----||| 5")
 
                 guard let self = self else { return }
                 self.scrollToStart()
@@ -274,7 +273,7 @@ public final class DWallController: TelegramBaseController {
     }
     
     private func showLoadingOverlay() {
-        guard !isShowingOverlay else { return }
+        guard !isShowingOverlay || overlayStatusController?.isViewLoaded != true else { return }
         isShowingOverlay = true
         
         let overlayController = OverlayStatusController(

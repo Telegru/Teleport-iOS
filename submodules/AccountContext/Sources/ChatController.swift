@@ -1186,7 +1186,7 @@ public protocol ChatCustomContentsProtocol: AnyObject {
     
     func loadMore()
     func loadAll()
-    func loadMoreAt(messageIndex: MessageIndex) 
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection)
 
     func hashtagSearchUpdate(query: String)
     var hashtagSearchResultsUpdate: ((SearchMessagesResult, SearchMessagesState)) -> Void { get set }
@@ -1198,6 +1198,11 @@ public enum ChatHistoryListDisplayHeaders {
     case none
     case all
     case allButLast
+}
+
+public enum ChatHistoryListLoadDirection {
+    case up
+    case down
 }
 
 public enum ChatHistoryListMode: Equatable {

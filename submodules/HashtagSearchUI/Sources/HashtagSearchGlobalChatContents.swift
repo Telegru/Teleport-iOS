@@ -207,7 +207,7 @@ final class HashtagSearchGlobalChatContents: ChatCustomContentsProtocol {
         }
     }
     
-    func loadMoreAt(messageIndex: MessageIndex) {
+    func loadMoreAt(messageIndex: MessageIndex, direction: ChatHistoryListLoadDirection){
         
     }
     

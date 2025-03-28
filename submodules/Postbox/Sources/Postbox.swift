@@ -3237,6 +3237,20 @@ final class PostboxImpl {
         }
     }
     
+    func getChatListPeers(groupId: PeerGroupId, filterPredicate: ChatListFilterPredicate) -> Signal<[PeerId], NoError> {
+        return self.transaction { transaction -> [PeerId] in
+            let peers = transaction.getChatListPeers(
+                groupId: groupId,
+                filterPredicate: filterPredicate,
+                additionalFilter: nil
+            ).map {
+                $0.id
+            }
+            
+            return peers
+        }
+    }
+    
     public func aggregatedGlobalMessagesHistoryViewForPeerIds(
         peerIds: [PeerId],
         from: [PeerId: MessageIndex],
@@ -4804,12 +4818,11 @@ public class Postbox {
     
     public func aroundAggregatedMessageHistoryViewForPeerIds(
         peerIds: [PeerId],
-        anchors: [PeerId: MessageIndex],
-        anchor: MessageIndex? = nil,
-        filterBofore: [PeerId: MessageIndex],
-        count: Int,
+        anchorIndices: [PeerId: MessageIndex],
+        filterOlderThanIndices: [PeerId: MessageIndex],
+        selectionOptions: MessageHistorySelectionOptions,
+        messageCount: Int,
         clipHoles: Bool = true,
-        takeTail: Bool = false,
         namespaces: MessageIdNamespaces = .just(Set([0])),
         orderStatistics: MessageHistoryViewOrderStatistics = MessageHistoryViewOrderStatistics(),
         additionalData: [AdditionalMessageHistoryViewData] = []
@@ -4822,9 +4835,9 @@ public class Postbox {
             }
 
             let peerSignals: [Signal<(PeerId, MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>] = peerIds.map { peerId in
-                let anchor: HistoryViewInputAnchor = anchors[peerId] != nil ? .index(anchors[peerId]!) : .unread
+                let anchor: HistoryViewInputAnchor = anchorIndices[peerId] != nil ? .index(anchorIndices[peerId]!) : .unread
 
-                return self.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), anchor: anchor, ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), count: count * 2, fixedCombinedReadStates: nil, topTaggedMessageIdNamespaces: Set(), tag: nil, appendMessagesFromTheSameGroup: true, namespaces: namespaces, orderStatistics: orderStatistics)
+                return self.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), anchor: anchor, ignoreMessagesInTimestampRange: nil, ignoreMessageIds: Set(), count: messageCount * 2, fixedCombinedReadStates: nil, topTaggedMessageIdNamespaces: Set(), tag: nil, appendMessagesFromTheSameGroup: true, namespaces: namespaces, orderStatistics: orderStatistics)
                 |> map { viewData -> (PeerId, MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?) in
                     return (peerId, viewData.0, viewData.1, viewData.2)
                 }
@@ -4839,9 +4852,11 @@ public class Postbox {
                 for (peerId, view, updateType, data) in peerResults {
                     var entries = view.entries
                     
-                    if let fromIndex = filterBofore[peerId] {
+                    if let fromIndex = filterOlderThanIndices[peerId] {
                         let passedGroupingKeys = Set(entries
-                            .filter { $0.index > fromIndex }
+                            .filter {
+                                return $0.index > fromIndex
+                            }
                             .compactMap { entry in
                                 if let groupingKey = entry.message.groupingKey {
                                     return groupingKey
@@ -4850,7 +4865,6 @@ public class Postbox {
                             })
 
                         entries = entries.filter { entry in
-                            
                             if  entry.index > fromIndex {
                                 return true
                             }
@@ -4879,19 +4893,28 @@ public class Postbox {
                 
                 allEntries.sort { $0.message.timestamp < $1.message.timestamp }
 
-                if let anchor = anchor {
+                if let anchor = selectionOptions.boundAnchor {
                     var groupsToInclude = Set<Int64>()
                     for entry in allEntries {
-                        if let key = entry.message.groupingKey, entry.index >= anchor {
-                            groupsToInclude.insert(key)
+                        if selectionOptions.direction == .olderMessages {
+                            if let key = entry.message.groupingKey, entry.index <= anchor {
+                                groupsToInclude.insert(key)
+                            }
+                        } else {
+                            if let key = entry.message.groupingKey, entry.index >= anchor {
+                                groupsToInclude.insert(key)
+                            }
                         }
                     }
                     allEntries = allEntries.filter { entry in
+                        if selectionOptions.direction == .olderMessages {
+                            return entry.index <= anchor
+                        }
                         return entry.index >= anchor
                     }
                 }
                 
-                allEntries = self.getEntriesPreservingGroups(entries: allEntries, count: count, takeTail: takeTail)
+                allEntries = self.getEntriesPreservingGroups(entries: allEntries, count: messageCount, takeTail: selectionOptions.range == .fromEnd)
                 
                 let namespaceSet = Set(allEntries.map { $0.index.id.namespace })
                 let aggregatedView = MessageHistoryView(
@@ -4982,6 +5005,19 @@ public class Postbox {
 //            return disposable.strict()
 //        }
 //    }
+    
+    public func getChatListPeers(groupId: PeerGroupId, filterPredicate: ChatListFilterPredicate) -> Signal<[PeerId], NoError>  {
+        return Signal { subscriber in
+            let disposable = MetaDisposable()
+
+            self.impl.with { impl in
+                disposable.set(impl.getChatListPeers(groupId: groupId,
+                    filterPredicate: filterPredicate
+                ).start(next: subscriber.putNext, error: subscriber.putError, completed: subscriber.putCompletion))
+            }
+            return disposable.strict()
+        }
+    }
     
     public func maxReadIndexForPeerIds(
             peerIds: [PeerId],
@@ -5085,6 +5121,8 @@ public class Postbox {
         }
     }
 
+   
+    
     public func aroundChatListView(
         groupId: PeerGroupId,
         filterPredicate: ChatListFilterPredicate? = nil,

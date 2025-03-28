@@ -362,7 +362,11 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         
 //        let appsController = appsControllerIfPossible()
         
-        let wallController = DWallController(context: context)
+        var wallController: DWallController?
+                        
+        if tabs.contains(.wall) {
+            wallController = DWallController(context: context)
+        }
         
         tabs.forEach {
             switch $0 {
@@ -386,7 +390,9 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                }
                 
             case .wall:
-                controllers.append(wallController)
+                if let wallController {
+                    controllers.append(wallController)
+                }
             }
         }
                 
@@ -410,9 +416,18 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
         guard let rootTabController = self.rootTabController as? TabBarControllerImpl else {
             return
         }
+        let wallTabWasRemoved = self.tabs?.contains(.wall) == true && !tabs.contains(.wall)
+        if wallTabWasRemoved, let wallController {
+            wallController.willMove(toParent: nil)
+            wallController.view.removeFromSuperview()
+            wallController.removeFromParent()
+            wallController.didMove(toParent: nil)
+            self.wallController = nil
+        }
+
         self.tabs = tabs
         var controllers: [ViewController] = []
-        
+
         tabs.forEach {
             switch $0 {
             case .calls:
@@ -435,7 +450,13 @@ public final class TelegramRootController: NavigationController, TelegramRootCon
 //                }
                 
             case .wall:
-                controllers.append(wallController!)
+                if self.wallController == nil {
+                    self.wallController = DWallController(context: context)
+                }
+                
+                if let wallController = self.wallController {
+                    controllers.append(wallController)
+                }
             }
         }
         
